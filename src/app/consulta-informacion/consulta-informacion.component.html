@@ -1,0 +1,135 @@
+<div
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png'); background-repeat: no-repeat; background-size: cover;height: 100vh;overflow: auto;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Consulta información producto</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-user-shield"></i>
+                                Consulta información persona
+                            </h3>
+                        </div>
+                        <div class="card-body mt-0 pt-0 mb-0 pb-0">
+                            <div class="card-header">
+                                <h3 class="card-title" style="padding-top: 5px;">
+                                    Información del activo
+                                </h3>
+                            </div>
+                            <div class="row m-3">
+                                <div class="col-lg-3 mb-2">
+                                    <label for="txtTipo" class="form-label fw-bold text-secondary">Tipo:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtTipo" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Tipo del bien" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 mb-2">
+                                    <label for="txtCodigoProducto" class="form-label fw-bold text-secondary">Código
+                                        Producto:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtCodigoProducto" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Código producto" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 mb-2">
+                                    <label for="txtDescripcion"
+                                        class="form-label fw-bold text-secondary">Descripción:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtDescripcion" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Descripción producto" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 mb-2">
+                                    <label for="txtCentroCosto" class="form-label fw-bold text-secondary">Centro de
+                                        Costo:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtCentroCosto" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Centro de costo" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 mb-2">
+                                    <label for="txtMarca" class="form-label fw-bold text-secondary">Marca:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtMarca" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                placeholder="Marca" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 mb-2">
+                                    <label for="txtModelo" class="form-label fw-bold text-secondary">Modelo:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtModelo" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Modelo" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2 mb-2">
+                                    <label for="txtfecha" class="form-label fw-bold text-secondary">Fecha
+                                        adquisición:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtfecha" type="date" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Fecha adquisición" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2 mb-2">
+                                    <label for="txtvalor" class="form-label fw-bold text-secondary">Valor
+                                        adquisición:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtvalor" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                placeholder="Valor de compra" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-2">
+                                    <label for="txtCustodio" class="form-label fw-bold text-secondary">Custodio:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtCustodio" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Apellido y nombre custodio" readonly>
+                                            <button class="btn btn-success ml-2 mr-2">Asignar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-2">
+                                    <label for="txtMotivoBaja" class="form-label fw-bold text-secondary">Motivo de baja:</label>
+                                    <div class="d-flex flex-column flex-sm-row align-items-center">
+                                        <div class="d-flex flex-grow-1">
+                                            <input name="txtMotivoBaja" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Motivo de baja activo" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
