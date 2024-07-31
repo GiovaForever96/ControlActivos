@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
   projectName: "Control Activos",
-  apiUrl: "http://localhost:5001/api/",
+  apiUrl: "http://localhost:5002/api/",
   company: "Seguros Súarez",
   website: "https://segurossuarez.com/",
   mailAddress: "comunicaciones@segurossuarez.com",

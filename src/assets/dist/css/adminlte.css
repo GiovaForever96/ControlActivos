@@ -13181,6 +13181,7 @@ body.sidebar-collapse:not(.sidebar-mini-md):not(.sidebar-mini) .main-header::bef
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0;
+  background-size: cover;
 }
 
 .user-panel {

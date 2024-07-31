@@ -8,7 +8,8 @@ const routes: Routes = [
   { path: '', component: LoginComponent },
   { path: 'iniciar-sesion', redirectTo: '', pathMatch: 'full' },
   { path: 'consulta-informacion', component: ConsultaInformacionComponent },
-  // { path: 'home', loadChildren: () => import('./home/home-routing.module').then(m => m.HomeRoutingModule) },
+  { path: 'consulta-informacion/:idProducto', component: ConsultaInformacionComponent },
+  { path: 'home', loadChildren: () => import('./home/home-routing.module').then(m => m.HomeRoutingModule) },
   { path: '**', component: PaginaNoEncontradaComponent },
 ];
 

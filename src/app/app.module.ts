@@ -6,6 +6,8 @@ import { AppComponent } from './app.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoadingComponent } from './loading/loading.component';
 import { ConsultaInformacionComponent } from './consulta-informacion/consulta-informacion.component';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { HomeModule } from './home/home.module';
 
 @NgModule({
   declarations: [
@@ -17,7 +19,9 @@ import { ConsultaInformacionComponent } from './consulta-informacion/consulta-in
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    ZXingScannerModule,
+    HomeModule
   ],
   providers: [],
   bootstrap: [AppComponent]

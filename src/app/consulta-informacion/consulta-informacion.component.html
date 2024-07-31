@@ -13,28 +13,50 @@
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-            <div class="row">
+            <div class="row" *ngIf="idProducto==null">
                 <div class="col-12">
                     <div class="card card-primary card-outline">
                         <div class="card-header">
                             <h3 class="card-title" style="padding-top: 5px;">
-                                <i class="fas fa-user-shield"></i>
-                                Busqueda información:
+                                <i class="fas fa-qrcode mr-2"></i>
+                                Coloque el código QR frente la cámara:
                             </h3>
                         </div>
                         <div class="card-body mt-0 pt-0 mb-0 pb-0">
-                            <div class="card-header">
-                                <h3 class="card-title" style="padding-top: 5px;">
-                                    Información del activo
-                                </h3>
+                            <div class="col-lg-3 mb-2">
+                                <zxing-scanner (captured)="handleQrCodeResult($event)" [formats]="formats">
+                                </zxing-scanner>
                             </div>
+                            <div *ngIf="scannedResult">
+                                <p>QR Code Result: {{ scannedResult }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" *ngIf="idProducto!=null">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Información del activo
+                            </h3>
+                            <button class="btn btn-danger float-right" (click)="DarDeBajaActivo()"
+                                *ngIf="informacionProductoCustodio.producto?.motivoBaja==null"><i
+                                    class="far fa-minus-square mr-2"></i>Dar de
+                                Baja</button>
+                        </div>
+                        <div class="card-body mt-0 pt-0 mb-0 pb-0">
                             <div class="row m-3">
                                 <div class="col-lg-3 mb-2">
                                     <label for="txtTipo" class="form-label fw-bold text-secondary">Tipo:</label>
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
-                                            <input name="txtTipo" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Tipo del bien" readonly>
+                                            <input name="txtTipo" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                placeholder="Tipo del bien"
+                                                [value]="informacionProductoCustodio.producto?.esBienaControl?'Bien de control':'Activo'"
+                                                readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -44,7 +66,8 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtCodigoProducto" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Código producto" readonly>
+                                                type="text" placeholder="Código producto"
+                                                [value]="informacionProductoCustodio.producto?.codigoProducto" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -54,7 +77,8 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtDescripcion" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Descripción producto" readonly>
+                                                type="text" placeholder="Descripción producto"
+                                                [value]="informacionProductoCustodio.producto?.nombreProducto" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -64,7 +88,9 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtCentroCosto" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Centro de costo" readonly>
+                                                type="text" placeholder="Centro de costo"
+                                                [value]="informacionProductoCustodio.producto?.ceco?.descripcionCeco"
+                                                readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -73,7 +99,9 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtMarca" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
-                                                placeholder="Marca" readonly>
+                                                placeholder="Marca"
+                                                [value]="informacionProductoCustodio.producto?.modelo?.marca?.nombreMarca"
+                                                readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -82,7 +110,9 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtModelo" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Modelo" readonly>
+                                                type="text" placeholder="Modelo"
+                                                [value]="informacionProductoCustodio.producto?.modelo?.nombreModelo"
+                                                readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -91,8 +121,10 @@
                                         adquisición:</label>
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
-                                            <input name="txtfecha" type="date" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Fecha adquisición" readonly>
+                                            <input name="txtfecha" type="text" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                type="text" placeholder="Fecha adquisición"
+                                                [value]="informacionProductoCustodio.producto?.fechaCompraProducto| date:'dd/MM/yyyy'"
+                                                style="text-align: right;" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -102,26 +134,46 @@
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtvalor" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
-                                                placeholder="Valor de compra" readonly>
+                                                [value]="appComponent.formatoDinero(informacionProductoCustodio.producto?.valorCompraProducto!,true)"
+                                                placeholder="Valor de compra" readonly style="text-align: right;">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 mb-2">
                                     <label for="txtCustodio" class="form-label fw-bold text-secondary">Custodio:</label>
-                                    <div class="d-flex flex-column flex-sm-row align-items-center">
-                                        <div class="d-flex flex-grow-1">
-                                            <input name="txtCustodio" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Apellido y nombre custodio" readonly>
-                                            <button class="btn btn-success ml-2 mr-2">Asignar</button>
+                                    <div *ngIf="informacionProductoCustodio.idCustodio==0">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Seleccionar custodio"
+                                                [formControl]="custodioControl" (input)="FilterCustodios()"
+                                                (focus)="visualizarOpciones = true" (blur)="HideOptions()">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-success ml-2 mr-2"
+                                                    (click)="RegistrarCustodioProducto()">Asignar</button>
+                                            </div>
                                         </div>
+                                        <ul *ngIf="visualizarOpciones" class="list-group">
+                                            <li class="list-group-item"
+                                                *ngFor="let custodio of lstCustodiosActivoFiltrados"
+                                                (mousedown)="SelectCustodio(custodio)">
+                                                {{custodio.nombreApellidoCustodio}}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="input-group" *ngIf="informacionProductoCustodio.idCustodio!=0">
+                                        <input name="txtCustodio" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                            placeholder="Sin asignar"
+                                            [value]="informacionProductoCustodio.custodio?.nombreApellidoCustodio"
+                                            readonly>
                                     </div>
                                 </div>
-                                <div class="col-lg-6 mb-2">
-                                    <label for="txtMotivoBaja" class="form-label fw-bold text-secondary">Motivo de baja:</label>
+                                <div class="col-lg-6 mb-2" *ngIf="!informacionProductoCustodio.producto?.estaActivo">
+                                    <label for="txtMotivoBaja" class="form-label fw-bold text-secondary">Motivo de
+                                        baja:</label>
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtMotivoBaja" class="form-control mb-2 mb-sm-0 me-sm-2"
-                                                type="text" placeholder="Motivo de baja activo" readonly>
+                                                type="text" placeholder="Motivo de baja activo"
+                                                [value]="informacionProductoCustodio.producto?.motivoBaja" readonly>
                                         </div>
                                     </div>
                                 </div>
