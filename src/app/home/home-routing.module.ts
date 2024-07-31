@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './home.component';
 import { IndexComponent } from './index/index.component';
 import { MarcasComponent } from './marcas/marcas.component';
+import { ModelosComponent } from './modelos/modelos.component';
 
 const homeRoutes: Routes = [
   {
@@ -12,6 +13,7 @@ const homeRoutes: Routes = [
       { path: 'index', component: IndexComponent },
       { path: '', redirectTo: 'index', pathMatch: 'full' },
       { path: 'marcas', component: MarcasComponent },
+      { path: 'modelos', component: ModelosComponent },
     ]
   }
 ];

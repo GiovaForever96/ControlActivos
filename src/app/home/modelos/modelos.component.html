@@ -1,0 +1,106 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6 d-none d-sm-block">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a routerLink="/home" (click)="SetInactive()">Home</a></li>
+                        <li class="breadcrumb-item active">Modelos</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-landmark mr-2"></i>
+                                Modelos
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal(false)">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar modelo
+                            </button>
+                            <button #btnActualizaModelo type="button" hidden data-toggle="modal"
+                                (click)="AbrirModal(true)">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableModelos class="table table-bordered table-striped" style="width: 100%;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="marcaModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar modelo' : 'Agregar modelo' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="modeloForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body row">
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="idMarca"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Marcas:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text" class="form-control" placeholder="Seleccionar marca"
+                                            [formControl]="marcaControl" (input)="FilterMarcas()"
+                                            (focus)="visualizarOpciones = true;" (blur)="HideOptions()"
+                                            [ngClass]="{ 'is-invalid': modeloForm.get('idMarca')!.errors && modeloForm.get('idMarca')!.touched }">
+                                        <ul *ngIf="visualizarOpciones" class="list-group">
+                                            <li class="list-group-item" *ngFor="let marca of lstMarcasFiltradas"
+                                                (mousedown)="SelectMarca(marca)">
+                                                {{marca.nombreMarca}}
+                                            </li>
+                                        </ul>
+                                        <div class="invalid-feedback"
+                                            *ngIf="modeloForm.get('idMarca')!.errors && modeloForm.get('idMarca')!.touched">
+                                            Debe seleccionar la marca del activo
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="nombreModelo" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre
+                                        modelo:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': modeloForm.get('nombreModelo')!.errors && modeloForm.get('nombreModelo')!.touched }"
+                                            class="form-control" placeholder="Nombre del modelo"
+                                            formControlName="nombreModelo">
+                                        <div class="invalid-feedback"
+                                            *ngIf="modeloForm.get('nombreModelo')!.errors && modeloForm.get('nombreModelo')!.touched">
+                                            El nombre del modelo es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

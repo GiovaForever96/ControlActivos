@@ -8,13 +8,15 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { MarcasComponent } from './marcas/marcas.component';
+import { ModelosComponent } from './modelos/modelos.component';
 
 @NgModule({
    declarations: [
       HomeComponent,
       HeaderComponent,
       SidebarComponent,
-      MarcasComponent
+      MarcasComponent,
+      ModelosComponent
    ],
    imports: [
       CommonModule,
