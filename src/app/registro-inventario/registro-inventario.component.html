@@ -1,0 +1,166 @@
+<div
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png'); background-repeat: no-repeat; background-size: cover;height: 100vh;overflow: auto;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Registro inventario</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="col-12" *ngIf="idInventarioRegistrar==0">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title" style="padding-top: 5px;">
+                            <i class="fas fa-list-ol mr-2"></i>
+                            Seleccione el inventario a realizar
+                        </h3>
+                    </div>
+                    <div class="card-body mt-2 pt-0 mb-0 pb-0">
+                        <div class="col-lg-6 mb-2">
+                            <label for="txtCustodio" class="form-label fw-bold text-secondary">Inventario:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control"
+                                    placeholder="Seleccione el inventario a realizar" [formControl]="inventarioControl"
+                                    (input)="FilterInventarios()" (focus)="visualizarOpciones = true"
+                                    (blur)="HideOptions()">
+                            </div>
+                            <ul *ngIf="visualizarOpciones" class="list-group">
+                                <li class="list-group-item" *ngFor="let inventario of lstInventariosFiltrados"
+                                    (mousedown)="SelectCustodio(inventario)">
+                                    {{inventario.descripcionInventario}}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12" *ngIf="idInventarioRegistrar!=0">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title" style="padding-top: 5px;">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            Coloque el código QR frente la cámara:
+                        </h3>
+                        <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                            (click)="SeleccionarInventario()">
+                            <i class="fas fa-plus-circle mr-2"></i> Seleccionar inventario
+                        </button>
+                    </div>
+                    <div class="card-body mt-0 pt-0 mb-0 pb-0">
+                        <div class="row mt-3">
+                            <div class="col-sm-4 col-md-4 col-lg-3 mb-2 text-center">
+                                <div class="d-flex">
+                                    <label for="cameraSelect" class="mr-2">Seleccionar:</label>
+                                    <select id="cameraSelect" (change)="onCameraSelected($event)">
+                                        <option *ngFor="let device of cameras" [value]="device.deviceId">
+                                            {{ device.label || 'Cámara sin nombre' }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <zxing-scanner (camerasFound)="onCamerasFound($event)"
+                                    (camerasNotFound)="onCamerasNotFound()" (scanSuccess)="handleQrCodeResult($event)"
+                                    [formats]="formats" [device]="selectedDevice!">
+                                </zxing-scanner>
+                            </div>
+                            <div class="col sm-8 col-md-8 col-lg-9 mb-2" *ngIf="this.informacionProductoCustodio.idProducto != 0">
+                                <div class="card-body mt-0 pt-0 mb-0 pb-0">
+                                    <div class="row m-3">
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="txtCodigoProducto"
+                                                class="form-label fw-bold text-secondary">Código
+                                                Producto:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtCodigoProducto"
+                                                        class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                        placeholder="Código producto"
+                                                        [value]="informacionProductoCustodio.producto?.codigoProducto"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="txtMarca"
+                                                class="form-label fw-bold text-secondary">Marca:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtMarca" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                        type="text" placeholder="Marca"
+                                                        [value]="informacionProductoCustodio.producto?.modelo?.marca?.nombreMarca"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="txtModelo"
+                                                class="form-label fw-bold text-secondary">Modelo:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtModelo" class="form-control mb-2 mb-sm-0 me-sm-2"
+                                                        type="text" placeholder="Modelo"
+                                                        [value]="informacionProductoCustodio.producto?.modelo?.nombreModelo"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="txtCentroCosto" class="form-label fw-bold text-secondary">Centro
+                                                de
+                                                Costo:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtCentroCosto"
+                                                        class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                        placeholder="Centro de costo"
+                                                        [value]="informacionProductoCustodio.producto?.ceco?.descripcionCeco"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-5 mb-2">
+                                            <label for="txtDescripcion"
+                                                class="form-label fw-bold text-secondary">Descripción:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtDescripcion"
+                                                        class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                        placeholder="Descripción producto"
+                                                        [value]="informacionProductoCustodio.producto?.nombreProducto"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-5 mb-2">
+                                            <label for="txtDescripcion"
+                                                class="form-label fw-bold text-secondary">Custodio:</label>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center">
+                                                <div class="d-flex flex-grow-1">
+                                                    <input name="txtDescripcion"
+                                                        class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
+                                                        placeholder="Sin asignar"
+                                                        [value]="informacionProductoCustodio.custodio?.nombreApellidoCustodio"
+                                                        readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12 mt-2 mb-2 d-flex justify-content-center">
+                                            <button class="btn btn-success ml-2 mr-2" (click)="RegistrarInventario()">
+                                                <i class="fas fa-check-circle"></i> Registrar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

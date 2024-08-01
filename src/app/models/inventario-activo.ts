@@ -4,3 +4,12 @@ export interface IInventarioActivo {
     descripcionInventario: string,
     estaActivo: boolean
 }
+
+export interface IProductoInventarioActivo {
+    idProductoInventario: number,
+    idProducto: number,
+    idInventario: number,
+    estaActivo: boolean,
+    producto: IProductoInventarioActivo,
+    inventario: IInventarioActivo,
+}

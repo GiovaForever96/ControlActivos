@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppComponent } from 'src/app/app.component';
 
 @Component({
   selector: 'app-index',
@@ -9,5 +10,12 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./index.component.css']
 })
 export class IndexComponent {
+
+  constructor(public appComponent: AppComponent,
+    private renderer: Renderer2,
+    private el: ElementRef) { }
+
+  ngOnInit() {
+  }
 
 }

@@ -1,0 +1,109 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png'); background-repeat: no-repeat; background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6 d-none d-sm-block">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a routerLink="/home" (click)="SetInactive()">Home</a></li>
+                        <li class="breadcrumb-item active">Inventario</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-list-ol"></i>
+                                Consulta inventario
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal()">
+                                <i class="fas fa-plus-circle mr-2"></i> Crear inventario
+                            </button>
+                        </div>
+                        <div class="card-body mt-0 pt-0 mb-0 pb-0">
+                            <div class="row m-3">
+                                <div class="col-lg-6 mb-2">
+                                    <label for="txtCustodio"
+                                        class="form-label fw-bold text-secondary">Inventario:</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Seleccionar inventario"
+                                            [formControl]="inventarioControl" (input)="FilterInventarios()"
+                                            (focus)="visualizarOpciones = true" (blur)="HideOptions()">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-success ml-2 mr-2"
+                                                [disabled]="idInventarioConsultar==0"
+                                                (click)="ObtenerListadoProductosInventario()">
+                                                <i class="fas fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    <ul *ngIf="visualizarOpciones" class="list-group">
+                                        <li class="list-group-item" *ngFor="let inventario of lstInventariosFiltrados"
+                                            (mousedown)="SelectCustodio(inventario)">
+                                            {{inventario.descripcionInventario}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body mr-1 ml-1 pt-0 mt-0 pb-3 mb-0"
+                                *ngIf="lstProductosInventario.length>0">
+                                <h5 style="font-size: 15px;" class="mb-3">Listado de bienes:</h5>
+                                <table #dataTableBienesInventario class="table table-bordered table-striped"
+                                    style="width: 100%;"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="inventarioModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Crear nuevo inventario</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="inventarioForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body row">
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="descripcionInventario"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Descripción:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': inventarioForm.get('descripcionInventario')!.errors && inventarioForm.get('descripcionInventario')!.touched }"
+                                            class="form-control" placeholder="Descripción del inventario"
+                                            formControlName="descripcionInventario">
+                                        <div class="invalid-feedback"
+                                            *ngIf="inventarioForm.get('descripcionInventario')!.errors && inventarioForm.get('descripcionInventario')!.touched">
+                                            La descripción del inventario es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i> Crear inventario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

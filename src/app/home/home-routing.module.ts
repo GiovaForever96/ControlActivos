@@ -4,6 +4,9 @@ import { HomeComponent } from './home.component';
 import { IndexComponent } from './index/index.component';
 import { MarcasComponent } from './marcas/marcas.component';
 import { ModelosComponent } from './modelos/modelos.component';
+import { CustodiosComponent } from './custodios/custodios.component';
+import { ActivosComponent } from './activos/activos.component';
+import { InventarioComponent } from './inventario/inventario.component';
 
 const homeRoutes: Routes = [
   {
@@ -14,6 +17,9 @@ const homeRoutes: Routes = [
       { path: '', redirectTo: 'index', pathMatch: 'full' },
       { path: 'marcas', component: MarcasComponent },
       { path: 'modelos', component: ModelosComponent },
+      { path: 'custodios', component: CustodiosComponent },
+      { path: 'bienes', component: ActivosComponent },
+      { path: 'inventario', component: InventarioComponent }
     ]
   }
 ];

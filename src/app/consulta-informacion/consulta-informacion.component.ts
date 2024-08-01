@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BarcodeFormat } from '@zxing/library';
 import { ProductoActivoService } from '../services/producto-activo.service';
 import { ToastrService } from '../services/toastr.service';
 import { LoadingService } from '../services/loading.service';
@@ -18,8 +17,6 @@ import { AppComponent } from '../app.component';
 })
 export class ConsultaInformacionComponent {
 
-  scannedResult: string | null = null;
-  formats: BarcodeFormat[] = [BarcodeFormat.QR_CODE];
   idProducto: string | null = null;
   informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
   lstCustodiosActivo: ICustodioActivo[] = [];
@@ -31,6 +28,8 @@ export class ConsultaInformacionComponent {
     private toastrService: ToastrService,
     private loadingService: LoadingService,
     public appComponent: AppComponent,
+    private renderer: Renderer2,
+    private el: ElementRef,
     private custodiosService: CustodioActivoService,
     private productosService: ProductoActivoService) { }
 
@@ -46,9 +45,9 @@ export class ConsultaInformacionComponent {
   async ConsultarInformacionProducto() {
     try {
       this.loadingService.showLoading();
-      this.informacionProductoCustodio = await this.productosService.obtenerInformacionProductoCustodio(this.idProducto!);
+      this.informacionProductoCustodio = await this.productosService.obtenerInformacionProductoCustodioPorIdProducto(this.idProducto!);
       if (this.informacionProductoCustodio.idProducto == 0) {
-        this.toastrService.error('Error al obtener la información del actiov', 'Solicitar soporte al departamento de TI.');
+        this.toastrService.error('Error al obtener la información del activo', 'Solicitar soporte al departamento de TI.');
       }
       this.lstCustodiosActivo = await this.custodiosService.obtenerInformacionProductoCustodio();
       this.lstCustodiosActivoFiltrados = [...this.lstCustodiosActivo];
@@ -57,7 +56,7 @@ export class ConsultaInformacionComponent {
       if (error instanceof Error) {
         this.toastrService.error('Error al obtener la información del activo', error.message);
       } else {
-        this.toastrService.error('Error al obtener la información del actiov', 'Solicitar soporte al departamento de TI.');
+        this.toastrService.error('Error al obtener la información del activo', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -122,10 +121,6 @@ export class ConsultaInformacionComponent {
     } finally {
       this.loadingService.hideLoading();
     }
-  }
-
-  handleQrCodeResult(result: any) {
-    this.scannedResult = result;
   }
 
   async DarDeBajaActivo() {

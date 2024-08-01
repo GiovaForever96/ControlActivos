@@ -13,27 +13,6 @@
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-            <div class="row" *ngIf="idProducto==null">
-                <div class="col-12">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title" style="padding-top: 5px;">
-                                <i class="fas fa-qrcode mr-2"></i>
-                                Coloque el código QR frente la cámara:
-                            </h3>
-                        </div>
-                        <div class="card-body mt-0 pt-0 mb-0 pb-0">
-                            <div class="col-lg-3 mb-2">
-                                <zxing-scanner (captured)="handleQrCodeResult($event)" [formats]="formats">
-                                </zxing-scanner>
-                            </div>
-                            <div *ngIf="scannedResult">
-                                <p>QR Code Result: {{ scannedResult }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="row" *ngIf="idProducto!=null">
                 <div class="col-12">
                     <div class="card card-primary card-outline">

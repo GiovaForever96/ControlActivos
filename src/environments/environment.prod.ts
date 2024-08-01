@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   projectName: "Control Activos",
-  apiUrl: "https://cotizador.segurossuarez.com/api/",
+  apiUrl: "https://cotizador.segurossuarez.com/apiactivos/",
   company: "Seguros Súarez",
   website: "https://segurossuarez.com/",
   mailAddress: "comunicaciones@segurossuarez.com",

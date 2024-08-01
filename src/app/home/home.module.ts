@@ -9,6 +9,9 @@ import { HeaderComponent } from './header/header.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { MarcasComponent } from './marcas/marcas.component';
 import { ModelosComponent } from './modelos/modelos.component';
+import { CustodiosComponent } from './custodios/custodios.component';
+import { ActivosComponent } from './activos/activos.component';
+import { InventarioComponent } from './inventario/inventario.component';
 
 @NgModule({
    declarations: [
@@ -16,7 +19,10 @@ import { ModelosComponent } from './modelos/modelos.component';
       HeaderComponent,
       SidebarComponent,
       MarcasComponent,
-      ModelosComponent
+      ModelosComponent,
+      CustodiosComponent,
+      ActivosComponent,
+      InventarioComponent
    ],
    imports: [
       CommonModule,

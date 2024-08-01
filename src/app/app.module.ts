@@ -8,12 +8,14 @@ import { LoadingComponent } from './loading/loading.component';
 import { ConsultaInformacionComponent } from './consulta-informacion/consulta-informacion.component';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { HomeModule } from './home/home.module';
+import { RegistroInventarioComponent } from './registro-inventario/registro-inventario.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoadingComponent,
-    ConsultaInformacionComponent
+    ConsultaInformacionComponent,
+    RegistroInventarioComponent
   ],
   imports: [
     BrowserModule,

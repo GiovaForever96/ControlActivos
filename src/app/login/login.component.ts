@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastrService } from '../services/toastr.service';
@@ -19,7 +19,10 @@ export class LoginComponent implements OnInit {
   appName: any;
   copyright: any;
 
-  constructor(private fb: FormBuilder, private toastrService: ToastrService, private appComponent: AppComponent) { }
+  constructor(private fb: FormBuilder,
+    private toastrService: ToastrService, 
+    private renderer: Renderer2,
+    private appComponent: AppComponent) { }
 
   ngOnInit() {
     this.CreateLoginForm();

@@ -16,10 +16,6 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.copyright = environment.copyright;
     const body = this.el.nativeElement.ownerDocument.body;
-    if (body.classList.contains('bg-texture')) {
-      this.renderer.removeClass(body, 'bg-texture');
-    }
-    this.renderer.setStyle(body, 'overflow', '');
   }
   SetActive(targetElement: HTMLElement) {
     this.SetInactive();
