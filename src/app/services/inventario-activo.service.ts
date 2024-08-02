@@ -12,6 +12,35 @@ export class InventarioActivoService {
 
   baseUrl = environment.apiUrl + 'InventarioActivo/';
   baseUrlProductoInventario = environment.apiUrl + 'ProductoInventarioActivo/';
+  private apiUrl = 'https://api.ipify.org/?format=json';
+
+  async obtenerIpPermitida(): Promise<string[]> {
+    const URL_API = this.baseUrl + 'obtenerIpsPermitidas';
+    try {
+      const response = await axios.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data as string[];
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+      } else {
+        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+      }
+    }
+  }
+
+  async obtenerIpPublicaCliente(): Promise<string> {
+    try {
+      const response = await axios.get(this.apiUrl);
+      return response.data.ip;
+    } catch (error) {
+      console.error('Error fetching IP:', error);
+      throw error;
+    }
+  }
 
   async obtenerInventarios(): Promise<IInventarioActivo[]> {
     const URL_API = this.baseUrl + 'obtenerInventarios';

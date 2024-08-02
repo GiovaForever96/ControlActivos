@@ -30,6 +30,10 @@
                                 (click)="AbrirModal()">
                                 <i class="fas fa-plus-circle mr-2"></i> Crear inventario
                             </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2"
+                                *ngIf="lstProductosInventario.length>0" (click)="descargarExcel()">
+                                <i class="far fa-file-excel mr-2" style="font-size: 20px;"></i>Exportar
+                            </button>
                         </div>
                         <div class="card-body mt-0 pt-0 mb-0 pb-0">
                             <div class="row m-3">

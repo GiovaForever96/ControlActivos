@@ -21,9 +21,11 @@
                                 <i class="fas fa-info-circle mr-2"></i>
                                 Información del activo
                             </h3>
+                            <!-- <button class="btn btn-danger float-right" (click)="DarDeBajaActivo()"
+                                *ngIf="informacionProductoCustodio.producto?.motivoBaja==null"> -->
                             <button class="btn btn-danger float-right" (click)="DarDeBajaActivo()"
-                                *ngIf="informacionProductoCustodio.producto?.motivoBaja==null"><i
-                                    class="far fa-minus-square mr-2"></i>Dar de
+                                *ngIf="false">
+                                <i class="far fa-minus-square mr-2"></i>Dar de
                                 Baja</button>
                         </div>
                         <div class="card-body mt-0 pt-0 mb-0 pb-0">
@@ -62,8 +64,8 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3 mb-2">
-                                    <label for="txtCentroCosto" class="form-label fw-bold text-secondary">Centro de
-                                        Costo:</label>
+                                    <label for="txtCentroCosto" class="form-label fw-bold text-secondary">Plan de
+                                        cuentas:</label>
                                     <div class="d-flex flex-column flex-sm-row align-items-center">
                                         <div class="d-flex flex-grow-1">
                                             <input name="txtCentroCosto" class="form-control mb-2 mb-sm-0 me-sm-2"
@@ -120,7 +122,7 @@
                                 </div>
                                 <div class="col-lg-6 mb-2">
                                     <label for="txtCustodio" class="form-label fw-bold text-secondary">Custodio:</label>
-                                    <div *ngIf="informacionProductoCustodio.idCustodio==0">
+                                    <div *ngIf="false">
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="Seleccionar custodio"
                                                 [formControl]="custodioControl" (input)="FilterCustodios()"
@@ -138,7 +140,7 @@
                                             </li>
                                         </ul>
                                     </div>
-                                    <div class="input-group" *ngIf="informacionProductoCustodio.idCustodio!=0">
+                                    <div class="input-group">
                                         <input name="txtCustodio" class="form-control mb-2 mb-sm-0 me-sm-2" type="text"
                                             placeholder="Sin asignar"
                                             [value]="informacionProductoCustodio.custodio?.nombreApellidoCustodio"

@@ -1,3 +1,5 @@
+import { IProductoActivo } from "./producto-activo";
+
 export interface IInventarioActivo {
     idInventario: number,
     fechaCreacionInventario: Date,
@@ -10,6 +12,7 @@ export interface IProductoInventarioActivo {
     idProducto: number,
     idInventario: number,
     estaActivo: boolean,
-    producto: IProductoInventarioActivo,
+    fechaRegistro: Date,
+    producto: IProductoActivo,
     inventario: IInventarioActivo,
 }

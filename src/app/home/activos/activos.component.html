@@ -25,12 +25,15 @@
                                 Bienes
                             </h3>
                             <!-- <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
-                                (click)="AbrirModal(false)">
-                                <i class="fas fa-plus-circle mr-2"></i> Agregar nuevo bien
+                                                        (click)="AbrirModal(false)">
+                                                        <i class="fas fa-plus-circle mr-2"></i> Agregar nuevo bien
+                                                    </button>
+                                                    <button #btnActualizaMarca type="button" hidden data-toggle="modal"
+                                                        (click)="AbrirModal(true)">
+                                                    </button> -->
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" (click)="descargarExcel()">
+                                <i class="far fa-file-excel mr-2" style="font-size: 20px;"></i>Exportar
                             </button>
-                            <button #btnActualizaMarca type="button" hidden data-toggle="modal"
-                                (click)="AbrirModal(true)">
-                            </button> -->
                         </div>
                         <div class="card-body">
                             <table #dataTableBienes class="table table-bordered table-striped" style="width: 100%;">

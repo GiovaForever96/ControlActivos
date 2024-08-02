@@ -9,6 +9,8 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import Swal from 'sweetalert2';
 declare var $: any;
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-inventario',
@@ -28,6 +30,7 @@ export class InventarioComponent {
   dtOptions: any;
   dataTable: any;
   inventarioForm!: FormGroup;
+  lstProductosInventarioExportar: any = [];
 
   constructor(private loadingService: LoadingService,
     private appComponent: AppComponent,
@@ -83,17 +86,38 @@ export class InventarioComponent {
             ...this.GetSpanishLanguage()
           },
           columns: [
-            { title: 'Código', data: 'producto.codigoProducto' },
-            { title: 'Id', data: 'producto.codigoAuxiliar' },
             {
               title: 'Tipo',
               data: 'producto.esBienaControl',
               render: (data: boolean) => data ? 'Bien de control' : 'Activo'
             },
-            { title: 'Centro de costo', data: 'producto.ceco.descripcionCeco' },
+            {
+              title: 'Plan de cuentas',
+              data: null,
+              render: (data: any, type: string, row: any) => {
+                const codigoCeco = row.producto.ceco.codigoCeco || '';
+                const descripcionCeco = row.producto.ceco.descripcionCeco || '';
+                return `${codigoCeco} - ${descripcionCeco}`;
+              }
+            },
+            { title: 'Código', data: 'producto.codigoProducto' },
             { title: 'Marca', data: 'producto.modelo.marca.nombreMarca' },
             { title: 'Modelo', data: 'producto.modelo.nombreModelo' },
             { title: 'Descripción', data: 'producto.nombreProducto' },
+            {
+              title: 'Fecha Adquisición',
+              data: 'producto.fechaCompraProducto',
+              render: (data: string) => this.formatDate(data),
+              className: 'text-right'
+            },
+            {
+              title: 'Valor compra',
+              data: 'producto.valorCompraProducto',
+              render: (data: any, type: any, full: any, meta: any) => {
+                return this.appComponent.formatoDinero(full.producto.valorCompraProducto, true);
+              },
+              className: 'text-right'
+            },
             {
               title: 'Estado',
               data: 'estaActivo',
@@ -105,6 +129,7 @@ export class InventarioComponent {
               className: 'text-center',
               orderable: false
             },
+            { title: 'Fecha Registro', data: 'fechaRegistro' }
           ],
           paging: false,
           responsive: false,
@@ -169,6 +194,109 @@ export class InventarioComponent {
     }
   }
 
+
+  descargarExcel(): void {
+    this.generarListaExcel();
+  }
+
+  generarListaExcel(): void {
+    if (this.lstProductosInventario.length > 0) {
+      this.lstProductosInventarioExportar = [];
+      this.lstProductosInventario.forEach(productoInventario => {
+        let productoInventarioExportar = {
+          'Tipo': productoInventario.producto.esBienaControl ? 'Bien de Control' : 'Activo',
+          'Plan de cuentas': `${productoInventario.producto.ceco?.codigoCeco}-${productoInventario.producto.ceco?.descripcionCeco}`,
+          'Código': productoInventario.producto.codigoProducto,
+          'Marca': productoInventario.producto.modelo?.marca?.nombreMarca,
+          'Modelo': productoInventario.producto.modelo?.nombreModelo,
+          'Descripción': productoInventario.producto.nombreProducto,
+          'Fc. de Adquisición': productoInventario.producto.fechaCompraProducto == null ? '' : this.formatearFecha(productoInventario.producto.fechaCompraProducto),
+          'Valor de Compra': productoInventario.producto.valorCompraProducto,
+          'Estado': productoInventario.estaActivo ? 'Registrado' : 'Pendiente',
+          'Fc. de Registro': productoInventario.fechaRegistro,
+        }
+        this.lstProductosInventarioExportar.push(productoInventarioExportar);
+      });
+      this.exportarInformacionAExcel(this.lstProductosInventarioExportar, "Listado_bienes", true);
+    }
+  }
+
+  formatearFecha(fecha: Date | string): string {
+    const date = new Date(fecha);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
+  exportarInformacionAExcel(resumen: any[], excelFileName: string, descargar: boolean): void {
+    try {
+      // Crear la hoja de trabajo desde el resumen
+      const wresumen: XLSX.WorkSheet = XLSX.utils.json_to_sheet([]);
+
+      // Especificar valores en celdas
+      wresumen['A1'] = { t: 's', v: 'Listado de bienes' };
+      wresumen['A2'] = { t: 's', v: 'Fecha generación' };
+      wresumen['B2'] = { t: 's', v: new Date().toISOString() }; // Llamar a toISOString()
+
+      // Crear un nuevo objeto resumen ajustado para empezar desde la fila 5
+      const resumenAjustado = resumen.map((item) => {
+        // Define newItem con una firma de índice
+        const newItem: { [key: string]: any } = {};
+        Object.keys(item).forEach(key => {
+          newItem[key] = item[key];
+        });
+        return newItem;
+      });
+
+      // Insertar los datos ajustados en la hoja de trabajo empezando desde A5
+      XLSX.utils.sheet_add_json(wresumen, resumenAjustado, { origin: 'A5', skipHeader: false });
+
+      // Crear el libro de trabajo con solo una hoja
+      const workbook: XLSX.WorkBook = {
+        Sheets: {
+          'Resumen': wresumen
+        },
+        SheetNames: ['Resumen']
+      };
+
+      // Escribir el libro de trabajo a un buffer
+      const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+      // Guardar el archivo usando file-saver
+      if (descargar) {
+        this.saveAsExcelFile(excelBuffer, excelFileName, true);
+      }
+
+    } catch (e) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Ha ocurrido un error al descargar el listado de emisiones!',
+        footer: 'Contactese con el Administrador.'
+      });
+    }
+  }
+
+  private saveAsExcelFile(buffer: any, fileName: string, descargar: boolean): void {
+    const data: Blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+    const file = descargar ? `${fileName}_${formattedDate}.xlsx` : `${fileName}.xlsx`;
+
+    FileSaver.saveAs(data, file);
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = ('0' + date.getDate()).slice(-2);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
   FilterInventarios(): void {
     const filterValue = this.inventarioControl.value!.toLowerCase();
     this.idInventarioConsultar = 0;
@@ -198,6 +326,5 @@ export class InventarioComponent {
   GetSpanishLanguage() {
     return SpanishLanguage;
   }
-
 
 }

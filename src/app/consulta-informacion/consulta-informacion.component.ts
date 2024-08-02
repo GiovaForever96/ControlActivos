@@ -1,5 +1,5 @@
 import { Component, ElementRef, Renderer2 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProductoActivoService } from '../services/producto-activo.service';
 import { ToastrService } from '../services/toastr.service';
 import { LoadingService } from '../services/loading.service';
@@ -9,6 +9,7 @@ import { CustodioActivoService } from '../services/custodio-activo.service';
 import { FormControl, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { AppComponent } from '../app.component';
+import { InventarioActivoService } from '../services/inventario-activo.service';
 
 @Component({
   selector: 'app-consulta-informacion',
@@ -21,26 +22,53 @@ export class ConsultaInformacionComponent {
   informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
   lstCustodiosActivo: ICustodioActivo[] = [];
   lstCustodiosActivoFiltrados: ICustodioActivo[] = [];
+  lstIpsValidas: string[] = [];
   custodioControl = new FormControl('', Validators.required);
   visualizarOpciones = false;
+  publicIp: string | undefined;
 
   constructor(private route: ActivatedRoute,
     private toastrService: ToastrService,
     private loadingService: LoadingService,
     public appComponent: AppComponent,
-    private renderer: Renderer2,
-    private el: ElementRef,
+    public inventariosService: InventarioActivoService,
     private custodiosService: CustodioActivoService,
+    private router: Router,
     private productosService: ProductoActivoService) { }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.idProducto = params.get('idProducto');
-    });
-    if (this.idProducto != null) {
-      this.ConsultarInformacionProducto();
+    this.ConsultarIpPermitidas();
+  }
+
+  async ConsultarIpPermitidas() {
+    this.lstIpsValidas = await this.inventariosService.obtenerIpPermitida();
+    if (this.lstIpsValidas.length > 0) {
+      this.inventariosService.obtenerIpPublicaCliente()
+        .then(ip => {
+          this.publicIp = ip;
+          let busquedaIp = this.lstIpsValidas.find(x => x === this.publicIp);
+          if (busquedaIp == null) {
+            Swal.fire({
+              text: 'No tiene permisos para ingresar a esta página',
+              icon: 'error',
+            }).then(() => {
+              this.router.navigate([`iniciar-sesion`])
+            });
+          } else {
+            this.route.paramMap.subscribe(params => {
+              this.idProducto = params.get('idProducto');
+            });
+            if (this.idProducto != null) {
+              this.ConsultarInformacionProducto();
+            }
+          }
+        })
+        .catch(error => {
+          this.toastrService.error('Error al obtener ip pública', error);
+        });
     }
   }
+
 
   async ConsultarInformacionProducto() {
     try {
@@ -51,7 +79,6 @@ export class ConsultaInformacionComponent {
       }
       this.lstCustodiosActivo = await this.custodiosService.obtenerInformacionProductoCustodio();
       this.lstCustodiosActivoFiltrados = [...this.lstCustodiosActivo];
-      console.log(this.informacionProductoCustodio.custodio?.nombreApellidoCustodio);
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error('Error al obtener la información del activo', error.message);
@@ -73,7 +100,6 @@ export class ConsultaInformacionComponent {
   SelectCustodio(custodio: ICustodioActivo): void {
     this.custodioControl.setValue(custodio.nombreApellidoCustodio);
     this.visualizarOpciones = false;
-    console.log(this.custodioControl);
   }
 
   HideOptions(): void {

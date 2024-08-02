@@ -9,6 +9,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { IProductoCustodioActivo } from '../models/producto-activo';
 import { ProductoActivoService } from '../services/producto-activo.service';
 import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-registro-inventario',
@@ -27,12 +28,15 @@ export class RegistroInventarioComponent {
   idInventarioRegistrar: number = 0;
   idProducto: number = 0;
   informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 1, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
+  lstIpsValidas: string[] = [];
+  publicIp: string | undefined;
 
   constructor(private loadingService: LoadingService,
     public appComponent: AppComponent,
     private inventariosService: InventarioActivoService,
     private productosService: ProductoActivoService,
     private changeDetector: ChangeDetectorRef,
+    private router: Router,
     private toastrService: ToastrService) { }
 
   onCamerasFound(devices: MediaDeviceInfo[]): void {
@@ -69,8 +73,31 @@ export class RegistroInventarioComponent {
   }
 
   ngOnInit() {
-    this.CargarListadoInventarios();
-    this.listCameras();
+    this.ConsultarIpPermitidas();
+  }
+
+  async ConsultarIpPermitidas() {
+    this.lstIpsValidas = await this.inventariosService.obtenerIpPermitida();
+    if (this.lstIpsValidas.length > 0) {
+      this.inventariosService.obtenerIpPublicaCliente()
+        .then(ip => {
+          this.publicIp = ip;
+          let busquedaIp = this.lstIpsValidas.find(x => x === this.publicIp);
+          if (busquedaIp == null) {
+            Swal.fire({
+              text: 'No tiene permisos para ingresar a esta página',
+              icon: 'error',
+            }).then(() => {
+              this.router.navigate([`iniciar-sesion`])
+            });
+          } else {
+            this.CargarListadoInventarios();
+          }
+        })
+        .catch(error => {
+          this.toastrService.error('Error al obtener ip pública', error);
+        });
+    }
   }
 
   async CargarListadoInventarios() {
@@ -80,6 +107,7 @@ export class RegistroInventarioComponent {
       this.lstInventarios = await this.inventariosService.obtenerInventarios();
       if (this.lstInventarios.length > 0) {
         this.lstInventariosFiltrados = [...this.lstInventarios];
+        this.listCameras();
       }
     } catch (error) {
       if (error instanceof Error) {
