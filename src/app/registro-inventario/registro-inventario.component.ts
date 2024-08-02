@@ -28,8 +28,7 @@ export class RegistroInventarioComponent {
   idInventarioRegistrar: number = 0;
   idProducto: number = 0;
   informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 1, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
-  lstIpsValidas: string[] = [];
-  publicIp: string | undefined;
+  lstDispositivosValidos: string[] = [];
 
   constructor(private loadingService: LoadingService,
     public appComponent: AppComponent,
@@ -73,30 +72,35 @@ export class RegistroInventarioComponent {
   }
 
   ngOnInit() {
-    this.ConsultarIpPermitidas();
+    this.ConsultarDispositivosVinculados();
   }
 
-  async ConsultarIpPermitidas() {
-    this.lstIpsValidas = await this.inventariosService.obtenerIpPermitida();
-    if (this.lstIpsValidas.length > 0) {
-      this.inventariosService.obtenerIpPublicaCliente()
-        .then(ip => {
-          this.publicIp = ip;
-          let busquedaIp = this.lstIpsValidas.find(x => x === this.publicIp);
-          if (busquedaIp == null) {
-            Swal.fire({
-              text: 'No tiene permisos para ingresar a esta página',
-              icon: 'error',
-            }).then(() => {
-              this.router.navigate([`iniciar-sesion`])
-            });
-          } else {
-            this.CargarListadoInventarios();
-          }
-        })
-        .catch(error => {
-          this.toastrService.error('Error al obtener ip pública', error);
-        });
+  async ConsultarDispositivosVinculados() {
+    try {
+      this.loadingService.showLoading();
+      this.lstDispositivosValidos = await this.inventariosService.obtenerIpPermitida();
+      if (this.lstDispositivosValidos.length > 0) {
+        let idDispositivo = this.appComponent.obtenerOGenerarIdentificador();
+        let dispositvoRegistrado = this.lstDispositivosValidos.find(x => x === idDispositivo);
+        if (dispositvoRegistrado == null) {
+          Swal.fire({
+            text: 'No tienes permiso para acceder a esta página.',
+            icon: 'error',
+          }).then(() => {
+            this.router.navigate([`iniciar-sesion`])
+          });
+        } else {
+          this.CargarListadoInventarios();
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al obtener el listado de inventarios', error.message);
+      } else {
+        this.toastrService.error('Error al obtener el listado de inventarios', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
     }
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, Renderer2 } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastrService } from '../services/toastr.service';
@@ -18,10 +18,10 @@ export class LoginComponent implements OnInit {
   model: any = {};
   appName: any;
   copyright: any;
+  identificadorUnico: string = '';
 
   constructor(private fb: FormBuilder,
-    private toastrService: ToastrService, 
-    private renderer: Renderer2,
+    private toastrService: ToastrService,
     private appComponent: AppComponent) { }
 
   ngOnInit() {
@@ -31,6 +31,7 @@ export class LoginComponent implements OnInit {
     body.classList.add('login-page');
     this.appName = environment.projectName;
     this.copyright = environment.copyrightLogin;
+    this.identificadorUnico = this.appComponent.obtenerOGenerarIdentificador();
   }
 
   CreateLoginForm() {

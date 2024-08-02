@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-root',
@@ -35,6 +36,18 @@ export class AppComponent {
       return (esDinero ? '$' : '') + valorFormateado;
     } else {
       return (esDinero ? '$' : '') + '0.00';
+    }
+  }
+
+  obtenerOGenerarIdentificador(): string {
+    console.log("Generar uui");
+    const identificador = localStorage.getItem('identificadorUnico');
+    if (identificador) {
+      return identificador;
+    } else {
+      const nuevoIdentificador = uuidv4();
+      localStorage.setItem('identificadorUnico', nuevoIdentificador);
+      return nuevoIdentificador;
     }
   }
 

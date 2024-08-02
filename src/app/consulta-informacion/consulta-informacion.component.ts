@@ -22,10 +22,9 @@ export class ConsultaInformacionComponent {
   informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
   lstCustodiosActivo: ICustodioActivo[] = [];
   lstCustodiosActivoFiltrados: ICustodioActivo[] = [];
-  lstIpsValidas: string[] = [];
+  lstDispositivosValidos: string[] = [];
   custodioControl = new FormControl('', Validators.required);
   visualizarOpciones = false;
-  publicIp: string | undefined;
 
   constructor(private route: ActivatedRoute,
     private toastrService: ToastrService,
@@ -37,35 +36,40 @@ export class ConsultaInformacionComponent {
     private productosService: ProductoActivoService) { }
 
   ngOnInit(): void {
-    this.ConsultarIpPermitidas();
+    this.ConsultarDispositivosVinculados();
   }
 
-  async ConsultarIpPermitidas() {
-    this.lstIpsValidas = await this.inventariosService.obtenerIpPermitida();
-    if (this.lstIpsValidas.length > 0) {
-      this.inventariosService.obtenerIpPublicaCliente()
-        .then(ip => {
-          this.publicIp = ip;
-          let busquedaIp = this.lstIpsValidas.find(x => x === this.publicIp);
-          if (busquedaIp == null) {
-            Swal.fire({
-              text: 'No tiene permisos para ingresar a esta página',
-              icon: 'error',
-            }).then(() => {
-              this.router.navigate([`iniciar-sesion`])
-            });
-          } else {
-            this.route.paramMap.subscribe(params => {
-              this.idProducto = params.get('idProducto');
-            });
-            if (this.idProducto != null) {
-              this.ConsultarInformacionProducto();
-            }
+  async ConsultarDispositivosVinculados() {
+    try {
+      this.loadingService.showLoading();
+      this.lstDispositivosValidos = await this.inventariosService.obtenerIpPermitida();
+      if (this.lstDispositivosValidos.length > 0) {
+        let idDispositivo = this.appComponent.obtenerOGenerarIdentificador();
+        let dispositvoRegistrado = this.lstDispositivosValidos.find(x => x === idDispositivo);
+        if (dispositvoRegistrado == null) {
+          Swal.fire({
+            text: 'No tienes permiso para acceder a esta página.',
+            icon: 'error',
+          }).then(() => {
+            this.router.navigate([`iniciar-sesion`])
+          });
+        } else {
+          this.route.paramMap.subscribe(params => {
+            this.idProducto = params.get('idProducto');
+          });
+          if (this.idProducto != null) {
+            this.ConsultarInformacionProducto();
           }
-        })
-        .catch(error => {
-          this.toastrService.error('Error al obtener ip pública', error);
-        });
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al obtener el listado de inventarios', error.message);
+      } else {
+        this.toastrService.error('Error al obtener el listado de inventarios', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
     }
   }
 
