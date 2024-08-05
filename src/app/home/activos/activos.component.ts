@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { LoadingService } from 'src/app/services/loading.service';
 import { HomeComponent } from '../home.component';
-import { IProductoCustodioActivo } from 'src/app/models/producto-activo';
+import { IInformacionQR, IProductoCustodioActivo } from 'src/app/models/producto-activo';
 import { ProductoActivoService } from 'src/app/services/producto-activo.service';
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
@@ -11,6 +11,7 @@ declare var $: any;
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import Swal from 'sweetalert2';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-activos',
@@ -37,6 +38,7 @@ export class ActivosComponent {
     private toastrService: ToastrService) { }
 
   ngOnInit() {
+    (window as any).ImprimirEtiqueta = this.ImprimirEtiqueta.bind(this);
     this.InicializarTablaProductosCustodio();
     this.InicializarInformacionForm();
   }
@@ -91,6 +93,14 @@ export class ActivosComponent {
             data: 'custodio',
             render: (data: any) => data === null ? 'Sin asignar' : data.nombreApellidoCustodio
           },
+          {
+            targets: -1,
+            searchable: false,
+            render: function (data: any, type: any, full: any, meta: any) {
+              return `<button type="button" class="btn btn-primary btn-sm" onclick="ImprimirEtiqueta(${full.idProductoCustodio})"><i class="fas fa-print"></i></button>`;
+            },
+            className: 'text-center btn-acciones-column'
+          }
           // {
           //   targets: -2,
           //   searchable: false,
@@ -145,6 +155,30 @@ export class ActivosComponent {
 
   descargarExcel(): void {
     this.generarListaExcel();
+  }
+
+  async ImprimirEtiqueta(idProductoCustodio: number) {
+    try {
+      this.loadingService.showLoading()
+      let productoCustodioSeleccionado = this.lstProductosCustodioActivo.find(x => x.idProductoCustodio == idProductoCustodio);
+      let informacionQR: IInformacionQR[] = [{
+        codigoProducto: productoCustodioSeleccionado!.producto?.codigoProducto!,
+        urlInformacion: `${environment.urlRedireccionQR}${productoCustodioSeleccionado?.idProducto}`
+      }];
+      let mensajeImpresion = await this.productosService.imprimirEtiquetasQR(informacionQR);
+      Swal.fire({
+        icon: 'success',
+        text: 'La etiqueta fue impresa correctamente.',
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al obtener los productos', error.message);
+      } else {
+        this.toastrService.error('Error al obtener los productos', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
+    }
   }
 
   generarListaExcel(): void {

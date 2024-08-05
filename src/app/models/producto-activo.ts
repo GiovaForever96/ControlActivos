@@ -45,3 +45,8 @@ export interface IRegistro {
     fecha_registro: Date,
     fecha_actualizacion: Date
 }
+
+export interface IInformacionQR {
+    urlInformacion: string,
+    codigoProducto: string
+}

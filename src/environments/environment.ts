@@ -9,4 +9,5 @@ export const environment = {
     "Copyright © 2024 <b><a href='https://segurossuarez.com/' class='text-white' target='_blank'>Seguros Suárez</a></b> - Todos los derechos reservados.<b>Versión:</b> 1.0.0",
   copyrightLogin:
     "<b>Versión:</b> 1.0.0",
+  urlRedireccionQR: 'http://localhost:4201/consulta-informacion/'
 };

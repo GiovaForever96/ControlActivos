@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { IProductoActivo, IProductoCustodioActivo, IRegistro } from '../models/producto-activo';
+import { IInformacionQR, IProductoActivo, IProductoCustodioActivo, IRegistro } from '../models/producto-activo';
 import axios from 'axios';
 
 @Injectable({
@@ -13,6 +13,7 @@ export class ProductoActivoService {
   baseUrl = environment.apiUrl + 'ProductoCustodio/';
   baseUrlProducto = environment.apiUrl + 'ProductoActivo/';
   baseUrlProductoInventario = environment.apiUrl + 'ProductoInventarioActivo/';
+  baseUrlImpresionQR = environment.apiUrl + 'ImpresionQRActivo/';
 
   async obtenerInformacionProductoCustodioPorIdProducto(idProducto: string): Promise<IProductoCustodioActivo> {
     const URL_API = `${this.baseUrl}obtenerProductoCustodioPorIdProducto/${idProducto}`;
@@ -90,6 +91,24 @@ export class ProductoActivoService {
     const URL_API = `${this.baseUrlProductoInventario}registrarProductoInventario/${idInventario}/${idProducto}`;
     try {
       const response = await axios.put<any>(URL_API, null);
+      if (!response.data.esError) {
+        return response.data.mensaje;
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+      } else {
+        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+      }
+    }
+  }
+
+  async imprimirEtiquetasQR(informacionQR: IInformacionQR[]): Promise<string> {
+    const URL_API = this.baseUrlImpresionQR + 'imprimirQR';
+    try {
+      const response = await axios.post<any>(URL_API, informacionQR);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
