@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { LoadingService } from 'src/app/services/loading.service';
 import { HomeComponent } from '../home.component';
 import { IInformacionQR, IProductoCustodioActivo } from 'src/app/models/producto-activo';
@@ -35,6 +35,7 @@ export class ActivosComponent {
     private productosService: ProductoActivoService,
     private fb: FormBuilder,
     public appComponent: AppComponent,
+    public changeDetector: ChangeDetectorRef,
     private toastrService: ToastrService) { }
 
   ngOnInit() {
@@ -58,6 +59,11 @@ export class ActivosComponent {
     try {
       this.loadingService.showLoading();
       this.lstProductosCustodioActivo = await this.productosService.obtenerListaProductoCustodio();
+      if (this.lstProductosCustodioActivo.length > 0) {
+        this.lstProductosCustodioActivo.forEach(x => {
+          x.seleccionado = false;
+        });
+      }
       this.dtOptions = {
         data: this.lstProductosCustodioActivo,
         info: false,
@@ -94,45 +100,39 @@ export class ActivosComponent {
             render: (data: any) => data === null ? 'Sin asignar' : data.nombreApellidoCustodio
           },
           {
-            targets: -1,
-            searchable: false,
-            render: function (data: any, type: any, full: any, meta: any) {
-              return `<button type="button" class="btn btn-primary btn-sm" onclick="ImprimirEtiqueta(${full.idProductoCustodio})"><i class="fas fa-print"></i></button>`;
+            title: 'Imprimir',
+            data: 'seleccionado',
+            render: (data: any, type: string, row: any) => {
+              return `
+                <input type="checkbox"
+                       ${data && data.seleccionado ? 'checked' : ''}
+                       data-id="${row.idProductoCustodio}"
+                       class="checkbox-seleccionado" />
+              `;
             },
-            className: 'text-center btn-acciones-column'
+            className: 'text-center'
           }
-          // {
-          //   targets: -2,
-          //   searchable: false,
-          //   render: function (data: any, type: any, full: any, meta: any) {
-          //     return `<button type="button" class="btn btn-primary btn-sm" onclick="EditarMarca(${full.idMarca})"><i class="fas fa-edit"></i></button>`;
-          //   },
-          //   className: 'text-center btn-acciones-column'
-          // },
-          // {
-          //   targets: -1,
-          //   orderable: false,
-          //   searchable: false,
-          //   render: function (data: any, type: any, full: any, meta: any) {
-          //     return `<button type="button" class="btn btn-danger btn-sm" onclick="EliminarMarca(${full.idMarca})"><i class="fas fa-trash-alt"></i></button>`;
-          //   },
-          //   className: 'text-center btn-acciones-column'
-          // }
         ],
-        // columnDefs: [
-        //   {
-        //     targets: [8, 9],
-        //     orderable: false,
-        //     searchable: false,
-        //     width: '50px'
-        //   }
-        // ],
+        paging: false,
         responsive: false,
         autoWidth: false,
         scrollX: true,
       };
       this.dataTable = $(this.tableBienes.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
+
+      $(this.tableBienes.nativeElement).on('change', '.checkbox-seleccionado', (event: any) => {
+        const checkbox = event.target as HTMLInputElement;
+        const rowId = $(checkbox).data('id');
+        const isChecked = checkbox.checked;
+
+        const productoCustodio = this.lstProductosCustodioActivo.find(x => x.idProductoCustodio === rowId);
+        if (productoCustodio) {
+          productoCustodio.seleccionado = isChecked;
+        }
+
+      });
+
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error('Error al obtener los productos', error.message);
@@ -157,18 +157,29 @@ export class ActivosComponent {
     this.generarListaExcel();
   }
 
-  async ImprimirEtiqueta(idProductoCustodio: number) {
+  async ImprimirEtiqueta() {
     try {
       this.loadingService.showLoading()
-      let productoCustodioSeleccionado = this.lstProductosCustodioActivo.find(x => x.idProductoCustodio == idProductoCustodio);
-      let informacionQR: IInformacionQR[] = [{
-        codigoProducto: productoCustodioSeleccionado!.producto?.codigoProducto!,
-        urlInformacion: `${environment.urlRedireccionQR}${productoCustodioSeleccionado?.idProducto}`
-      }];
-      let mensajeImpresion = await this.productosService.imprimirEtiquetasQR(informacionQR);
+      //Verificar si se imprime solo ciertos QR
+      let etiquetasImprimir = this.lstProductosCustodioActivo.filter(x => x.seleccionado) as IProductoCustodioActivo[];
+      if (etiquetasImprimir.length == 0)
+        etiquetasImprimir = this.lstProductosCustodioActivo;
+      // Generamos la información para enviar al servicio de impresión local
+      let informacionEtiqueta: IInformacionQR;
+      let listaEtiquetasImprimir: IInformacionQR[] = [];
+      etiquetasImprimir.forEach(etiquetaImprimir => {
+        informacionEtiqueta = {
+          codigoProducto: etiquetaImprimir.producto?.codigoProducto!,
+          urlInformacion: `${environment.urlRedireccionQR}${etiquetaImprimir?.idProducto}`
+        };
+        listaEtiquetasImprimir.push(informacionEtiqueta);
+      });
+      let mensajeImpresion = await this.productosService.imprimirEtiquetasQR(listaEtiquetasImprimir);
       Swal.fire({
         icon: 'success',
-        text: 'La etiqueta fue impresa correctamente.',
+        text: 'Las etiquetas se imprimieron correctamente.',
+      }).finally(() => {
+        window.location.reload();
       });
     } catch (error) {
       if (error instanceof Error) {

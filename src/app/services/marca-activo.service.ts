@@ -2,20 +2,21 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { IMarcaActivo } from '../models/marca-activo';
 import axios from 'axios';
+import { AuthService } from './auth-interceptor.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MarcaActivoService {
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   baseUrl = environment.apiUrl + 'MarcaActivo/';
 
   async obtenerMarcas(): Promise<IMarcaActivo[]> {
     const URL_API = this.baseUrl + 'obtenerMarcas';
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as IMarcaActivo[];
       } else {
@@ -33,7 +34,7 @@ export class MarcaActivoService {
   async insertarMarca(marcaData: IMarcaActivo): Promise<string> {
     const URL_API = this.baseUrl + 'agregarMarca';
     try {
-      const response = await axios.post<any>(URL_API, marcaData);
+      const response = await this.authService.apiClient.post<any>(URL_API, marcaData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -51,7 +52,7 @@ export class MarcaActivoService {
   async actualizarMarca(idMarca: number, marcaActualizado: IMarcaActivo): Promise<string> {
     const URL_API = `${this.baseUrl}actualizarMarca/${idMarca}`;
     try {
-      const response = await axios.put<any>(URL_API, marcaActualizado);
+      const response = await this.authService.apiClient.put<any>(URL_API, marcaActualizado);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -69,7 +70,7 @@ export class MarcaActivoService {
   async eliminarMarca(idMarca: number): Promise<string> {
     const URL_API = `${this.baseUrl}eliminarMarca/${idMarca}`;
     try {
-      const response = await axios.delete<any>(URL_API);
+      const response = await this.authService.apiClient.delete<any>(URL_API);
       if (!response.data.esError) {
         return 'Marca eliminada exitosamente';
       } else {

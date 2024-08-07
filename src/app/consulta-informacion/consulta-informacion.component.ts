@@ -19,7 +19,7 @@ import { InventarioActivoService } from '../services/inventario-activo.service';
 export class ConsultaInformacionComponent {
 
   idProducto: string | null = null;
-  informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
+  informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined, seleccionado: false };
   lstCustodiosActivo: ICustodioActivo[] = [];
   lstCustodiosActivoFiltrados: ICustodioActivo[] = [];
   lstDispositivosValidos: string[] = [];
@@ -131,7 +131,8 @@ export class ConsultaInformacionComponent {
         const mensajeInsercion = await this.productosService.insertarCustodioProducto({
           idCustodio: Number(idCustodio), idProducto: Number(this.idProducto!),
           idProductoCustodio: 0,
-          estaActivo: true
+          estaActivo: true,
+          seleccionado: true
         })
         Swal.fire({
           text: mensajeInsercion,

@@ -27,7 +27,7 @@ export class RegistroInventarioComponent {
   inventarioControl = new FormControl('', Validators.required);
   idInventarioRegistrar: number = 0;
   idProducto: number = 0;
-  informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 1, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
+  informacionProductoCustodio: IProductoCustodioActivo = { idProductoCustodio: 1, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined, seleccionado: false };
   lstDispositivosValidos: string[] = [];
 
   constructor(private loadingService: LoadingService,
@@ -134,7 +134,7 @@ export class RegistroInventarioComponent {
           icon: 'success',
         }).then(() => {
           this.idProducto = 0;
-          this.informacionProductoCustodio = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined };
+          this.informacionProductoCustodio = { idProductoCustodio: 0, idCustodio: 0, idProducto: 0, estaActivo: false, custodio: undefined, producto: undefined, seleccionado: false };
           this.changeDetector.detectChanges();
         });
       } else {

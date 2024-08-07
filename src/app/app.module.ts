@@ -9,6 +9,7 @@ import { ConsultaInformacionComponent } from './consulta-informacion/consulta-in
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { HomeModule } from './home/home.module';
 import { RegistroInventarioComponent } from './registro-inventario/registro-inventario.component';
+import { AuthService } from './services/auth-interceptor.service';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,9 @@ import { RegistroInventarioComponent } from './registro-inventario/registro-inve
     ZXingScannerModule,
     HomeModule
   ],
-  providers: [],
+  providers: [
+    AuthService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -54,7 +54,7 @@
                     </div>
                     <div class="card-body mt-0 pt-0 mb-0 pb-0">
                         <div class="row mt-3">
-                            <div class="col-lg-3 mb-2 text-center">
+                            <div class="col-sm-6 col-md-6 col-lg-3 mb-2 text-center">
                                 <div class="d-flex">
                                     <label for="cameraSelect" class="mr-2">Seleccionar:</label>
                                     <select id="cameraSelect" (change)="onCameraSelected($event)">
@@ -68,7 +68,8 @@
                                     [formats]="formats" [device]="selectedDevice!">
                                 </zxing-scanner>
                             </div>
-                            <div class="col-lg-9 mb-2" *ngIf="this.informacionProductoCustodio.idProducto != 0">
+                            <div class="col-sm-12 col-md-12 col-lg-9 mb-2"
+                                *ngIf="this.informacionProductoCustodio.idProducto != 0">
                                 <div class="card-body mt-0 pt-0 mb-0 pb-0">
                                     <div class="row m-3">
                                         <div class="col-lg-3 mb-2">

@@ -24,7 +24,8 @@ export interface IProductoCustodioActivo {
     idProducto: number,
     estaActivo: boolean,
     custodio?: ICustodioActivo,
-    producto?: IProductoActivo
+    producto?: IProductoActivo,
+    seleccionado: boolean
 }
 
 export interface IRegistro {

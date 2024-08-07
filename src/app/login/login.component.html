@@ -10,26 +10,22 @@
             <form [formGroup]="loginForm" class="mb-5" (ngSubmit)="iniciarSesion()">
                 <div class="input-group mb-4">
                     <input type="email" [ngClass]="{
-                             'is-invalid': loginForm.get('Email')?.errors && loginForm.get('Email')?.touched
-                           }" class="form-control" formControlName="Email" placeholder="Correo electrónico" />
+                             'is-invalid': loginForm.get('username')?.errors && loginForm.get('username')?.touched
+                           }" class="form-control" formControlName="username" placeholder="Nombre de usuario" />
                     <div class="input-group-append">
                         <div class="input-group-text" style="background-color: transparent;color: white;">
-                            <span class="fas fa-envelope"></span>
+                            <span class="fas fa-user"></span>
                         </div>
                     </div>
                     <div class="invalid-feedback" style="color: white;"
-                        *ngIf="loginForm.get('Email')?.hasError('required') && loginForm.get('Email')?.touched">
-                        El correo electrónico es obligatorio
-                    </div>
-                    <div class="invalid-feedback" style="color: white;"
-                        *ngIf="loginForm.get('Email')?.hasError('email') && loginForm.get('Email')?.touched">
-                        El correo electrónico es incorrecto
+                        *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
+                        El nombre de usuario es obligatorio
                     </div>
                 </div>
                 <div class="input-group mb-4">
                     <input type="password" [ngClass]="{
-                             'is-invalid': loginForm.get('Password')?.errors && loginForm.get('Password')?.touched
-                           }" class="form-control" formControlName="Password" placeholder="Contraseña" />
+                             'is-invalid': loginForm.get('password')?.errors && loginForm.get('password')?.touched
+                           }" class="form-control" formControlName="password" placeholder="Contraseña" />
                     <div class="input-group-append">
                         <div class="input-group-text" style="background-color: transparent;color: white;">
                             <span class="fas fa-lock"></span>
@@ -37,7 +33,7 @@
                     </div>
                     <br />
                     <div class="invalid-feedback" style="color: white;"
-                        *ngIf="loginForm.get('Password')?.hasError('required') && loginForm.get('Password')?.touched">
+                        *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
                         La contraseña es obligatorio
                     </div>
                 </div>

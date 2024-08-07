@@ -4,6 +4,7 @@ import { PaginaNoEncontradaComponent } from './pagina-no-encontrada/pagina-no-en
 import { LoginComponent } from './login/login.component';
 import { ConsultaInformacionComponent } from './consulta-informacion/consulta-informacion.component';
 import { RegistroInventarioComponent } from './registro-inventario/registro-inventario.component';
+import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   { path: '', component: LoginComponent },
@@ -11,7 +12,7 @@ const routes: Routes = [
   { path: 'consulta-informacion', component: ConsultaInformacionComponent },
   { path: 'consulta-informacion/:idProducto', component: ConsultaInformacionComponent },
   { path: 'registro-inventario', component: RegistroInventarioComponent },
-  { path: 'home', loadChildren: () => import('./home/home-routing.module').then(m => m.HomeRoutingModule) },
+  { path: 'home', loadChildren: () => import('./home/home-routing.module').then(m => m.HomeRoutingModule), canActivate: [AuthGuard] },
   { path: '**', component: PaginaNoEncontradaComponent },
 ];
 

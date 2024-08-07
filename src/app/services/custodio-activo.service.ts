@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { ICustodioActivo } from '../models/custodio-activo';
 import axios from 'axios';
+import { AuthService } from './auth-interceptor.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CustodioActivoService {
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   baseUrl = environment.apiUrl + 'CustodioActivo/';
   baseUrlProductoCustodio = environment.apiUrl + 'ProductoCustodioActivo/';
@@ -16,7 +17,7 @@ export class CustodioActivoService {
   async obtenerInformacionProductoCustodio(): Promise<ICustodioActivo[]> {
     const URL_API = `${this.baseUrl}obtenerCustodios`;
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as ICustodioActivo[];
       } else {
@@ -34,7 +35,7 @@ export class CustodioActivoService {
   async obtenerCustodios(): Promise<ICustodioActivo[]> {
     const URL_API = this.baseUrl + 'obtenerCustodios';
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as ICustodioActivo[];
       } else {
@@ -52,7 +53,7 @@ export class CustodioActivoService {
   async insertarCustodio(custodioData: ICustodioActivo): Promise<string> {
     const URL_API = this.baseUrl + 'agregarCustodio';
     try {
-      const response = await axios.post<any>(URL_API, custodioData);
+      const response = await this.authService.apiClient.post<any>(URL_API, custodioData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -70,7 +71,7 @@ export class CustodioActivoService {
   async actualizarCustodio(idCustodio: number, custodioActualizado: ICustodioActivo): Promise<string> {
     const URL_API = `${this.baseUrl}actualizarCustodio/${idCustodio}`;
     try {
-      const response = await axios.put<any>(URL_API, custodioActualizado);
+      const response = await this.authService.apiClient.put<any>(URL_API, custodioActualizado);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -88,7 +89,7 @@ export class CustodioActivoService {
   async eliminarCustodio(idCustodio: number): Promise<string> {
     const URL_API = `${this.baseUrl}eliminarCustodio/${idCustodio}`;
     try {
-      const response = await axios.delete<any>(URL_API);
+      const response = await this.authService.apiClient.delete<any>(URL_API);
       if (!response.data.esError) {
         return 'Custodio eliminado exitosamente';
       } else {

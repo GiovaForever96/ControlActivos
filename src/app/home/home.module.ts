@@ -12,6 +12,7 @@ import { ModelosComponent } from './modelos/modelos.component';
 import { CustodiosComponent } from './custodios/custodios.component';
 import { ActivosComponent } from './activos/activos.component';
 import { InventarioComponent } from './inventario/inventario.component';
+import { AuthService } from '../services/auth-interceptor.service';
 
 @NgModule({
    declarations: [
@@ -32,7 +33,9 @@ import { InventarioComponent } from './inventario/inventario.component';
       HomeRoutingModule,
       FormsModule
    ],
-   providers: [],
+   providers: [
+      AuthService
+   ],
    exports: [RouterModule]
 })
 

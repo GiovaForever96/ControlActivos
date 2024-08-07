@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from 'src/app/services/auth-interceptor.service';
 
 @Component({
   selector: 'nav[app-header]',
@@ -18,12 +19,13 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     this.currentUserPhoto = "";
-    this.currentUserName = "Giovanni Rivera";
+    this.currentUserName = "Usuario";
   }
 
   cerrarSesion() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     this.router.navigate(['/'])
   }
-
 
 }

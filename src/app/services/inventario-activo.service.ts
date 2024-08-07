@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { IInventarioActivo, IProductoInventarioActivo } from '../models/inventario-activo';
 import axios from 'axios';
+import { AuthService } from './auth-interceptor.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class InventarioActivoService {
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   baseUrl = environment.apiUrl + 'InventarioActivo/';
   baseUrlProductoInventario = environment.apiUrl + 'ProductoInventarioActivo/';
@@ -17,7 +18,7 @@ export class InventarioActivoService {
   async obtenerIpPermitida(): Promise<string[]> {
     const URL_API = this.baseUrl + 'obtenerIpsPermitidas';
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data as string[];
       } else {
@@ -34,7 +35,7 @@ export class InventarioActivoService {
 
   async obtenerIpPublicaCliente(): Promise<string> {
     try {
-      const response = await axios.get(this.apiUrl);
+      const response = await this.authService.apiClient.get(this.apiUrl);
       return response.data.ip;
     } catch (error) {
       console.error('Error fetching IP:', error);
@@ -45,7 +46,7 @@ export class InventarioActivoService {
   async obtenerInventarios(): Promise<IInventarioActivo[]> {
     const URL_API = this.baseUrl + 'obtenerInventarios';
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as IInventarioActivo[];
       } else {
@@ -63,7 +64,7 @@ export class InventarioActivoService {
   async obtenerProductosInventarios(idInventario: number): Promise<IProductoInventarioActivo[]> {
     const URL_API = `${this.baseUrlProductoInventario}obtenerProductosInventarioPorIdInventario/${idInventario}`;
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as IProductoInventarioActivo[];
       } else {
@@ -81,7 +82,7 @@ export class InventarioActivoService {
   async crearNuevoInventario(inventarioData: IInventarioActivo): Promise<string> {
     const URL_API = this.baseUrl + 'agregarInventario';
     try {
-      const response = await axios.post<any>(URL_API, inventarioData);
+      const response = await this.authService.apiClient.post<any>(URL_API, inventarioData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {

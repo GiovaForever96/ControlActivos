@@ -2,20 +2,21 @@ import { Injectable } from '@angular/core';
 import axios from 'axios';
 import { environment } from 'src/environments/environment';
 import { IModeloActivo } from '../models/modelo-activo';
+import { AuthService } from './auth-interceptor.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ModeloActivoService {
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   baseUrl = environment.apiUrl + 'ModeloActivo/';
 
   async obtenerModelos(): Promise<IModeloActivo[]> {
     const URL_API = this.baseUrl + 'obtenerModelos';
     try {
-      const response = await axios.get<any>(URL_API);
+      const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
         return response.data.resultado as IModeloActivo[];
       } else {
@@ -33,7 +34,7 @@ export class ModeloActivoService {
   async insertarModelo(modeloData: IModeloActivo): Promise<string> {
     const URL_API = this.baseUrl + 'agregarModelo';
     try {
-      const response = await axios.post<any>(URL_API, modeloData);
+      const response = await this.authService.apiClient.post<any>(URL_API, modeloData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -51,7 +52,7 @@ export class ModeloActivoService {
   async actualizarModelo(idModelo: number, modeloActualizado: IModeloActivo): Promise<string> {
     const URL_API = `${this.baseUrl}actualizarModelo/${idModelo}`;
     try {
-      const response = await axios.put<any>(URL_API, modeloActualizado);
+      const response = await this.authService.apiClient.put<any>(URL_API, modeloActualizado);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -69,7 +70,7 @@ export class ModeloActivoService {
   async eliminarModelo(idModelo: number): Promise<string> {
     const URL_API = `${this.baseUrl}eliminarModelo/${idModelo}`;
     try {
-      const response = await axios.delete<any>(URL_API);
+      const response = await this.authService.apiClient.delete<any>(URL_API);
       if (!response.data.esError) {
         return 'Modelo eliminado exitosamente';
       } else {
