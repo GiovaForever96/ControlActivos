@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { ICustodioActivo } from '../models/custodio-activo';
+import { ICustodioActivo, ISucursalActivo } from '../models/custodio-activo';
 import axios from 'axios';
 import { AuthService } from './auth-interceptor.service';
 
@@ -12,6 +12,7 @@ export class CustodioActivoService {
   constructor(private authService: AuthService) { }
 
   baseUrl = environment.apiUrl + 'CustodioActivo/';
+  baseUrlSucursal = environment.apiUrl + 'SucursalActivo/';
   baseUrlProductoCustodio = environment.apiUrl + 'ProductoCustodioActivo/';
 
   async obtenerInformacionProductoCustodio(): Promise<ICustodioActivo[]> {
@@ -92,6 +93,24 @@ export class CustodioActivoService {
       const response = await this.authService.apiClient.delete<any>(URL_API);
       if (!response.data.esError) {
         return 'Custodio eliminado exitosamente';
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+      } else {
+        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+      }
+    }
+  }
+
+  async obtenerSucursales(): Promise<ISucursalActivo[]> {
+    const URL_API = this.baseUrlSucursal + 'obtenerSucursales';
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as ISucursalActivo[];
       } else {
         throw new Error(response.data.mensaje);
       }

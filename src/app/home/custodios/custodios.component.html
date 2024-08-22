@@ -55,6 +55,44 @@
                         <div class="card-body row">
                             <div class="col-lg-12 form-group">
                                 <div class="row align-items-center">
+                                    <label for="idSucursal"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Sucursal:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text" class="form-control" placeholder="Seleccione la sucursal"
+                                            [formControl]="sucursalControl" (input)="FilterSucursal()"
+                                            (focus)="visualizarOpciones = true;" (blur)="HideOptions()"
+                                            [ngClass]="{ 'is-invalid': custodioForm.get('idSucursal')!.errors && custodioForm.get('idSucursal')!.touched }">
+                                        <ul *ngIf="visualizarOpciones" class="list-group">
+                                            <li class="list-group-item" *ngFor="let sucursal of lstSucursalesFiltradas"
+                                                (mousedown)="SelectSucursal(sucursal)">
+                                                {{sucursal.descripcionSucursal}}
+                                            </li>
+                                        </ul>
+                                        <div class="invalid-feedback"
+                                            *ngIf="custodioForm.get('idSucursal')!.errors && custodioForm.get('idSucursal')!.touched">
+                                            Debe seleccionar la sucusal del activo
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="identificacion"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Identificación:</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': custodioForm.get('identificacion')!.errors && custodioForm.get('identificacion')!.touched }"
+                                            class="form-control" placeholder="Número de identificación"
+                                            formControlName="identificacion">
+                                        <div class="invalid-feedback"
+                                            *ngIf="custodioForm.get('identificacion')!.errors && custodioForm.get('identificacion')!.touched">
+                                            El número de identificación es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
                                     <label for="nombreApellidoCustodio"
                                         class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre del custodio:</label>
                                     <div class="col-lg-9 col-md-8 col-sm-12">

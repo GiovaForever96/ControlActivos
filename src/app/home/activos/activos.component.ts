@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
+import { QRCodeWriter, BarcodeFormat, EncodeHintType } from '@zxing/library';
 
 @Component({
   selector: 'app-activos',
@@ -29,6 +30,9 @@ export class ActivosComponent {
   productoForm!: FormGroup;
   custodioForm!: FormGroup;
   lstProductosInventarioExportar: any = [];
+  productoSeleccionado: any;
+  qrCodeData: string = environment.urlRedireccionQR;
+  qrCode: string | Array<number> | undefined;
 
   constructor(private loadingService: LoadingService,
     private homeComponent: HomeComponent,
@@ -40,6 +44,7 @@ export class ActivosComponent {
 
   ngOnInit() {
     (window as any).ImprimirEtiqueta = this.ImprimirEtiqueta.bind(this);
+    (window as any).VisualizarQR = this.VisualizarQR.bind(this);
     this.InicializarTablaProductosCustodio();
     this.InicializarInformacionForm();
   }
@@ -79,6 +84,7 @@ export class ActivosComponent {
           { title: 'Plan de Cuentas', data: 'producto.ceco.descripcionCeco' },
           { title: 'Marca', data: 'producto.modelo.marca.nombreMarca' },
           { title: 'Modelo', data: 'producto.modelo.nombreModelo' },
+          { title: 'Código', data: 'producto.codigoProducto' },
           { title: 'Descripción', data: 'producto.nombreProducto' },
           {
             title: 'Fecha Adquisición',
@@ -94,10 +100,19 @@ export class ActivosComponent {
             },
             className: 'text-right'
           },
+          { title: 'Sucursal', data: 'custodio.sucursal.descripcionSucursal' },
           {
             title: 'Custodio',
             data: 'custodio',
             render: (data: any) => data === null ? 'Sin asignar' : data.nombreApellidoCustodio
+          },
+          {
+            title: 'Visualizar',
+            data: null,
+            render: function (data: any, type: any, full: any, meta: any) {
+              return `<button type="button" class="btn btn-success btn-sm" onclick="VisualizarQR(${full.idProducto})"><i class="fas fa-qrcode"></i></button>`;
+            },
+            className: 'text-center btn-acciones-column'
           },
           {
             title: 'Imprimir',
@@ -192,6 +207,18 @@ export class ActivosComponent {
     }
   }
 
+  async VisualizarQR(idProducto: any) {
+    this.qrCodeData = environment.urlRedireccionQR + idProducto;
+    console.log(this.qrCodeData);
+    this.generateQRCode();
+    var informacionProductoCustodio = this.lstProductosCustodioActivo.find(x => x.idProducto == idProducto);
+    informacionProductoCustodio!.seleccionado = true;
+    this.productoSeleccionado = informacionProductoCustodio;
+    console.log(this.productoSeleccionado);
+    this.changeDetector.detectChanges();
+    $('#qrProductoModal').modal('show');
+  }
+
   generarListaExcel(): void {
     if (this.lstProductosCustodioActivo.length > 0) {
       this.lstProductosInventarioExportar = [];
@@ -205,6 +232,7 @@ export class ActivosComponent {
           'Descripción': productoCustodio.producto?.nombreProducto,
           'Fc. de Adquisición': productoCustodio.producto?.fechaCompraProducto == null ? '' : this.formatearFecha(productoCustodio.producto?.fechaCompraProducto),
           'Valor de Compra': productoCustodio.producto?.valorCompraProducto,
+          'Sucursal': productoCustodio.custodio?.sucursal == null ? 'Sin asignar' : productoCustodio.custodio.sucursal.descripcionSucursal,
           'Custodio': productoCustodio.custodio == null ? 'Sin asignar' : productoCustodio.custodio.nombreApellidoCustodio
         }
         this.lstProductosInventarioExportar.push(productoInventarioExportar);
@@ -295,6 +323,41 @@ export class ActivosComponent {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  generateQRCode() {
+    try {
+      const writer = new QRCodeWriter();
+      const hints = new Map<EncodeHintType, any>();
+      hints.set(EncodeHintType.ERROR_CORRECTION, 'L'); // Nivel de corrección de errores
+      const bitMatrix = writer.encode(this.qrCodeData, BarcodeFormat.QR_CODE, 256, 256, hints);
+      this.qrCode = this.bitMatrixToDataUrl(bitMatrix);
+    } catch (e) {
+      console.error('Error generating QR code', e);
+    }
+  }
+
+  bitMatrixToDataUrl(bitMatrix: any): string {
+    const width = bitMatrix.width;
+    const height = bitMatrix.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('No context available');
+    }
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = 'black';
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (bitMatrix.get(x, y)) {
+          context.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    return canvas.toDataURL();
   }
 
 }

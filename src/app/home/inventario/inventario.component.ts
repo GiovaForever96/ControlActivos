@@ -129,7 +129,12 @@ export class InventarioComponent {
               className: 'text-center',
               orderable: false
             },
-            { title: 'Fecha Registro', data: 'fechaRegistro' }
+            {
+              title: 'Fecha Registro',
+              data: 'fechaRegistro',
+              render: (data: string) => this.formatDate(data),
+              className: 'text-right'
+            }
           ],
           paging: false,
           responsive: false,

@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { ICustodioActivo } from 'src/app/models/custodio-activo';
+import { ICustodioActivo, ISucursalActivo } from 'src/app/models/custodio-activo';
 import { LoadingService } from 'src/app/services/loading.service';
 import { HomeComponent } from '../home.component';
 import { CustodioActivoService } from 'src/app/services/custodio-activo.service';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import Swal from 'sweetalert2';
@@ -22,9 +22,13 @@ export class CustodiosComponent {
 
   isEditing: boolean = false;
   lstCustodios: ICustodioActivo[] = [];
+  lstSucursales: ISucursalActivo[] = [];
+  lstSucursalesFiltradas: ISucursalActivo[] = [];
   dtOptions: any;
   dataTable: any;
   custodioForm!: FormGroup;
+  sucursalControl = new FormControl('', Validators.required);
+  visualizarOpciones = false;
 
   constructor(private loadingService: LoadingService,
     private appComponent: AppComponent,
@@ -45,7 +49,9 @@ export class CustodiosComponent {
     this.custodioForm = this.fb.group({
       idCustodio: [0, [Validators.required]],
       nombreApellidoCustodio: ['', [Validators.required, Validators.maxLength(300)]],
-      estaActivo: [true, [Validators.required]]
+      estaActivo: [true, [Validators.required]],
+      identificacion: ['', [Validators.required]],
+      idSucursal: ['', [Validators.required]]
     });
   }
 
@@ -54,6 +60,9 @@ export class CustodiosComponent {
       this.loadingService.showLoading();
       this.appComponent.setTitle('Custodios');
       this.lstCustodios = await this.custodiosService.obtenerCustodios();
+      this.lstSucursales = await this.custodiosService.obtenerSucursales();
+      if (this.lstSucursales.length > 0)
+        this.lstSucursalesFiltradas = [...this.lstSucursales];
       this.dtOptions = {
         data: this.lstCustodios,
         info: false,
@@ -62,6 +71,8 @@ export class CustodiosComponent {
         },
         columns: [
           { title: 'Id.', data: 'idCustodio' },
+          { title: 'Sucursal', data: 'sucursal.descripcionSucursal' },
+          { title: 'Identificación', data: 'identificacion' },
           { title: 'Apellidos y Nombres', data: 'nombreApellidoCustodio' },
           {
             targets: -2,
@@ -83,7 +94,7 @@ export class CustodiosComponent {
         ],
         columnDefs: [
           {
-            targets: [2, 3],
+            targets: [4, 5],
             orderable: false,
             searchable: false,
             width: '50px'
@@ -157,8 +168,11 @@ export class CustodiosComponent {
     this.custodioForm = this.fb.group({
       idCustodio: [custodioActualizar!.idCustodio, [Validators.required]],
       nombreApellidoCustodio: [custodioActualizar!.nombreApellidoCustodio, [Validators.required, Validators.maxLength(300)]],
-      estaActivo: [custodioActualizar!.estaActivo, [Validators.required]]
+      estaActivo: [custodioActualizar!.estaActivo, [Validators.required]],
+      identificacion: [custodioActualizar!.identificacion, [Validators.required]],
+      idSucursal: [custodioActualizar!.idSucursal, [Validators.required]]
     });
+    this.sucursalControl.setValue(custodioActualizar!.sucursal.descripcionSucursal);
     this.changeDetector.detectChanges();
     this.btnActualizaCustodio.nativeElement.click();
   }
@@ -248,6 +262,23 @@ export class CustodiosComponent {
     } finally {
       this.loadingService.hideLoading();
     }
+  }
+
+  FilterSucursal(): void {
+    const filterValue = this.sucursalControl.value!.toLowerCase();
+    this.lstSucursalesFiltradas = this.lstSucursales.filter(sucursal =>
+      sucursal.descripcionSucursal.toLowerCase().includes(filterValue)
+    );
+  }
+
+  SelectSucursal(sucursal: ISucursalActivo): void {
+    this.sucursalControl.setValue(sucursal.descripcionSucursal);
+    this.custodioForm.get('idSucursal')!.setValue(sucursal.idSucursal);
+    this.visualizarOpciones = false;
+  }
+
+  HideOptions(): void {
+    setTimeout(() => this.visualizarOpciones = false, 200);
   }
 
   SetInactive() {

@@ -121,7 +121,10 @@ export class ConsultaInformacionComponent {
           let mensajeRespuesta = await this.custodiosService.insertarCustodio({
             idCustodio: 0,
             nombreApellidoCustodio: this.custodioControl.value?.toUpperCase() ?? '',
-            estaActivo: true
+            estaActivo: true,
+            identificacion: '',
+            idSucursal: 0,
+            sucursal: { descripcionSucursal: '', estaActivo: true, idSucursal: 0 }
           });
           idCustodio = mensajeRespuesta.split(';')[1];
         } else {

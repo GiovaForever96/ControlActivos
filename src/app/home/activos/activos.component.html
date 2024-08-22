@@ -89,4 +89,25 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="qrProductoModal">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Visualización QR</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container text-center">
+                        <div class="d-flex flex-column align-items-center">
+                            <span>Seguros Suárez</span>
+                            <img [src]="qrCode" alt="QR Code" style="max-width: 100%; height: auto;" />
+                            <span *ngIf="productoSeleccionado != null">{{productoSeleccionado.producto.codigoProducto}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
