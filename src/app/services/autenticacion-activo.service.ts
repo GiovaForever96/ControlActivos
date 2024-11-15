@@ -17,12 +17,11 @@ export class AutenticacionActivoService {
     const URL_API = this.baseUrl + 'login';
     try {
       const response = await this.authService.apiClient.post<any>(URL_API, inicioSesionData);
-      if (response.data !== null) {
+      if (!response.data.esError) {
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
         return "Inicio de sesión exitoso";
       } else {
-        throw new Error('Error en el inicio de sesión.');
+        return `Error: ${response.data.mensaje}`;
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {

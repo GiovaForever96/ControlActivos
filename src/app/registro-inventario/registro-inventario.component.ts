@@ -168,7 +168,6 @@ export class RegistroInventarioComponent {
         if (this.informacionProductoCustodio.idProducto == 0) {
           this.toastrService.error('Error al obtener la información del activo', 'Solicitar soporte al departamento de TI.');
         } else {
-          console.log(JSON.stringify(this.informacionProductoCustodio));
           this.idProducto = Number(idProducto);
         }
       }

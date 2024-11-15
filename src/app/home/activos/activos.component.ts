@@ -209,12 +209,10 @@ export class ActivosComponent {
 
   async VisualizarQR(idProducto: any) {
     this.qrCodeData = environment.urlRedireccionQR + idProducto;
-    console.log(this.qrCodeData);
     this.generateQRCode();
     var informacionProductoCustodio = this.lstProductosCustodioActivo.find(x => x.idProducto == idProducto);
     informacionProductoCustodio!.seleccionado = true;
     this.productoSeleccionado = informacionProductoCustodio;
-    console.log(this.productoSeleccionado);
     this.changeDetector.detectChanges();
     $('#qrProductoModal').modal('show');
   }

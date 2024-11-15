@@ -6,7 +6,6 @@ import { AppComponent } from '../app.component';
 import { environment } from 'src/environments/environment';
 import { AutenticacionActivoService } from '../services/autenticacion-activo.service';
 import { IInicioSesionActivo } from '../models/inicio-sesion-activo';
-import { LoadingService } from '../services/loading.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -62,8 +61,13 @@ export class LoginComponent implements OnInit {
           }
         });
         const inicioSesionData: IInicioSesionActivo = this.loginForm.value;
-        await this.autenticacionService.iniciarSesion(inicioSesionData);
-        window.location.href = 'home';
+        inicioSesionData.platformId = environment.idPlatform;
+        let respuestaAutenticacion = await this.autenticacionService.iniciarSesion(inicioSesionData);
+        if (!respuestaAutenticacion.includes('Error:')) {
+          window.location.href = 'home';
+        } else {
+          this.toastrService.error("Iniciar sesión", respuestaAutenticacion);
+        }
       } else {
         this.appComponent.validateAllFormFields(this.loginForm);
         this.toastrService.error('Error al iniciar sesión', 'No se llenaron todos los campos necesarios.');

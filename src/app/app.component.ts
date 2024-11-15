@@ -40,7 +40,6 @@ export class AppComponent {
   }
 
   obtenerOGenerarIdentificador(): string {
-    console.log("Generar uui");
     const identificador = localStorage.getItem('identificadorUnico');
     if (identificador) {
       return identificador;

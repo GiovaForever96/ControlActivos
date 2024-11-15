@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
+  idPlatform:2,
   projectName: "Control Activos",
   apiUrl: "http://localhost:5002/api/",
   company: "Seguros Súarez",

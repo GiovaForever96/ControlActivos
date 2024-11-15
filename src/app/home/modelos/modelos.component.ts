@@ -240,7 +240,6 @@ export class ModelosComponent {
       this.loadingService.showLoading();
       if (this.marcaControl.value == '') {
         this.modeloForm.patchValue({ 'idMarca': '' });
-        console.log(this.modeloForm.value);
       }
       if (this.modeloForm.valid) {
         try {
