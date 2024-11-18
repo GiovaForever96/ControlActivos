@@ -19,7 +19,8 @@ const homeRoutes: Routes = [
       { path: 'modelos', component: ModelosComponent },
       { path: 'custodios', component: CustodiosComponent },
       { path: 'bienes', component: ActivosComponent },
-      { path: 'inventario', component: InventarioComponent }
+      { path: 'inventario', component: InventarioComponent },
+      { path: 'presupuestos', loadChildren: () => import('./presupuestos/presupuestos.module').then(m => m.PresupuestosModule) },
     ]
   }
 ];
