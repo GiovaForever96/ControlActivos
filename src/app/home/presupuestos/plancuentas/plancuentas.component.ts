@@ -7,6 +7,7 @@ import { LoadingService } from 'src/app/services/loading.service';
 import { IPlanCuentas } from 'src/app/models/plan-cuentas';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'src/app/services/toastr.service';
+import { Column } from 'ag-grid-community';
 
 declare var $: any;
 
@@ -18,75 +19,97 @@ declare var $: any;
 export class PlancuentasComponent {
   @ViewChild('dataTablePlan', { static: false }) tablePlan!: ElementRef;
   @ViewChild('btnActualizaPlan', { static: true }) btnActualizaPlan!: ElementRef;
-  
-  lstPlanCuentas :IPlanCuentas[] = [];
+
+  lstPlanCuentas: IPlanCuentas[] = [];
+  lstPlanCuentasArbol: any = [];
+
   dtOptions: any;
   dataTable: any;
   planCuentaForm!: FormGroup;
   isEditing: boolean = false;
 
+  public files: any[] = [];
+  public filteredFiles: any[] = [];
+  public searchText: string = '';
+  cols!: Column[];
+  nombreBoton: string = 'Contraer';
+
+
   constructor(private loadingService: LoadingService,
-     private appComponent: AppComponent, private planCuentasService:PlanCuentasService,
-    private fb: FormBuilder,    private toastrService: ToastrService, private changeDetector:ChangeDetectorRef
+    private appComponent: AppComponent, private planCuentasService: PlanCuentasService,
+    private fb: FormBuilder, private toastrService: ToastrService, private changeDetector: ChangeDetectorRef
   ) {
     this.appComponent.setTitle('Plan Cuentas');
-   }
+  }
 
-   ngOnInit() {
+  ngOnInit() {
     (window as any).EditarPlan = this.EditarPlan.bind(this);
-    this.cargarRegistro();
     this.crearPlanForm();
-   }
+    this.cargarRegistro();
+  }
+
+  filterTreeTable() {
+    if (!this.searchText) {
+      this.filteredFiles = [...this.files];
+    } else {
+      this.filteredFiles = this.filterNodes(this.files, this.searchText);
+    }
+  }
+
+  filterNodes(nodes: any[], searchText: string): any[] {
+    return nodes
+      .map(node => {
+        const matches =
+          node.data.nombrePlan.toLowerCase().includes(searchText.toLowerCase()) ||
+          node.data.codigoPlan.toLowerCase().includes(searchText.toLowerCase());
+
+        if (matches) {
+          return node;
+        } else if (node.children) {
+          const filteredChildren = this.filterNodes(node.children, searchText);
+          if (filteredChildren.length > 0) {
+            return { ...node, children: filteredChildren };
+          }
+        }
+        return null;
+      })
+      .filter(node => node !== null);
+  }
+
+  toggleApplications() {
+    this.nombreBoton = this.nombreBoton == 'Contraer' ? 'Expandir' : 'Contraer';
+    if (this.filteredFiles && this.filteredFiles.length > 0) {
+      const newFiles = this.filteredFiles.map(file => ({
+        ...file,
+        expanded: !file.expanded
+      }));
+      this.filteredFiles = newFiles;
+    }
+  }
   crearPlanForm() {
     this.planCuentaForm = this.fb.group({
       idPlan: [0, [Validators.required]],
       idPadre: ['', [Validators.required]],
-      codigoPlan: ['' ,[Validators.required]],
-      nombrePlan: ['',[Validators.required]],
+      codigoPlan: ['', [Validators.required]],
+      nombrePlan: ['', [Validators.required]],
       nivelPlan: ['', [Validators.required]]
     });
   }
-  async cargarRegistro(){
-    this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    this.dtOptions = {
-      data: this.lstPlanCuentas,
-      info: false,
-      language: {
-        ...this.GetSpanishLanguage()
-      },
-      columns: [
-        { title: 'Código', data: 'codigoPlan'},
-        { title: 'Nombre', data: 'nombrePlan'},
-        {
-          targets: -2,
-          searchable: false,
-          render: function (data: any, type: any, full: any, meta: any) {
-            return `<button type="button" class="btn btn-primary btn-sm" onclick="EditarPlan(${full.idPlan})"><i class="fas fa-edit"></i></button>`;
-          },
-          className: 'text-center btn-acciones-column'
-        }
-      ],
-      rowGroup: {
-        dataSrc: 'idPadre',
-        startRender: function (rows: any, group: any) {
-          return `<div class="group-header" style="display: flex; justify-content: space-between;">
-                    <strong>Ramo: ${group} (${rows.count()} elementos)</strong>
-                  </div>`;
-        }
-      },
-      paging: false,
-      responsive: false,
-      autoWidth: false,
-      scrollX: true,
-    };
-    this.dataTable = $(this.tablePlan.nativeElement);
-    this.dataTable.DataTable(this.dtOptions);
-   }
 
-  AbrirModal(esEdicion: boolean) {
+  async cargarRegistro() {
+    this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
+    this.files = await this.planCuentasService.obtenerPlanCuentasArbol();
+    this.filteredFiles = [...this.files];
+    this.expandNodes(this.filteredFiles);
+  }
+
+  AbrirModal(rowData: any, esEdicion: boolean) {
+    let idPlan = rowData['idPlan'];
     this.isEditing = esEdicion;
     if (!esEdicion) {
       this.crearPlanForm();
+    } else {
+      this.EditarPlan(idPlan);
     }
     $('#planModal').modal('show');
   }
@@ -168,6 +191,7 @@ export class PlancuentasComponent {
       this.loadingService.hideLoading();
     }
   }
+
   EditarPlan(idPlan: number) {
     const planActualizar = this.lstPlanCuentas.find(x => x.idPlan == idPlan);
     this.planCuentaForm = this.fb.group({
@@ -195,5 +219,14 @@ export class PlancuentasComponent {
     const month = ('0' + (date.getMonth() + 1)).slice(-2);
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+  }
+
+  expandNodes(nodes: any[]): void {
+    nodes.forEach(node => {
+      node.expanded = true;
+      if (node.children && node.children.length) {
+        this.expandNodes(node.children);
+      }
+    });
   }
 }

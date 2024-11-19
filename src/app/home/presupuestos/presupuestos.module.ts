@@ -7,6 +7,9 @@ import { PlancuentasComponent } from './plancuentas/plancuentas.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { ResultadosComponent } from './resultados/resultados.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TreeTableModule } from 'primeng/treetable';
+
+
 @NgModule({
   declarations: [
     PresupuestosComponent,
@@ -17,7 +20,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     PresupuestosRoutingModule,FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TreeTableModule
   ]
 })
 export class PresupuestosModule { }

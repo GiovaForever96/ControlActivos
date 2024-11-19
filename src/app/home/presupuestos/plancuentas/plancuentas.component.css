@@ -1,0 +1,24 @@
+/* Estilo para los nodos padres */
+.nivel1 {
+    background-color: rgb(21, 181, 255);
+    color: white;
+    font-weight: bold;
+  }
+  
+  /* Estilo para los nodos hijos */
+  .nivel2 {
+    background-color: rgb(139, 218, 255);
+  }
+
+  .nivel3 {
+    background-color: rgb(164, 228, 255);
+  }
+  .nivel4 {
+    background-color: rgb(192, 233, 252);
+  }
+  .nivel5 {
+    background-color:  rgb(225, 243, 252);
+  }
+  .nivel6 {
+    background-color: white;
+  }

@@ -30,7 +30,23 @@ export class PlanCuentasService {
       }
     }
   }
-
+  async obtenerPlanCuentasArbol(): Promise<any> {
+    const URL_API = this.baseUrl + 'obtenerPlanCuentasArbol';
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as [];
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+      } else {
+        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+      }
+    }
+  }
 
   async insertarPlan(planData: IPlanCuentas): Promise<string> {
     const URL_API = this.baseUrl + 'agregarMarca';

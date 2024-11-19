@@ -24,7 +24,7 @@ import { AuthService } from './services/auth-interceptor.service';
     ReactiveFormsModule,
     FormsModule,
     ZXingScannerModule,
-    HomeModule
+    HomeModule,
   ],
   providers: [
     AuthService
