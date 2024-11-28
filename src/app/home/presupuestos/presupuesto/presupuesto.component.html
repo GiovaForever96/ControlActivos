@@ -26,9 +26,117 @@
                                 Presupuesto
                             </h3>
                         </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <label>Año:</label>&nbsp;
+                                <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;" [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
+                                  <option [value]="item" *ngFor="let item of lstAnios">
+                                    {{item}}
+                                  </option>
+                                </select>
+                                &nbsp;&nbsp;
+                                <button class="btn btn-success btn-sm ml-2" (click)="abrirModal()" [disabled]="disableSubir" title="Subir Registro"><i class="fas fa-upload"></i></button>
+                                <button class="btn btn-primary btn-sm ml-2" (click)="guardarPresupuesto()" [disabled]="disableGuardar">Guardar</button>
+                                <div class="d-flex justify-content-end align-items-center mb-3" style="font-size: 12px; flex-grow: 1;">
+                                  Buscar:&nbsp;&nbsp;
+                                  <input [(ngModel)]="filterText" placeholder="" class="form-control col-3" />
+                                </div>
+                              </div>
+
+                              <p-table [value]="filteredData" dataKey="id" [sortField]="'codigoPlan'" [sortOrder]="1" [scrollable]="true" scrollHeight="800px" >
+                                <ng-template pTemplate="header">
+                                  <tr style="font-size: 10px;">
+                                    <!-- Ordenar por Código -->
+                                    <th pSortableColumn="codigoPlan" pFrozenColumn >
+                                      Código 
+                                    </th>
+                              
+                                    <th pSortableColumn="nombrePlan" pFrozenColumn class="celdasDer">
+                                      Plan 
+                                    </th>
+                              
+                                    <th *ngFor="let item of lstMeses" [pSortableColumn]="item.nombre">
+                                      {{item.nombre}} 
+                                    </th>
+                                  </tr>
+                                </ng-template>
+                              
+                                <ng-template pTemplate="body" let-plan>
+                                  <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}">
+                                    <!-- Código editable -->
+                                    <td pFrozenColumn >
+                                      <p-cellEditor>
+                                        <ng-template pTemplate="input" >
+                                          <input pInputText type="text" [(ngModel)]="plan.codigoPlan"  />
+                                        </ng-template>
+                                        <ng-template pTemplate="output">
+                                          {{plan.codigoPlan}}
+                                        </ng-template>
+                                      </p-cellEditor>
+                                    </td>
+                    
+                                    <td pFrozenColumn class="celdasDer">
+                                      <p-cellEditor>
+                                        <ng-template pTemplate="input">
+                                          <input pInputText type="text" [(ngModel)]="plan.nombrePlan" />
+                                        </ng-template>
+                                        <ng-template pTemplate="output">
+                                          {{plan.nombrePlan}}
+                                        </ng-template>
+                                      </p-cellEditor>
+                                    </td>
+                                    <td pEditableColumn *ngFor="let mes of lstMeses" [attr.contenteditable]="!plan.tieneHijos">
+                                      <p-cellEditor  >
+                                        <ng-template pTemplate="input">
+                                          <input *ngIf="!plan.tieneHijos" pInputText type="number" [(ngModel)]="plan[mes.nombre]" (focus)="celdaOriginal(plan[mes.nombre],plan)" (focusout)="celdaEditada(plan,mes,plan[mes.nombre])" />
+                                          <span
+                                          *ngIf="plan.tieneHijos">{{plan[mes.nombre] | currency: 'USD'}}</span>
+                                        </ng-template>
+                                        <ng-template pTemplate="output">
+                                          {{plan[mes.nombre] | currency: 'USD'}}
+                                        </ng-template>
+                                      </p-cellEditor>
+                                    </td>
+                                  </tr>
+                                </ng-template>
+                              </p-table>
+                              
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <div class="modal fade" id="planModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Agregar Registro de Gastos
+                    </h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span >&times;</span>
+                    </button>
+                </div>
+                <form (ngSubmit)="cargarInformacion()">
+                    <div class="modal-body">
+                        <div class="card-body row">
+                            <div class="col-lg-6 form-group">
+                                <div class="row align-items-center">
+                                    <label for="codigoPlan" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Archivo:</label><u style="color: blue;cursor: pointer;"
+                                     title="Descargar Formato Registro" (click)="descargarFormato()">Formato</u>
+                                    <input type="file" class="form-control color-black" style="height: 45px;"  
+                                    (change)="onFileChange($event)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload mr-2"></i>Cargar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>

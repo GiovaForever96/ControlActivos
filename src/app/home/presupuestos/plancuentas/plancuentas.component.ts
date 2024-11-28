@@ -7,7 +7,7 @@ import { LoadingService } from 'src/app/services/loading.service';
 import { IPlanCuentas } from 'src/app/models/plan-cuentas';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'src/app/services/toastr.service';
-import { Column } from 'ag-grid-community';
+import { Column, GroupInstanceIdCreator } from 'ag-grid-community';
 
 declare var $: any;
 
@@ -33,7 +33,7 @@ export class PlancuentasComponent {
   public searchText: string = '';
   cols!: Column[];
   nombreBoton: string = 'Contraer';
-
+  inicialPadre:any='';
 
   constructor(private loadingService: LoadingService,
     private appComponent: AppComponent, private planCuentasService: PlanCuentasService,
@@ -88,11 +88,12 @@ export class PlancuentasComponent {
   }
   crearPlanForm() {
     this.planCuentaForm = this.fb.group({
-      idPlan: [0, [Validators.required]],
-      idPadre: ['', [Validators.required]],
+      idPlan: [0],
+      idPadre: [''],
       codigoPlan: ['', [Validators.required]],
       nombrePlan: ['', [Validators.required]],
-      nivelPlan: ['', [Validators.required]]
+      nivelPlan: [''],
+      estaActivo:[true]
     });
   }
 
@@ -104,14 +105,45 @@ export class PlancuentasComponent {
   }
 
   AbrirModal(rowData: any, esEdicion: boolean) {
-    let idPlan = rowData['idPlan'];
     this.isEditing = esEdicion;
     if (!esEdicion) {
-      this.crearPlanForm();
+      this.agregarPlan(rowData);
     } else {
-      this.EditarPlan(idPlan);
+      this.EditarPlan(rowData['idPlan']);
     }
     $('#planModal').modal('show');
+  }
+  agregarPlan(rowData:any){
+
+    let hijos = this.lstPlanCuentas.filter(element=>element.idPadre==rowData.idPlan);
+    let idHijo =this.idSiguienteHijo(hijos);
+    this.inicialPadre = rowData.codigoPlan;
+    this.planCuentaForm = this.fb.group({
+      idPlan: ['0'],
+      idPadre: [rowData.idPlan],
+      codigoPlan: [idHijo+'.', [Validators.required]],
+      nombrePlan: [rowData.nombrePlan, [Validators.required]],
+      nivelPlan: [Number(rowData.nivelPlan)+1],
+      estaActivo:[true]
+    });
+  }
+  idSiguienteHijo(hijos:any[]){
+    hijos.forEach(element => {
+      let partes = element.codigoPlan.split('.');
+      element['indexHijo']=partes[partes.length-2];
+    });
+
+    let numeroIdMaximo =0;
+    if(hijos.length>0){
+      numeroIdMaximo = Math.max(...hijos.map(obj => Number(obj.indexHijo))); 
+    }
+
+    if(numeroIdMaximo+1<10){
+      return '0'+(numeroIdMaximo+1);
+    }else{
+      return numeroIdMaximo+1;
+    }
+   
   }
 
   OnSubmit(): void {
@@ -128,6 +160,7 @@ export class PlancuentasComponent {
       if (this.planCuentaForm.valid) {
         try {
           const planData: IPlanCuentas = this.planCuentaForm.value;
+          planData.codigoPlan = this.inicialPadre+this.planCuentaForm.value.codigoPlan;
           const mensajeInsercion = await this.planCuentasService.insertarPlan(planData);
           Swal.fire({
             text: mensajeInsercion,
@@ -163,6 +196,7 @@ export class PlancuentasComponent {
       if (this.planCuentaForm.valid) {
         try {
           const planData: IPlanCuentas = this.planCuentaForm.value;
+          planData.codigoPlan = this.planCuentaForm.get('codigoPlan')?.value;
           const mensajeActualizacion = await this.planCuentasService.actualizarPlan(planData.idPlan, planData);
           Swal.fire({
             text: mensajeActualizacion,
@@ -193,32 +227,24 @@ export class PlancuentasComponent {
   }
 
   EditarPlan(idPlan: number) {
+    this.inicialPadre='';
     const planActualizar = this.lstPlanCuentas.find(x => x.idPlan == idPlan);
     this.planCuentaForm = this.fb.group({
-      idPlan: [planActualizar!.idPlan, [Validators.required]],
-      nivelPlan: [planActualizar!.idPlan, [Validators.required]],
+      idPlan: [planActualizar!.idPlan],
+      nivelPlan: [planActualizar!.nivelPlan],
       nombrePlan: [planActualizar!.nombrePlan, [Validators.required]],
       codigoPlan: [planActualizar!.codigoPlan, [Validators.required]],
-      idPadre: [planActualizar!.idPadre, [Validators.required]]
+      idPadre: [planActualizar!.idPadre],
+      estaActivo:[true]
     });
+    this.planCuentaForm.get('codigoPlan')?.disable();
 
     this.changeDetector.detectChanges();
-    this.btnActualizaPlan.nativeElement.click();
+    //this.btnActualizaPlan.nativeElement.click();
   }
-
-
 
   GetSpanishLanguage() {
     return SpanishLanguage;
-  }
-
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const day = ('0' + date.getDate()).slice(-2);
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
   }
 
   expandNodes(nodes: any[]): void {

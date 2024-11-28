@@ -1,0 +1,23 @@
+p-cellEditor input {
+    width: 100px; /* Ajusta el porcentaje según lo necesario */
+    font-size: 10px; /* Cambia el tamaño de la fuente */
+    height: 5px;
+  }
+  .red-text {
+    background-color: rgba(255, 0, 0,0.4);
+    color: white; /* Cambia el color del texto si lo prefieres */
+  }
+  .celdas{
+    text-align: center;border-right: 1px solid #e0e0e0;border-left: 1px solid #e0e0e0;
+  }
+  .celdasIzq{
+    text-align: center;border-left: 1px solid #e0e0e0;
+  }
+  .celdasDer{
+    text-align: center;border-right: 1px solid #e0e0e0;
+  }
+  .grey-text {
+    background-color: rgb(230, 243, 255);
+    color: black; /* Cambia el color del texto si lo prefieres */
+  }
+  
