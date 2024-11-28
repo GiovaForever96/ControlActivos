@@ -48,7 +48,7 @@ export class PresupuestoComponent {
 
   async cargarPlanCuentas(){
     this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    this.lstPresupuestos = await this.presupuestoGastoService.obtenerPresupuestoCuentaPlanAnual(2024);
+    this.lstPresupuestos = await this.presupuestoGastoService.obtenerPresupuestoCuentaPlanAnual(this.anioPresupuesto);
     this.lstPlanCuentas.forEach(cuenta => {
       let encontro=false;
       this.lstPresupuestos.forEach(element => {
@@ -108,7 +108,7 @@ export class PresupuestoComponent {
         lstValores.push(element[mes.nombre]);
       });
       let item :IPlanCuentasPresupuesto = {
-        anioPresupuesto:2024,
+        anioPresupuesto:this.anioPresupuesto,
         idPlan:element.idPlan,
         valorPresupuestoMensual:lstValores
       };
@@ -243,6 +243,7 @@ export class PresupuestoComponent {
         valorGastoMensual:valorNuevo
       }
       let response = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item,1);
+      this.onChangeAnio();
     }
   }
   valorOriginalEditar:number=0;

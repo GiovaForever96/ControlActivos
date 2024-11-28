@@ -9,21 +9,21 @@ import { AuthService } from 'src/app/services/auth-interceptor.service';
 })
 export class HeaderComponent implements OnInit {
 
-  currentUserPhoto: string;
-  currentUserName: string;
+  currentUserPhoto: string = "";
+  nombreUsuario: string = "";
+  ultimoInicioSesion: string = "";
 
-  constructor(private router: Router) {
-    this.currentUserName = "";
-    this.currentUserPhoto = "";
-  }
+  constructor(private router: Router) { }
 
   ngOnInit() {
-    this.currentUserPhoto = "";
-    this.currentUserName = "Usuario";
+    this.nombreUsuario = localStorage.getItem("nombreUsuario") ?? "";
+    this.ultimoInicioSesion = localStorage.getItem("lastLogin") ?? "";
   }
 
   cerrarSesion() {
     localStorage.removeItem('token');
+    localStorage.removeItem('nombreUsuario');
+    localStorage.removeItem('lastLogin');
     this.router.navigate(['/'])
   }
 

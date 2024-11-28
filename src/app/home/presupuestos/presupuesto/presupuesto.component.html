@@ -25,6 +25,9 @@
                                 <i class="fa fa fa-money-bill-wave mr-2"></i>
                                 Presupuesto
                             </h3>
+                            <button type="button" class="btn btn-secondary btn-sm float-right" data-toggle="modal">
+                                <i class="fas fa-history mr-2"></i> Historial
+                            </button>
                         </div>
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
@@ -85,7 +88,7 @@
                                         </ng-template>
                                       </p-cellEditor>
                                     </td>
-                                    <td pEditableColumn *ngFor="let mes of lstMeses" [attr.contenteditable]="!plan.tieneHijos">
+                                    <td pEditableColumn *ngFor="let mes of lstMeses">
                                       <p-cellEditor  >
                                         <ng-template pTemplate="input">
                                           <input *ngIf="!plan.tieneHijos" pInputText type="number" [(ngModel)]="plan[mes.nombre]" (focus)="celdaOriginal(plan[mes.nombre],plan)" (focusout)="celdaEditada(plan,mes,plan[mes.nombre])" />

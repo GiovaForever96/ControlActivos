@@ -25,94 +25,53 @@
                                 <i class="fa fa fa-chart-line mr-2"></i>
                                 Resultados
                             </h3>
+                            <button type="button" class="btn btn-secondary btn-sm float-right" data-toggle="modal">
+                                <i class="fas fa-history mr-2"></i> Historial
+                            </button>
                         </div>
                         <div class="card-body">
-                            <!-- <div class="row mb-3 mt-3">
-                                <div class="col-md-3 col-lg-3 col-sm-6" style=" align-items: center;">
-                                    <label>Año:</label>
-                                    <div class="row">
-                                        <select class="custom-select color-black"
-                                            style="height: 45px; flex-basis: 200px;" [(ngModel)]="anioPresupuesto"
-                                            (change)="onChangeAnio()">
-                                            <option [value]="2024">
-                                                2024
-                                            </option>
-                                            <option [value]="2023">
-                                                2023
-                                            </option>
-                                        </select>&nbsp;
-                                        <button class="btn btn-success " (click)="abrirModal()"
-                                            title="Subir Registro"><i class="fas fa-upload"></i></button>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-lg-3 col-sm-6">
-                                    <label style="font-weight: normal;">Mes Desde:</label>
-                                    <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
-                                        [(ngModel)]="mesDesde" (change)="rangoMeses($event)">
-                                        <option [value]="0">
-                                            Todos
-                                        </option>
-                                        <option [value]="item.id" *ngFor="let item of lstMeses">
-                                            {{item.nombre}}
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 col-lg-3 col-sm-6">
-
-                                    <label style="font-weight: normal;">Mes Hasta:</label>
-                                    <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
-                                        [(ngModel)]="mesHasta" (change)="rangoMeses($event)">
-                                        <option [value]="0">
-                                            Todos
-                                        </option>
-                                        <option [value]="item.id" *ngFor="let item of lstMeses">
-                                            {{item.nombre}}
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 col-lg-3 col-sm-6">
-                                    <div>
-                                        <label style="font-weight: normal;">Buscar:</label>
-                                        <input [(ngModel)]="filterText" placeholder="" class="form-control color-black"
-                                            style="height: 45px; flex-basis: 200px;" />
-                                    </div>
-                                </div>
-                            </div> -->
                             <div class="d-flex align-items-center mb-3">
-                                <label>Año:</label>&nbsp;
-                                <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;" [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
+                                <label for="">Año:</label>&nbsp;
+                                <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
+                                    [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
                                     <option [value]="item" *ngFor="let item of lstAnios">
                                         {{item}}
-                                      </option>
+                                    </option>
                                 </select>
                                 &nbsp;&nbsp;
-                                <button class="btn btn-success btn-sm ml-2" (click)="abrirModal()" title="Subir Registro"><i class="fas fa-upload"></i></button>
-                                <div class="d-flex justify-content-end align-items-center mb-3" style="font-size: 12px; flex-grow: 1;">
-                                  Buscar:&nbsp;&nbsp;
-                                  <input [(ngModel)]="filterText" placeholder="" class="form-control col-3" />
+                                <button class="btn btn-success btn-sm ml-2" (click)="abrirModal()"
+                                    title="Subir Registro"><i class="fas fa-upload"></i></button>
+                                <div class="d-flex justify-content-end align-items-center mb-3"
+                                    style="font-size: 12px; flex-grow: 1;">
+                                    Buscar:&nbsp;&nbsp;
+                                    <input [(ngModel)]="filterText" placeholder="" class="form-control col-3" />
                                 </div>
-                              </div>
-        
-                            <p-table *ngIf="filteredData && filteredData.length > 0" [value]="filteredData" dataKey="id" [sortField]="'codigoPlan'" [sortOrder]="1" [scrollable]="true" scrollHeight="800px">
-                                <ng-template pTemplate="header" >
+                            </div>
+
+                            <p-table *ngIf="filteredData && filteredData.length > 0" [value]="filteredData" dataKey="id"
+                                [sortField]="'codigoPlan'" [sortOrder]="1" [scrollable]="true" scrollHeight="800px">
+                                <ng-template pTemplate="header">
                                     <tr style="font-size: 10px;">
                                         <th colspan="2" pFrozenColumn></th>
-                                        <th *ngFor="let item of cabeceraMeses" colspan="5" class="celdas" >{{item.nombreMes}}</th>
+                                        <th *ngFor="let item of cabeceraMeses" colspan="5" class="celdas">
+                                            {{item.nombreMes}}</th>
                                     </tr>
                                     <tr style="font-size: 10px;">
                                         <th pSortableColumn="codigoPlan" pFrozenColumn>Código</th>
                                         <th pSortableColumn="nombrePlan" pFrozenColumn>Plan</th>
                                         <ng-container *ngFor="let item of cabeceraMeses">
-                                            <th class="celdasIzq" pSortableColumn="{{'presupuesto'+item.nombreMes}}" >Presupuesto</th>
+                                            <th class="celdasIzq" pSortableColumn="{{'presupuesto'+item.nombreMes}}">
+                                                Presupuesto</th>
                                             <th pSortableColumn="{{'gastos'+item.nombreMes}}">Gastos</th>
                                             <th pSortableColumn="{{'diferencia'+item.nombreMes}}">Diferencia</th>
                                             <th pSortableColumn="{{'porcentaje'+item.nombreMes}}">%</th>
-                                            <th class="celdasDer"><i class="nav-icon fa fa-chart-line mr-2" style="color: black;"> </i></th>
-                                        </ng-container>   
+                                            <th class="celdasDer"><i class="nav-icon fa fa-chart-line mr-2"
+                                                    style="color: black;"> </i></th>
+                                        </ng-container>
                                     </tr>
                                 </ng-template>
                                 <ng-template pTemplate="body" let-plan>
-                                    <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}" >
+                                    <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}">
                                         <td pFrozenColumn>
                                             <p-cellEditor>
                                                 <ng-template pTemplate="output">
@@ -127,44 +86,54 @@
                                                 </ng-template>
                                             </p-cellEditor>
                                         </td>
-                                        <ng-container *ngFor="let mes of cabeceraMeses" >
+                                        <ng-container *ngFor="let mes of cabeceraMeses">
                                             <td class="celdasIzq">
                                                 <p-cellEditor>
-                                                    <ng-template pTemplate="input" >
-                                                        <input pInputText type="number" [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes]">
+                                                    <ng-template pTemplate="input">
+                                                        <input pInputText type="number"
+                                                            [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes]">
                                                     </ng-template>
                                                     <ng-template pTemplate="output">
                                                         {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
-                                            <td pEditableColumn [attr.contenteditable]="!plan.tieneHijos">
-                                          
-                                          <p-cellEditor>
-                                            <ng-template pTemplate="input">
-                                              <input *ngIf="!plan.tieneHijos" pInputText type="number" [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes + 'G']" (focus)="celdaOriginal(plan.mesGastoPresupuesto[mes.nombreMes + 'G'])" (focusout)="celdaEditada(plan,mes,plan.mesGastoPresupuesto[mes.nombreMes + 'G'])" >
-                                              <span *ngIf="plan.tieneHijos">{{plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency: 'USD'}}</span>
-                                            </ng-template>
-                                        
-                                            <ng-template pTemplate="output">
-                                              {{plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency: 'USD'}}
-                                            </ng-template>
-                                          </p-cellEditor>
-                                        
-                                        </td>
-                                        <td  [ngClass]="{'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]}" >
-                                            <p-cellEditor>
-                                                <ng-template pTemplate="input" >
-                                                    <input pInputText type="number" >
-                                                </ng-template>
-                                                <ng-template pTemplate="output">
-                                                    {{ plan.mesGastoPresupuesto[mes.nombreMes] - plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency: 'USD'}}
-                                                </ng-template>
-                                            </p-cellEditor>
-                                        </td>
+                                            <td pEditableColumn>
+
+                                                <p-cellEditor>
+                                                    <ng-template pTemplate="input">
+                                                        <input *ngIf="!plan.tieneHijos" pInputText type="number"
+                                                            [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes + 'G']"
+                                                            (focus)="celdaOriginal(plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
+                                                            (focusout)="celdaEditada(plan,mes,plan.mesGastoPresupuesto[mes.nombreMes + 'G'])">
+                                                        <span
+                                                            *ngIf="plan.tieneHijos">{{plan.mesGastoPresupuesto[mes.nombreMes
+                                                            + 'G'] | currency: 'USD'}}</span>
+                                                    </ng-template>
+
+                                                    <ng-template pTemplate="output">
+                                                        {{plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency:
+                                                        'USD'}}
+                                                    </ng-template>
+                                                </p-cellEditor>
+
+                                            </td>
+                                            <td
+                                                [ngClass]="{'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]}">
+                                                <p-cellEditor>
+                                                    <ng-template pTemplate="input">
+                                                        <input pInputText type="number">
+                                                    </ng-template>
+                                                    <ng-template pTemplate="output">
+                                                        {{ plan.mesGastoPresupuesto[mes.nombreMes] -
+                                                        plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency:
+                                                        'USD'}}
+                                                    </ng-template>
+                                                </p-cellEditor>
+                                            </td>
                                             <td>
                                                 <p-cellEditor>
-                                                    <ng-template pTemplate="input" >
+                                                    <ng-template pTemplate="input">
                                                         <input pInputText type="number" [(ngModel)]="plan.porcentaje">
                                                     </ng-template>
                                                     <ng-template pTemplate="output">
@@ -173,21 +142,27 @@
                                                 </p-cellEditor>
                                             </td>
                                             <td class="celdasDer">
-                                            <p-cellEditor>
-                                                <ng-template pTemplate="output">
-                                                    <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]" class="fas fa-arrow-circle-up fa-lg" style="color: rgba(255, 0, 0,0.4);"></i>
-                                                    <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] < plan.mesGastoPresupuesto[mes.nombreMes]" class="fas fa-arrow-circle-down fa-lg" style="color: rgb(98, 168, 98);"></i>
-                                                    <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] === plan.mesGastoPresupuesto[mes.nombreMes]" class="fas fa-equals fa-lg" style="color: skyblue;"></i>
-                                                </ng-template>
-                                            </p-cellEditor>
-                                        </td>
+                                                <p-cellEditor>
+                                                    <ng-template pTemplate="output">
+                                                        <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]"
+                                                            class="fas fa-arrow-circle-up fa-lg"
+                                                            style="color: rgba(255, 0, 0,0.4);"></i>
+                                                        <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] < plan.mesGastoPresupuesto[mes.nombreMes]"
+                                                            class="fas fa-arrow-circle-down fa-lg"
+                                                            style="color: rgb(98, 168, 98);"></i>
+                                                        <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] === plan.mesGastoPresupuesto[mes.nombreMes]"
+                                                            class="fas fa-equals fa-lg" style="color: skyblue;"></i>
+                                                    </ng-template>
+                                                </p-cellEditor>
+                                            </td>
                                         </ng-container>
                                     </tr>
                                 </ng-template>
                             </p-table>
-                            <div *ngIf="filteredData && filteredData.length === 0" style="text-align: center;font-weight: bold;">
+                            <div *ngIf="filteredData && filteredData.length === 0"
+                                style="text-align: center;font-weight: bold;">
                                 <p>No hay datos que mostrar.</p>
-                              </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -210,34 +185,39 @@
                         <div class="card-body row">
                             <div class="col-lg-4 form-group">
                                 <div class="row align-items-center">
-                                    <label for="codigoPlan" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Mes:</label>
-                                    <select class="custom-select color-black" style="height: 45px;"  formControlName="mesRegistro"
-                                    [ngClass]="{ 'is-invalid': registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 }">
-                                    <option [value]='0'>
-                                      Seleccionar...
-                                    </option>
-                                    <option [value]="item.idMes" *ngFor="let item of lstMesesPendientes">
-                                      {{item.nombreMes}}
-                                    </option>
-                                  </select>
-                                  <div class="invalid-feedback"
-                                  *ngIf="registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 ">
-                                  Debe selecionar el mes a cargar.
-                              </div>
+                                    <label for="codigoPlan"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Mes:</label>
+                                    <select class="custom-select color-black" style="height: 45px;"
+                                        formControlName="mesRegistro"
+                                        [ngClass]="{ 'is-invalid': registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 }">
+                                        <option [value]='0'>
+                                            Seleccionar...
+                                        </option>
+                                        <option [value]="item.idMes" *ngFor="let item of lstMesesPendientes">
+                                            {{item.nombreMes}}
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback"
+                                        *ngIf="registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 ">
+                                        Debe selecionar el mes a cargar.
+                                    </div>
                                 </div>
                             </div>
                             &nbsp;
                             <div class="col-lg-6 form-group">
                                 <div class="row align-items-center">
-                                    <label for="codigoPlan" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Archivo:</label><u style="color: blue;cursor: pointer;"
-                                     title="Descargar Formato Registro" (click)="descargarFormato()">Formato</u>
+                                    <label for="codigoPlan"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Archivo:</label>
+                                    <u style="color: blue;cursor: pointer;" title="Descargar Formato Registro"
+                                        (click)="descargarFormato()">Formato</u>
                                     <input type="file"
-                                    [ngClass]="{ 'is-invalid': registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched }"
-                                    class="form-control color-black" style="height: 45px;" formControlName="archivo" (change)="onFileChange($event)">
-                                <div class="invalid-feedback"
-                                    *ngIf="registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched">
-                                    Debe cargar el archivo de gastos.
-                                </div>
+                                        [ngClass]="{ 'is-invalid': registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched }"
+                                        class="form-control color-black" style="height: 45px;" formControlName="archivo"
+                                        (change)="onFileChange($event)">
+                                    <div class="invalid-feedback"
+                                        *ngIf="registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched">
+                                        Debe cargar el archivo de gastos.
+                                    </div>
                                 </div>
                             </div>
                         </div>

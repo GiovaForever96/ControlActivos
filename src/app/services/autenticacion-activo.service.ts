@@ -16,21 +16,24 @@ export class AutenticacionActivoService {
   async iniciarSesion(inicioSesionData: IInicioSesionActivo): Promise<string> {
     const URL_API = this.baseUrl + 'login';
     try {
-      const response = await this.authService.apiClient.post<any>(URL_API, inicioSesionData);
-      if (!response.data.esError) {
+      const response = await axios.post<any>(URL_API, inicioSesionData);
+      if (response.data) {
         localStorage.setItem('token', response.data.token);
-        return "Inicio de sesión exitoso";
+        localStorage.setItem('nombreUsuario', response.data.fullName);
+        localStorage.setItem('lastLogin', response.data.lastLogin);
+        return "OK";
       } else {
-        return `Error: ${response.data.mensaje}`;
+        return response.data.mensaje;
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.code == "ERR_BAD_REQUEST")
-          throw new Error('Usuario o contraseña incorrectos.');
-        else
-          throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        if (error.code === 'ERR_BAD_REQUEST') {
+          return 'Usuario o contraseña incorrectos.';
+        } else {
+          return 'Ha ocurrido un error en el servidor. Contactese con TI.';
+        }
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        return 'Ha ocurrido un error no reconocido. Contactese con TI.';
       }
     }
   }
