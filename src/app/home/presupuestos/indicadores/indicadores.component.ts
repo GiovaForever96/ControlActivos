@@ -6,8 +6,8 @@ import { IndicadorFinancieroService } from 'src/app/services/indicador-financier
 import { LoadingService } from 'src/app/services/loading.service';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
 import { ToastrService } from 'src/app/services/toastr.service';
-
 declare var $: any;
+declare var pdfMake: any;
 
 @Component({
   selector: 'app-indicadores',
@@ -28,8 +28,8 @@ export class IndicadoresComponent {
   lstRoles: string[] = [];
   lstIndicadoresPorcentaje: string[] = ['15.', '16.', '17.', '18.', '20.'];
   informacionIndicadoresFinancieros: any;
+  informacionIndicadoresFinancierosReporte: any;
   //#endregion
-
 
   constructor(
     private loadingService: LoadingService,
@@ -105,16 +105,16 @@ export class IndicadoresComponent {
     var indicePruebaAcida = this.obtenerValorIndicador(571, nombreMes);
     var utilidadNeta = this.obtenerValorIndicador(566, nombreMes);
     var activosTotal = this.obtenerValorIndicador(561, nombreMes);
-    var ROA = this.obtenerValorIndicador(572, nombreMes);
+    var ROA = this.obtenerValorIndicador(572, nombreMes) * 100;
     var patrimonio = this.obtenerValorIndicador(565, nombreMes);
-    var ROE = this.obtenerValorIndicador(573, nombreMes);
+    var ROE = this.obtenerValorIndicador(573, nombreMes) * 100;
     var utilidadBruta = this.obtenerValorIndicador(570, nombreMes);
     var ventas = this.obtenerValorIndicador(569, nombreMes);
-    var margenBruto = this.obtenerValorIndicador(574, nombreMes);
-    var margenNeto = this.obtenerValorIndicador(575, nombreMes);
+    var margenBruto = this.obtenerValorIndicador(574, nombreMes) * 100;
+    var margenNeto = this.obtenerValorIndicador(575, nombreMes) * 100;
     var capitalTrabajo = this.obtenerValorIndicador(576, nombreMes);
     var pasivoTotal = this.obtenerValorIndicador(564, nombreMes);
-    var apalancamientoTotal = this.obtenerValorIndicador(577, nombreMes);
+    var apalancamientoTotal = this.obtenerValorIndicador(577, nombreMes) * 100;
     this.informacionIndicadoresFinancieros = [
       {
         headers: ['DESCRIPCION', 'ACTIVO CORRIENTE', 'PASIVO CORRIENTE', 'VALOR INDICE'],
@@ -134,7 +134,7 @@ export class IndicadoresComponent {
           ['Índice de Prueba ácida en detalle: (Activo corriente - Inventario) / Pasivo Corriente',
             this.appComponent.formatoDinero(activoCorriente, true),
             this.appComponent.formatoDinero(pasivoCorriente, true),
-            this.appComponent.formatoDinero(indiceLiquidez, true)
+            this.appComponent.formatoDinero(indicePruebaAcida, true)
           ]
         ],
         editableResumen: `El índice corriente o de liquidez fue ${this.appComponent.formatoDinero(indiceLiquidez, true)}.El factor mínimo de este es 1,0 y el óptimo de 2,5`
@@ -203,7 +203,7 @@ export class IndicadoresComponent {
             `${this.appComponent.formatoDinero(apalancamientoTotal, false)}%`
           ]
         ],
-        editableResumen: `El índice de Endeudamiento indica que los activos han sido financiados a través de deudas en el ${this.appComponent.formatoDinero(apalancamientoTotal, true)}%, o visto de otra manera los socios son propietarios del ${this.appComponent.formatoDinero(apalancamientoTotal, true)}% de la compañía.`
+        editableResumen: `El índice de Endeudamiento indica que los activos han sido financiados a través de deudas en el ${this.appComponent.formatoDinero(apalancamientoTotal, false)}%, o visto de otra manera los socios son propietarios del ${this.appComponent.formatoDinero(apalancamientoTotal, false)}% de la compañía.`
       }
     ];
     $('#indicadoresModal').modal('show');
@@ -216,6 +216,120 @@ export class IndicadoresComponent {
       valorIndicador = registroCuentaPlan.mesGastoPresupuesto[nombreMes];
     }
     return valorIndicador;
+  }
+
+
+  generarInformePdf() {
+    const documentDefinition: any = {
+      content: [
+        // Agregar los textos antes de la tabla
+        {
+          text: 'ÍNDICES FINANCIEROS ' + this.anioIndicador,
+          fontSize: 11,
+          style: 'title',
+          bold: true,
+          alignment: 'center',
+          margin: [0, 0, 0, 10],
+        },
+        {
+          text: 'SEGUSUAREZ AGENCIA ASESORA PRODUCTORA DE SEGUROS CIA. LTDA.',
+          fontSize: 10,
+          style: 'subtitle',
+          alignment: 'center',
+          margin: [0, 0, 0, 10],
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 9,
+          bold: true,
+          alignment: 'center',
+          margin: [0, 5, 0, 5],
+          lineHeight: 1,
+        },
+        table: {
+          margin: [0, 5, 0, 5],
+          fontSize: 9,
+          border: [true, true, true, true],
+          lineHeight: 1,
+        },
+        tableHeader: {
+          fillColor: '#cfe2f3',
+          alignment: 'center',
+          fontSize: 9,
+          bold: true,
+          border: [true, true, true, true],
+          margin: [0, 2, 0, 2],
+          lineHeight: 1,
+        },
+        tableCell: {
+          alignment: 'center',
+          fontSize: 9,
+          border: [true, true, true, true],
+          margin: [0, 2, 0, 2],
+          lineHeight: 1,
+        },
+        editableResumen: {
+          fontSize: 9,
+          margin: [0, 5, 0, 10],
+          lineHeight: 1,
+        }
+      },
+      footer: (currentPage: number, pageCount: number) => {
+        return [
+          {
+            text: `Página ${currentPage} de ${pageCount}\t\tFecha Generación: ${new Date().toLocaleString()}.`,
+            alignment: 'center',
+            fontSize: 7,
+            margin: [0, 10],
+            bold: true
+          }
+        ];
+      }
+    };
+
+    // Iterar sobre la información para crear las tablas
+    this.informacionIndicadoresFinancieros.forEach((indicador: any) => {
+      const table = {
+        table: {
+          headerRows: 1,
+          widths: ['auto', '*', '*', '*'],
+          body: [
+            // Celdas de encabezado con fondo
+            indicador.headers.map((header: any) => ({
+              text: header,
+              style: 'tableHeader'
+            })),
+            // Filas con celdas que tienen los bordes
+            ...indicador.rows.map((row: any) =>
+              row.map((cell: any) => ({
+                text: cell,
+                style: 'tableCell'
+              }))
+            )
+          ]
+        },
+        style: 'table'
+      };
+
+      // Agregar la tabla al documento
+      documentDefinition.content.push(table);
+
+      // Agregar el resumen editable si existe
+      if (indicador.editableResumen) {
+        documentDefinition.content.push({
+          text: [
+            { text: 'Resumen: ', bold: true },
+            indicador.editableResumen
+          ],
+          style: 'editableResumen'
+        });
+      }
+    });
+
+    // Crear y abrir el PDF
+    pdfMake.createPdf(documentDefinition).open();
+
   }
 
 }
