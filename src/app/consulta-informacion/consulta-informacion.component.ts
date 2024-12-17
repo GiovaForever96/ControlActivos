@@ -33,10 +33,14 @@ export class ConsultaInformacionComponent {
     public inventariosService: InventarioActivoService,
     private custodiosService: CustodioActivoService,
     private router: Router,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private productosService: ProductoActivoService) { }
 
   ngOnInit(): void {
     this.ConsultarDispositivosVinculados();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   async ConsultarDispositivosVinculados() {

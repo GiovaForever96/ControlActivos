@@ -16,6 +16,8 @@ export class IndexComponent {
     private el: ElementRef) { }
 
   ngOnInit() {
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', 'hidden');
   }
 
 }

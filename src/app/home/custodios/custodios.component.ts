@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
 import { ICustodioActivo, ISucursalActivo } from 'src/app/models/custodio-activo';
 import { LoadingService } from 'src/app/services/loading.service';
@@ -36,6 +36,8 @@ export class CustodiosComponent {
     private custodiosService: CustodioActivoService,
     private fb: FormBuilder,
     private changeDetector: ChangeDetectorRef,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private toastrService: ToastrService) { }
 
   ngOnInit(): void {
@@ -43,6 +45,8 @@ export class CustodiosComponent {
     (window as any).EditarCustodio = this.EditarCustodio.bind(this);
     this.CargarListadoCustodios();
     this.CrearCustodioForm();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   CrearCustodioForm() {

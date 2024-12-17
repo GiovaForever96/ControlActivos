@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
 import { IModeloActivo } from 'src/app/models/modelo-activo';
@@ -38,6 +38,8 @@ export class ModelosComponent {
     private marcasService: MarcaActivoService,
     private homeComponent: HomeComponent,
     private fb: FormBuilder,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private changeDetector: ChangeDetectorRef,
     private toastrService: ToastrService) { }
 
@@ -46,6 +48,8 @@ export class ModelosComponent {
     (window as any).EditarModelo = this.EditarModelo.bind(this);
     this.CargarListadoModelos();
     this.CrearModeloForm();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   async CargarListadoModelos() {

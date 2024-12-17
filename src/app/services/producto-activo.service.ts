@@ -27,9 +27,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -45,9 +46,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -63,9 +65,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -81,9 +84,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -99,9 +103,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -117,9 +122,10 @@ export class ProductoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }

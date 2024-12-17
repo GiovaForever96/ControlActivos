@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
 import { IMarcaActivo } from 'src/app/models/marca-activo';
 import { LoadingService } from 'src/app/services/loading.service';
@@ -34,6 +34,8 @@ export class MarcasComponent implements OnInit {
     private marcasService: MarcaActivoService,
     private fb: FormBuilder,
     private changeDetector: ChangeDetectorRef,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private toastrService: ToastrService) { }
 
   ngOnInit(): void {
@@ -41,6 +43,8 @@ export class MarcasComponent implements OnInit {
     (window as any).EditarMarca = this.EditarMarca.bind(this);
     this.CargarListadoMarcas();
     this.CrearMarcaForm();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   CrearMarcaForm() {

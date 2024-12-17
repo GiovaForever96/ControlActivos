@@ -7,71 +7,96 @@
     <nav class="mt-2">
         <ul name="mainParent" class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
             data-accordion="false">
-            <li class="nav-item">
-                <a routerLink="/home/marcas" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
+            <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-landmark mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Marcas</p>
+                    <p style="color: white;">Control Activos
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
                 </a>
+                <ul name="childParent" class="nav nav-treeview">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/marcas" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-landmark mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Marcas</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/modelos" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-list-alt mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Modelos</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/custodios" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Custodios</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/bienes" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-shopping-bag mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Bienes</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/inventario" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-list-ol mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Inventario</p>
+                        </a>
+                    </li>
+                </ul>
             </li>
-            <li class="nav-item">
-                <a routerLink="/home/modelos" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
-                    <i class="nav-icon fas fa-list-alt mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Modelos</p>
+            <!-- Presupuestos -->
+            <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                <a href="javascript:void(0)" class="nav-link">
+                    <i class="nav-icon fas fa-chart-pie mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Presupuestos
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
                 </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/custodios" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
-                    <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Custodios</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/bienes" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
-                    <i class="nav-icon fas fa-shopping-bag mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Bienes</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/inventario" class="nav-link" routerLinkActive="active" (click)="SetActive($event)">
-                    <i class="nav-icon fas fa-list-ol mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Inventario</p>
-                </a>
-            </li>
-            <!--Presupuestos-->
-            <li class="nav-item">
-                <a routerLink="/home/presupuestos/planCuentas" class="nav-link" routerLinkActive="active"
-                    (click)="SetActive($event)">
-                    <i class="nav-icon fa fa-building mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Plan Cuentas</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/presupuestos/presupuesto" class="nav-link" routerLinkActive="active"
-                    (click)="SetActive($event)">
-                    <i class="nav-icon fa fa-money-bill-wave mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Presupuesto Anual</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/presupuestos/resultados" class="nav-link" routerLinkActive="active"
-                    (click)="SetActive($event)">
-                    <i class="nav-icon fa fa-chart-line mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Gasto Mensual</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/presupuestos/indicadores" class="nav-link" routerLinkActive="active"
-                    (click)="SetActive($event)">
-                    <i class="nav-icon fa fa-poll-h mr-2" style="color: white;"> </i>
-                    <p style="color: white;">Indicadores Financieros</p>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a routerLink="/home/presupuestos/dashboard" class="nav-link" routerLinkActive="active"
-                    (click)="SetActive($event)">
-                    <i class="nav-icon fa fa-chart-pie mr-2" style="color: white;"> </i>
-                    <p style="color: white;">DashBoard</p>
-                </a>
+                <ul name="childParent" class="nav nav-treeview">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                        <a routerLink="/home/presupuestos/planCuentas" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fa fa-building mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Plan Cuentas</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                        <a routerLink="/home/presupuestos/presupuesto" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fa fa-money-bill-wave mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Presupuesto Anual</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                        <a routerLink="/home/presupuestos/resultados" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fa fa-chart-line mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Gasto Mensual</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" >
+                        <a routerLink="/home/presupuestos/indicadores" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fa fa-poll-h mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Indicadores Financieros</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" >
+                        <a routerLink="/home/presupuestos/dashboard" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fa fa-chart-pie mr-2" style="color: white;"> </i>
+                            <p style="color: white;">DashBoard</p>
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </nav>

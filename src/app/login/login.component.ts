@@ -65,8 +65,10 @@ export class LoginComponent implements OnInit {
         let respuestaAutenticacion = await this.autenticacionService.iniciarSesion(inicioSesionData);
         if (respuestaAutenticacion == "OK")
           window.location.href = 'home';
-        else
+        else {
           this.toastrService.error("Error inicio sesión", respuestaAutenticacion);
+          this.loginForm.reset();
+        }
       } else {
         this.appComponent.validateAllFormFields(this.loginForm);
         this.toastrService.error('Error al iniciar sesión', 'No se llenaron todos los campos necesarios.');

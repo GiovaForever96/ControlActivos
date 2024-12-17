@@ -1,0 +1,145 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6 d-none d-sm-block">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a routerLink="/home">Home</a></li>
+                        <li class="breadcrumb-item active">Indicadores Financieros</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fa fa fa-poll-h mr-2"></i>
+                                Indicadores Financieros
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <label for="">Año:</label>&nbsp;
+                                <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
+                                    [(ngModel)]="anioIndicador" (change)="onChangeAnio()">
+                                    <option [value]="item" *ngFor="let item of lstAnios">
+                                        {{item}}
+                                    </option>
+                                </select>
+                                &nbsp;&nbsp;
+                                <div class="d-flex justify-content-end align-items-center mb-3"
+                                    style="font-size: 12px; flex-grow: 1;">
+                                    Buscar:&nbsp;&nbsp;
+                                    <input [(ngModel)]="filterText" placeholder="" class="form-control col-3" />
+                                </div>
+                            </div>
+
+                            <p-table *ngIf="filteredData && filteredData.length > 0" [value]="filteredData" dataKey="id"
+                                [sortField]="'idPlan'" [sortOrder]="1">
+                                <ng-template pTemplate="header">
+                                    <tr style="font-size: 10px;">
+                                        <th pSortableColumn="nombrePlan" pFrozenColumn id="" class="text-center"
+                                            style="border: 0.5px solid silver;">Plan</th>
+                                        <th *ngFor="let item of cabeceraMeses" class="text-center" id=""
+                                            style="border: 0.5px solid silver;">
+                                            {{item.nombreMes}}
+                                            <button class="btn btn-success p-1 m-1 ml-2"
+                                                (click)="visualizarDocumento(item.nombreMes)">
+                                                <i class="fas fa-file-alt fa-lg"></i>
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-plan>
+                                    <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}">
+                                        <td pFrozenColumn style="border: 0.5px solid silver;">
+                                            <p-cellEditor>
+                                                <ng-template pTemplate="output">
+                                                    {{plan.nombrePlan}}
+                                                </ng-template>
+                                            </p-cellEditor>
+                                        </td>
+                                        <ng-container *ngFor="let mes of cabeceraMeses">
+                                            <td class="celdasIzq" class="text-center"
+                                                style="border: 0.5px solid silver;">
+                                                <p-cellEditor>
+                                                    <ng-template pTemplate="output"
+                                                        *ngIf="lstIndicadoresPorcentaje.includes(plan.codigoPlan)">
+                                                        {{plan.mesGastoPresupuesto[mes.nombreMes]| percent: '1.2-2'}}
+                                                    </ng-template>
+                                                    <ng-template pTemplate="output"
+                                                        *ngIf="!lstIndicadoresPorcentaje.includes(plan.codigoPlan)">
+                                                        {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
+                                                    </ng-template>
+                                                </p-cellEditor>
+                                            </td>
+                                        </ng-container>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                            <div *ngIf="filteredData && filteredData.length === 0"
+                                style="text-align: center;font-weight: bold;">
+                                <p>No hay datos que mostrar.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Modal -->
+    <div class="modal fade" id="indicadoresModal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center text-center"
+                    style="background-color: rgba(150,100,100,0.1);">
+                    <h5 class="modal-title w-100 text-center">
+                        INDICES FINANCIEROS {{anioIndicador}}<br />
+                        SEGUSUAREZ AGENCIA ASESORA PRODUCTORA DE SEGUROS CIA. LTDA.
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body m-2">
+                    <div *ngFor="let table of informacionIndicadoresFinancieros" class="mb-2">
+                        <table
+                            style="border: 1px solid silver; border-collapse: collapse; width: 100%; margin-bottom: 10px;">
+                            <thead>
+                                <tr style="background-color: #cfe2f3;">
+                                    <th *ngFor="let header of table.headers"
+                                        style="text-align: center; border: 1px solid silver; font-size: small;">
+                                        {{ header }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let row of table.rows">
+                                    <td *ngFor="let cell of row" [innerHTML]="cell"
+                                        style="text-align: center; border: 1px solid silver; font-size: small;">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <textarea [(ngModel)]="table.editableResumen" rows="2" style="width: 100%;font-size: small;"
+                            *ngIf="table.editableResumen"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer text-end">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-2"></i>
+                        Generar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,7 +3,7 @@ import { AuthService } from './auth-interceptor.service';
 import { environment } from 'src/environments/environment';
 import { IGastoMensual, IGastosRespuesta, IMesGasto } from '../models/presupuesto-gastos';
 import axios from 'axios';
-import { IGastoPresupuesto, IPlanCuentasPresupuesto } from '../models/plan-cuentas';
+import { IGastoPresupuesto, IHistorialGastoPresupuesto, IPlanCuentasPresupuesto } from '../models/plan-cuentas';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +14,8 @@ export class PresupuestoGastoService {
 
   baseUrl = environment.apiUrl + 'PresupuestoPlan/';
 
-  async obtenerMesGastoPendientes(anio:number): Promise<IMesGasto[]> {
-    const URL_API = this.baseUrl + 'obtenerMesGastoPendientes/'+anio;
+  async obtenerMesGastoPendientes(anio: number): Promise<IMesGasto[]> {
+    const URL_API = this.baseUrl + 'obtenerMesGastoPendientes/' + anio;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
@@ -25,15 +25,16 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
 
-  async obtenerGastosPresupuestoPlanCuenta(anio:number): Promise<IGastosRespuesta> {
-    const URL_API = this.baseUrl + 'obtenerGastosPresupuestoPlanCuenta/'+anio;
+  async obtenerGastosPresupuestoPlanCuenta(anio: number): Promise<IGastosRespuesta> {
+    const URL_API = this.baseUrl + 'obtenerGastosPresupuestoPlanCuenta/' + anio;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
@@ -43,9 +44,10 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -61,9 +63,10 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
@@ -79,15 +82,35 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+      }
+    } 
+  }
+
+  async agregarGastoAnual(numeroMeses:number,presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
+    const URL_API = this.baseUrl + 'agregarGastoAnual/'+numeroMeses;
+    try {
+      const response = await this.authService.apiClient.post<any>(URL_API, presupuestoData);
+      if (!response.data.esError) {
+        return response.data.mensaje;
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
+      } else {
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
 
-  async actualizarValorGastoPresupuesto(gastoPresupuesto: IGastoPresupuesto,tipo:number): Promise<string> {
-    const URL_API = this.baseUrl + 'actualizarValorGastoPresupuesto/'+tipo;
+  async actualizarValorGastoPresupuesto(gastoPresupuesto: IGastoPresupuesto, tipo: number): Promise<string> {
+    const URL_API = this.baseUrl + 'actualizarValorGastoPresupuesto/' + tipo;
     try {
       const response = await this.authService.apiClient.post<any>(URL_API, gastoPresupuesto);
       if (!response.data.esError) {
@@ -97,15 +120,16 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.'+error);
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.'+error);
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
 
-  async verificarExistePresupuestoCargado(anio:number): Promise<any> {
-    const URL_API = this.baseUrl + 'verificarExistePresupuestoCargado/'+anio;
+  async verificarExistePresupuestoCargado(anio: number): Promise<any> {
+    const URL_API = this.baseUrl + 'verificarExistePresupuestoCargado/' + anio;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
@@ -115,15 +139,16 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
 
-  async obtenerPresupuestoCuentaPlanAnual(anio:number): Promise<IPlanCuentasPresupuesto[]> {
-    const URL_API = this.baseUrl + 'obtenerPresupuestoCuentaPlanAnual/'+anio;
+  async obtenerPresupuestoCuentaPlanAnual(anio: number): Promise<IPlanCuentasPresupuesto[]> {
+    const URL_API = this.baseUrl + 'obtenerPresupuestoCuentaPlanAnual/' + anio;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
@@ -133,10 +158,31 @@ export class PresupuestoGastoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error('Ha ocurrido un error en el servidor.\nContactese con TI.');
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
       } else {
-        throw new Error('Ha ocurrido un error no reconocido.\nContactese con TI.');
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
     }
   }
+
+  async obtenerHistorialGastoPresupuesto(anio: number, esPresupuesto: number): Promise<IHistorialGastoPresupuesto[]> {
+    const URL_API = this.baseUrl + 'obtenerPresupuestoGastoHistorial/' + anio + '/' + esPresupuesto;
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as IHistorialGastoPresupuesto[];
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
+      } else {
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+      }
+    }
+  }
+
 }

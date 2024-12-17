@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
 import { LoadingService } from 'src/app/services/loading.service';
 import { HomeComponent } from '../home.component';
@@ -38,11 +38,15 @@ export class InventarioComponent {
     private fb: FormBuilder,
     private inventariosService: InventarioActivoService,
     private changeDetector: ChangeDetectorRef,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private toastrService: ToastrService) { }
 
   ngOnInit() {
     this.CargarListadoInventarios();
     this.CrearInventarioForm();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   CrearInventarioForm() {

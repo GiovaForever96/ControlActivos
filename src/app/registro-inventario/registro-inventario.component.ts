@@ -36,6 +36,8 @@ export class RegistroInventarioComponent {
     private productosService: ProductoActivoService,
     private changeDetector: ChangeDetectorRef,
     private router: Router,
+    private el: ElementRef,
+    private renderer: Renderer2,
     private toastrService: ToastrService) { }
 
   onCamerasFound(devices: MediaDeviceInfo[]): void {
@@ -73,6 +75,8 @@ export class RegistroInventarioComponent {
 
   ngOnInit() {
     this.ConsultarDispositivosVinculados();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   async ConsultarDispositivosVinculados() {

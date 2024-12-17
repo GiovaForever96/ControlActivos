@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { LoadingService } from 'src/app/services/loading.service';
 import { HomeComponent } from '../home.component';
 import { IInformacionQR, IProductoCustodioActivo } from 'src/app/models/producto-activo';
@@ -39,6 +39,8 @@ export class ActivosComponent {
     private productosService: ProductoActivoService,
     private fb: FormBuilder,
     public appComponent: AppComponent,
+    private el: ElementRef,
+    private renderer: Renderer2,
     public changeDetector: ChangeDetectorRef,
     private toastrService: ToastrService) { }
 
@@ -47,6 +49,8 @@ export class ActivosComponent {
     (window as any).VisualizarQR = this.VisualizarQR.bind(this);
     this.InicializarTablaProductosCustodio();
     this.InicializarInformacionForm();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   InicializarInformacionForm() {

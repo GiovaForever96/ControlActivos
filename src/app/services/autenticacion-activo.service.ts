@@ -21,6 +21,8 @@ export class AutenticacionActivoService {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('nombreUsuario', response.data.fullName);
         localStorage.setItem('lastLogin', response.data.lastLogin);
+        localStorage.setItem('roles', response.data.roles);
+        localStorage.setItem('userName', inicioSesionData.username);
         return "OK";
       } else {
         return response.data.mensaje;
@@ -28,7 +30,7 @@ export class AutenticacionActivoService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.code === 'ERR_BAD_REQUEST') {
-          return 'Usuario o contraseña incorrectos.';
+          return error.response?.data.message ?? 'Ha ocurrido un error en el servidor. Contactese con TI.';
         } else {
           return 'Ha ocurrido un error en el servidor. Contactese con TI.';
         }

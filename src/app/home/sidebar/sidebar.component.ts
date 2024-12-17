@@ -14,6 +14,12 @@ export class SidebarComponent {
   constructor(private router: Router,
     private homeComponent: HomeComponent) { }
 
+  lstRolesUsuario: string[] = [];
+
+  ngOnInit(): void {
+    var rolesString = localStorage.getItem("roles") ?? "";
+    this.lstRolesUsuario = rolesString.split(',') ?? [];
+  }
 
   ngAfterViewInit() {
     const menu = document.getElementsByName('mainParent')[0];
@@ -24,6 +30,10 @@ export class SidebarComponent {
         break;
       }
     }
+  }
+
+  public VerificarRolUsuario(rolesPermitidos: string[]): boolean {
+    return this.lstRolesUsuario.some(role => rolesPermitidos.includes(role));
   }
 
   public SetActive(event: MouseEvent) {

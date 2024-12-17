@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { SelectItem } from 'primeng/api';
 import { AppComponent } from 'src/app/app.component';
-import { IGastoPresupuesto, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
+import { IGastoPresupuesto, IIndicadorFinanciero, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
 import { IGastoMensual, IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
+import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
 import { PresupuestoGastoService } from 'src/app/services/presupuesto-gasto.service';
@@ -20,213 +20,300 @@ import * as XLSX from 'xlsx';
 export class ResultadosComponent {
 
   //Variables
-  anioPresupuesto:any=2024;
-  lstPlanCuentas:(IPlanCuentas & Record<string, any>)[] = [];
-  lstMeses:any[]=[];
-  lstMesesPendientes:any[]=[];
-  lstPlanCuentasPresupuesto :IPlanCuentasPresupuesto[]=[];
-  registroGastosForm!: FormGroup;
+  anioGasto: any = 2024;
+  lstPlanCuentas: (IPlanCuentas & Record<string, any>)[] = [];
+  lstMeses: any[] = [];
+  lstPlanCuentasPresupuesto: IPlanCuentasPresupuesto[] = [];
   filterText: string = '';
-  file:any;
-  cabeceraMeses:any[]=[];
-  listaDatos:any[]=[];
-  nameFile:any;
+  file: any;
+  cabeceraMeses: any[] = [];
+  listaDatos: any[] = [];
+  nameFile: string = '';
   arrayBuffer: any;
-  registrosExcel:any;
-  registrosExcelAuxiliar:any;
-  mesDesde:any=0;
-  mesHasta:any=0;
-  valorOriginalEditar:number=0;
-  lstAnios:any[]=[];
+  registrosExcel: any;
+  registrosExcelAuxiliar: any;
+  valorOriginalEditar: number = 0;
+  lstAnios: any[] = [];
+  lstRoles: string[] = [];
+  lstIndicadoresFinancieros: IPlanCuentas[] = [];
+  lstValoresIndicadoresFinancieros: IIndicadorFinanciero[] = [];
+  mesGasto: number = 0;
+  esActualizacionIndicadores: boolean = false;
 
-  constructor(private planCuentasService:PlanCuentasService,
+  constructor(private planCuentasService: PlanCuentasService,
+    private indicadoresService: IndicadorFinancieroService,
     private fb: FormBuilder,
-    private presupuestoGastoService:PresupuestoGastoService,
-    private toastrService:ToastrService,
-    private loadingService:LoadingService,
-    private appComponent: AppComponent) { 
-      this.lstMeses = [
-        { id: 1, nombre: 'Enero' },{ id: 2, nombre: 'Febrero' },{ id: 3, nombre: 'Marzo' },{ id: 4, nombre: 'Abril' },
-        { id: 5, nombre: 'Mayo' },{ id: 6, nombre: 'Junio' },{ id: 7, nombre: 'Julio' },{ id: 8, nombre: 'Agosto' },
-        { id: 9, nombre: 'Septiembre' },{ id: 10, nombre: 'Octubre' },{ id: 11, nombre: 'Noviembre' },{ id: 12, nombre: 'Diciembre' },
-      ];
-      this.crearregistroGastosForm();
-     }
-
-  async ngOnInit(){
-    this.lstAnios = await this.planCuentasService.obtenerAniosValidos();
-    this.anioPresupuesto = new Date().getFullYear();
-    this.onChangeAnio();
-    this.crearregistroGastosForm();
+    private el: ElementRef,
+    private renderer: Renderer2,
+    private presupuestoGastoService: PresupuestoGastoService,
+    private toastr: ToastrService,
+    private loadingService: LoadingService,
+    private appComponent: AppComponent) {
+    this.lstMeses = appComponent.obtenerMesesAnio();
   }
 
-  crearregistroGastosForm() {
-    this.registroGastosForm = this.fb.group({
-      mesRegistro: [0, [Validators.required]],
-      archivo: [null, [Validators.required]],
-    });
-  }
-
-  async cargarPlanCuentas(){
-    this.loadingService.showLoading();
-    this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    let registros:IGastosRespuesta = await this.presupuestoGastoService.obtenerGastosPresupuestoPlanCuenta(this.anioPresupuesto);
-    this.cabeceraMeses = registros.listaMesesGastos;
-    this.listaDatos = registros.informacionGastoPresupuesto;
-    this.loadingService.hideLoading();
+  async ngOnInit() {
+    try {
+      this.loadingService.showLoading();
+      this.appComponent.setTitle('Gastos Mensuales');
+      this.lstAnios = await this.planCuentasService.obtenerAniosValidos();
+      this.lstIndicadoresFinancieros = await this.indicadoresService.obtenerIndicadoresFinancieros(1);
+      this.anioGasto = new Date().getFullYear();
+      const body = this.el.nativeElement.ownerDocument.body;
+      this.renderer.setStyle(body, 'overflow', '');
+      this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
+      this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al obtener el presupuesto', error.message);
+      } else {
+        this.toastr.error('Error al obtener el presupuesto', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.onChangeAnio();
+    }
   }
 
   get filteredData() {
-    if(this.listaDatos){
-      return this.listaDatos.filter(plan => 
-        plan.codigoPlan?.toLowerCase().includes(this.filterText.toLowerCase()) || 
+    if (this.listaDatos) {
+      return this.listaDatos.filter(plan =>
+        plan.codigoPlan?.toLowerCase().includes(this.filterText.toLowerCase()) ||
         plan.nombrePlan.toLowerCase().includes(this.filterText.toLowerCase())
       );
-    }else{
+    } else {
       return [];
     }
 
   }
 
-  async abrirModal(){
+  async abrirModal() {
     $('#planModal').modal('show');
-    $('#planModal').on('shown.bs.modal', async () => {
-      try {
-        this.crearregistroGastosForm();
-        this.lstMesesPendientes = await this.presupuestoGastoService.obtenerMesGastoPendientes(this.anioPresupuesto);
-      } catch (error) {
-        console.error('Error al obtener los meses pendientes', error);
-      }
-    });
+    this.mesGasto = 0;
   }
 
-  async OnSubmit(){
-
-    if (this.registroGastosForm.valid && this.registroGastosForm.value.mesRegistro!=0) {
-    let listaGastos :IGastoMensual[]=[];
-    this.registrosExcel.forEach((element:any) => {
-      let item={
-        AnioGastoPresupuesto:this.anioPresupuesto,
-        MesGastoPresupuesto:this.registroGastosForm.value.mesRegistro,
-        IdPlan:element.Id,
-        ValorGastoMensual:element.Gasto
+  async OnSubmit() {
+    try {
+      this.loadingService.showLoading();
+      //Inserción de Gastos
+      if (this.nameFile != '') {
+        this.registrosExcel.forEach((element: any) => {
+          let lstValores: number[] = [];
+          this.lstMeses.forEach(mes => {
+            lstValores.push(element[mes.nombre] == '' ? 0 : element[mes.nombre]);
+          });
+          let item: IPlanCuentasPresupuesto = {
+            anioPresupuesto: Number(this.anioGasto),
+            idPlan: element.Id,
+            valorPresupuestoMensual: lstValores
+          };
+          this.lstPlanCuentasPresupuesto.push(item);
+        });
+        // Obtener la longitud máxima de las listas internas
+        let maxLength = Math.max(...this.lstPlanCuentasPresupuesto.map(item => item.valorPresupuestoMensual.length));
+        // Crear una nueva lista con las sumas por posición
+        let sumaMensualRegistro = Array.from({ length: maxLength }, (_, index) => {
+          return this.lstPlanCuentasPresupuesto.reduce((sum, item) => sum + (item.valorPresupuestoMensual[index] || 0), 0);
+        });
+        let posicionValorGasto = this.obtenerUltimaPosicionValor(sumaMensualRegistro);
+        await this.presupuestoGastoService.agregarGastoAnual(posicionValorGasto + 1, this.lstPlanCuentasPresupuesto);
+        this.toastr.success("Registro gastos", "Los gastos se han registrados correctamente");
       }
-      listaGastos.push(item);
-    });
-    const mensajeInsercion = await this.presupuestoGastoService.agregarGastoMensual(listaGastos);
-    Swal.fire({
-      text: mensajeInsercion,
-      icon: 'success',
-    }).then(() => {
+      //Inserción de indicador financiero
+      var registroModificados = this.lstIndicadoresFinancieros.filter(x => x.idPadre == 0 || x.idPadre == null).length;
+      if (registroModificados != this.lstIndicadoresFinancieros.length) {
+        if (this.esActualizacionIndicadores) {
+          //Modificamos el registro de los valores de indicadores
+          this.lstValoresIndicadoresFinancieros.forEach(valorIndicador => {
+            valorIndicador.montoIndicador = this.lstIndicadoresFinancieros.find(x => x.idPlan == valorIndicador.idCuentaPlan)?.idPadre ?? 0,
+              valorIndicador.planCuenta = undefined
+          });
+          let respuestaPeticion = await this.indicadoresService.actualizarValorIndicadoresFinancieros(this.lstValoresIndicadoresFinancieros);
+          setTimeout(() => { this.toastr.success("Guardado Exitosamente", respuestaPeticion); }, 1000);
+        } else {
+          this.lstValoresIndicadoresFinancieros = [];
+          this.lstIndicadoresFinancieros.forEach(indicadorFinanciero => {
+            var valorIndicadorFinanciero: IIndicadorFinanciero = {
+              idIndicadorFinanciero: 0,
+              anioIndicador: this.anioGasto,
+              mesIndicador: this.mesGasto,
+              montoIndicador: indicadorFinanciero?.idPadre ?? 0,
+              idCuentaPlan: indicadorFinanciero.idPlan,
+              planCuenta: undefined
+            };
+            this.lstValoresIndicadoresFinancieros.push(valorIndicadorFinanciero);
+          });
+          let respuestaPeticion = await this.indicadoresService.agregarValorIndicadoresFinancieros(this.lstValoresIndicadoresFinancieros);
+          setTimeout(() => { this.toastr.success("Guardado Exitosamente", respuestaPeticion); }, 1000);
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al registrar gastos', error.message);
+      } else {
+        this.toastr.error('Error al registrar gastos', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
       window.location.reload();
-    });
-    } else {
-      this.appComponent.validateAllFormFields(this.registroGastosForm);
-      this.toastrService.error('Error al guardar los registros', 'No se seleccionaron todos los campos necesarios.');
     }
   }
-  validarExcel(){
-    let headers: any[]= [];
+
+  validarExcel() {
+    let headers: any[] = [];
     let arraylistAux = this.registrosExcelAuxiliar;
     headers = arraylistAux[0] as string[];
-    let camposObligatorios =['Id', 'Codigo', 'Nombre', 'Gasto'];
+    let camposObligatorios = ['Id', 'Codigo', 'Nombre'];
     camposObligatorios.forEach(element => {
-      let encontro = headers.find((item)=>item==element);
+      let encontro = headers.find((item) => item == element);
       if (!encontro) {
-        this.toastrService.error('Columna Faltante','El formato debe contener la columna '+element);
+        this.toastr.error('Columna Faltante', 'El formato debe contener la columna ' + element);
         return;
       }
     });
     for (let index = 0; index < this.registrosExcel.length; index++) {
-      if (isNaN(Number(this.registrosExcel[index].Gasto))||String(this.registrosExcel[index].Gasto).trim()=='') {
-        this.toastrService.error('Valor Gasto Incorrecto','Revisar valor en: '+this.registrosExcel[index].Nombre);
+      if (isNaN(Number(this.registrosExcel[index].Gasto)) || String(this.registrosExcel[index].Gasto).trim() == '') {
+        this.toastr.error('Valor Gasto Incorrecto', 'Revisar valor en: ' + this.registrosExcel[index].Nombre);
         break;
-      }   
+      }
     }
   }
-  descargarFormato(){
-    let listaPlanes:any[]=[];
+
+  descargarFormato() {
+    let listaPlanes: any[] = [];
     this.lstPlanCuentas.forEach(element => {
-      let item ={
-        Id:element.idPlan,
-        Codigo:element.codigoPlan,
-        Nombre:element.nombrePlan,
-        Gasto:''
-      }
+      let item: any = {
+        Id: element.idPlan,
+        Codigo: element.codigoPlan,
+        Nombre: element.nombrePlan,
+      };
+      this.lstMeses.forEach(mes => {
+        item[mes.nombre] = '';
+      });
       listaPlanes.push(item);
     });
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(listaPlanes); 
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();  
-    XLSX.utils.book_append_sheet(wb, ws, 'formato');  
-    XLSX.writeFile(wb, 'formatoGastos.xlsx'); 
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(listaPlanes);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'formato');
+    XLSX.writeFile(wb, 'formatoGastos.xlsx');
   }
 
-  async onChangeAnio(){
-    this.loadingService.showLoading();
-    this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    this.cabeceraMeses=[];
-    this.listaDatos=[];
-    let registros:IGastosRespuesta = await this.presupuestoGastoService.obtenerGastosPresupuestoPlanCuenta(this.anioPresupuesto);
-    this.cabeceraMeses = registros.listaMesesGastos;
-
-    this.listaDatos = registros.informacionGastoPresupuesto;
-    this.loadingService.hideLoading();
+  async onChangeAnio() {
+    try {
+      this.loadingService.showLoading();
+      this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
+      this.cabeceraMeses = [];
+      this.listaDatos = [];
+      let registros: IGastosRespuesta = await this.presupuestoGastoService.obtenerGastosPresupuestoPlanCuenta(this.anioGasto);
+      this.cabeceraMeses = registros.listaMesesGastos;
+      this.listaDatos = registros.informacionGastoPresupuesto;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al obtener el presupuesto', error.message);
+      } else {
+        this.toastr.error('Error al obtener el presupuesto', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
   }
 
-  async onFileChange(event:any) {
+  async onFileChange(event: any) {
     this.loadingService.showLoading();
     setTimeout(() => {
       let file = event.target.files[0];
-        if(file){
-          this.nameFile = file.name;
-          let fileReader = new FileReader();
-          fileReader.readAsArrayBuffer(file);
-          fileReader.onload = (e) => {
-            this.arrayBuffer = fileReader.result;
-            var data = new Uint8Array(this.arrayBuffer);
-            var arr = new Array();
-            for (var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
-            var bstr = arr.join("");
-            var workbook = XLSX.read(bstr, {
-              type: "binary", 
-              cellDates: true,
-              cellNF: false,
-              cellText: false
-            });
-            var first_sheet_name = workbook.SheetNames[0];
-            var worksheet = workbook.Sheets[first_sheet_name];
-            var arraylist = XLSX.utils.sheet_to_json(worksheet, { raw: true });
-            this.registrosExcelAuxiliar = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            this.registrosExcel = arraylist;
-            this.validarExcel();
-          }
+      if (file) {
+        this.nameFile = file.name;
+        let fileReader = new FileReader();
+        fileReader.readAsArrayBuffer(file);
+        fileReader.onload = (e) => {
+          this.arrayBuffer = fileReader.result;
+          var data = new Uint8Array(this.arrayBuffer);
+          var arr = new Array();
+          for (var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+          var bstr = arr.join("");
+          var workbook = XLSX.read(bstr, {
+            type: "binary",
+            cellDates: true,
+            cellNF: false,
+            cellText: false
+          });
+          var first_sheet_name = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[first_sheet_name];
+          var arraylist = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+          this.registrosExcelAuxiliar = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          this.registrosExcel = arraylist;
         }
-        this.loadingService.hideLoading();
+      }
+      this.loadingService.hideLoading();
 
     }, 500);
   }
 
-  async celdaEditada(plan: any,mes:any,valorNuevo:number) {
-    if(this.valorOriginalEditar != valorNuevo){
-      let item:IGastoPresupuesto={
-        anioGastoPresupuesto:this.anioPresupuesto,
-        mesGastoPresupuesto:mes.idMes,
-        idPlan:plan.idPlan,
-        valorGastoMensual:valorNuevo
-      }
+  async celdaEditada(plan: any, mes: any, valorNuevo: number) {
+    if (valorNuevo < 0) {
+      this.toastr.warning("Valor incorrecto", "El valor ingresado no puede ser menor a 0");
+      valorNuevo = this.valorOriginalEditar;
+      return;
+    }
 
-      let response = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item,0);
-      this.onChangeAnio();
+    if (this.valorOriginalEditar === valorNuevo) {
+      return;
+    }
+
+    const item: IGastoPresupuesto = {
+      anioGastoPresupuesto: plan.anioPresupuesto,
+      mesGastoPresupuesto: mes.id,
+      idPlan: plan.idPlan,
+      valorGastoMensual: valorNuevo
+    };
+
+    await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
+    this.onChangeAnio();
+  }
+
+  async onChangeMesIndicador() {
+    try {
+      this.loadingService.showLoading();
+      if (this.mesGasto != 0) {
+        this.lstValoresIndicadoresFinancieros = await this.indicadoresService.obtenerValorIndicadoresFinancieros(this.anioGasto, this.mesGasto) ?? [];
+        this.esActualizacionIndicadores = this.lstValoresIndicadoresFinancieros.length > 0;
+        // Mapea los valores obtenidos a `lstIndicadoresFinancieros`.
+        this.lstIndicadoresFinancieros.forEach(item => {
+          const indicadorEncontrado = this.lstValoresIndicadoresFinancieros.find(valor => valor.idCuentaPlan === item.idPlan);
+          item.idPadre = indicadorEncontrado != undefined ? indicadorEncontrado.montoIndicador : 0;
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al obtener los indicadores financieros', error.message);
+      } else {
+        this.toastr.error('Error al obtener los indicadores financieros', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
     }
   }
 
-  celdaOriginal(valorOriginal:number){
+  celdaOriginal(valorOriginal: number) {
     this.valorOriginalEditar = valorOriginal;
-
   }
 
-  rangoMeses(event:any){
-
+  permiteModificarRol(lstRolesPermitidos: string[]): boolean {
+    return this.lstRoles.some(role => lstRolesPermitidos.includes(role));
   }
+
+  obtenerUltimaPosicionValor(lstValores: number[]): number {
+    // Inicializamos la variable para la última posición
+    let ultimaPosicion = -1;
+    // Recorremos el array de atrás hacia adelante
+    for (let i = lstValores.length - 1; i >= 0; i--) {
+      if (lstValores[i] !== 0) {
+        ultimaPosicion = i;
+        break;
+      }
+    }
+    return ultimaPosicion;
+  }
+
 }

@@ -8,8 +8,7 @@
                 <div class="col-sm-6 d-none d-sm-block">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a routerLink="/home">Home</a></li>
-                        <li class="breadcrumb-item"><a routerLink="/home/presupuestos">Presupuestos</a></li>
-                        <li class="breadcrumb-item active">Resultados</li>
+                        <li class="breadcrumb-item active">Gasto Mensual</li>
                     </ol>
                 </div>
             </div>
@@ -23,7 +22,7 @@
                         <div class="card-header">
                             <h3 class="card-title" style="padding-top: 5px;">
                                 <i class="fa fa fa-chart-line mr-2"></i>
-                                Resultados
+                                Gasto Mensual
                             </h3>
                             <button type="button" class="btn btn-secondary btn-sm float-right" data-toggle="modal">
                                 <i class="fas fa-history mr-2"></i> Historial
@@ -33,7 +32,7 @@
                             <div class="d-flex align-items-center mb-3">
                                 <label for="">Año:</label>&nbsp;
                                 <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
-                                    [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
+                                    [(ngModel)]="anioGasto" (change)="onChangeAnio()">
                                     <option [value]="item" *ngFor="let item of lstAnios">
                                         {{item}}
                                     </option>
@@ -52,13 +51,13 @@
                                 [sortField]="'codigoPlan'" [sortOrder]="1" [scrollable]="true" scrollHeight="800px">
                                 <ng-template pTemplate="header">
                                     <tr style="font-size: 10px;">
-                                        <th colspan="2" pFrozenColumn></th>
-                                        <th *ngFor="let item of cabeceraMeses" colspan="5" class="celdas">
+                                        <th colspan="2" pFrozenColumn id=""></th>
+                                        <th *ngFor="let item of cabeceraMeses" colspan="5" class="celdas" id="">
                                             {{item.nombreMes}}</th>
                                     </tr>
                                     <tr style="font-size: 10px;">
-                                        <th pSortableColumn="codigoPlan" pFrozenColumn>Código</th>
-                                        <th pSortableColumn="nombrePlan" pFrozenColumn>Plan</th>
+                                        <th pSortableColumn="codigoPlan" pFrozenColumn id="">Código</th>
+                                        <th pSortableColumn="nombrePlan" pFrozenColumn id="">Plan</th>
                                         <ng-container *ngFor="let item of cabeceraMeses">
                                             <th class="celdasIzq" pSortableColumn="{{'presupuesto'+item.nombreMes}}">
                                                 Presupuesto</th>
@@ -102,12 +101,14 @@
 
                                                 <p-cellEditor>
                                                     <ng-template pTemplate="input">
-                                                        <input *ngIf="!plan.tieneHijos" pInputText type="number"
+                                                        <input *ngIf="!plan.tieneHijos && permiteModificarRol(['FIN'])"
+                                                            pInputText type="number"
                                                             [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes + 'G']"
                                                             (focus)="celdaOriginal(plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
-                                                            (focusout)="celdaEditada(plan,mes,plan.mesGastoPresupuesto[mes.nombreMes + 'G'])">
+                                                            (focusout)="celdaEditada(plan,mes,plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
+                                                            min="0" />
                                                         <span
-                                                            *ngIf="plan.tieneHijos">{{plan.mesGastoPresupuesto[mes.nombreMes
+                                                            *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">{{plan.mesGastoPresupuesto[mes.nombreMes
                                                             + 'G'] | currency: 'USD'}}</span>
                                                     </ng-template>
 
@@ -180,54 +181,54 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form [formGroup]="registroGastosForm" (ngSubmit)="OnSubmit()">
-                    <div class="modal-body">
-                        <div class="card-body row">
-                            <div class="col-lg-4 form-group">
-                                <div class="row align-items-center">
-                                    <label for="codigoPlan"
-                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Mes:</label>
-                                    <select class="custom-select color-black" style="height: 45px;"
-                                        formControlName="mesRegistro"
-                                        [ngClass]="{ 'is-invalid': registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 }">
-                                        <option [value]='0'>
-                                            Seleccionar...
-                                        </option>
-                                        <option [value]="item.idMes" *ngFor="let item of lstMesesPendientes">
-                                            {{item.nombreMes}}
-                                        </option>
-                                    </select>
-                                    <div class="invalid-feedback"
-                                        *ngIf="registroGastosForm.get('mesRegistro')!.errors && registroGastosForm.get('mesRegistro')!.touched || registroGastosForm.get('mesRegistro')?.value==0 ">
-                                        Debe selecionar el mes a cargar.
-                                    </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <p class="modal-title">Gastos</p>
+                        <div class="col-lg-12 card-body row">
+                            <div class="input-group is-invalid">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="validatedInputGroupCustomFile"
+                                        (change)="onFileChange($event)" required />
+                                    <label class="custom-file-label" for="validatedInputGroupCustomFile"
+                                        [innerText]="nameFile || 'Seleccionar Archivo...'"></label>
+                                </div>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-success" type="button"
+                                        (click)="descargarFormato()"><i
+                                            class="fas fa-file-download mr-2"></i>Formato</button>
                                 </div>
                             </div>
-                            &nbsp;
-                            <div class="col-lg-6 form-group">
-                                <div class="row align-items-center">
-                                    <label for="codigoPlan"
-                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Archivo:</label>
-                                    <u style="color: blue;cursor: pointer;" title="Descargar Formato Registro"
-                                        (click)="descargarFormato()">Formato</u>
-                                    <input type="file"
-                                        [ngClass]="{ 'is-invalid': registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched }"
-                                        class="form-control color-black" style="height: 45px;" formControlName="archivo"
-                                        (change)="onFileChange($event)">
-                                    <div class="invalid-feedback"
-                                        *ngIf="registroGastosForm.get('archivo')!.errors && registroGastosForm.get('archivo')!.touched">
-                                        Debe cargar el archivo de gastos.
+                        </div>
+                        <p class="modal-title">Indicadores Financieros</p>
+                        <div class="col-lg-12 card-body row form-inline">
+                            <label for="codigoPlan" class="col-form-label mr-2">Mes:</label>
+                            <select class="custom-select color-black col-lg-6" [(ngModel)]="mesGasto"
+                                (change)="onChangeMesIndicador()">
+                                <option [value]='0'>Seleccionar...</option>
+                                <option [value]="item.id" *ngFor="let item of lstMeses">
+                                    {{item.nombre}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-lg-12 card-body row m-0 p-0" *ngIf="mesGasto!=0">
+                            <div *ngFor="let item of lstIndicadoresFinancieros" class="col-md-6 col-lg-4 mb-3">
+                                <label for="{{item.nombrePlan}}" class="form-label">{{item.nombrePlan}}</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">$</span>
                                     </div>
+                                    <input type="number" id="{{item.idPadre}}" [(ngModel)]="item.idPadre"
+                                        class="form-control" placeholder="Ingrese un valor" min="0" />
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer text-end">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save mr-2"></i>Guardar
-                        </button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer text-end">
+                    <button type="submit" class="btn btn-success" (click)="OnSubmit()">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                </div>
             </div>
         </div>
     </div>

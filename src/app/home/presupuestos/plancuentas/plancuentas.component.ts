@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
@@ -7,7 +7,7 @@ import { LoadingService } from 'src/app/services/loading.service';
 import { IPlanCuentas } from 'src/app/models/plan-cuentas';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'src/app/services/toastr.service';
-import { Column, GroupInstanceIdCreator } from 'ag-grid-community';
+import { Column } from 'ag-grid-community';
 
 declare var $: any;
 
@@ -17,35 +17,40 @@ declare var $: any;
   styleUrls: ['./plancuentas.component.css']
 })
 export class PlancuentasComponent {
+
   @ViewChild('dataTablePlan', { static: false }) tablePlan!: ElementRef;
   @ViewChild('btnActualizaPlan', { static: true }) btnActualizaPlan!: ElementRef;
 
   lstPlanCuentas: IPlanCuentas[] = [];
   lstPlanCuentasArbol: any = [];
-
   dtOptions: any;
   dataTable: any;
   planCuentaForm!: FormGroup;
   isEditing: boolean = false;
-
   public files: any[] = [];
   public filteredFiles: any[] = [];
   public searchText: string = '';
   cols!: Column[];
   nombreBoton: string = 'Contraer';
-  inicialPadre:any='';
+  inicialPadre: any = '';
 
   constructor(private loadingService: LoadingService,
-    private appComponent: AppComponent, private planCuentasService: PlanCuentasService,
-    private fb: FormBuilder, private toastrService: ToastrService, private changeDetector: ChangeDetectorRef
-  ) {
-    this.appComponent.setTitle('Plan Cuentas');
-  }
+    private el: ElementRef,
+    private renderer: Renderer2,
+    private appComponent: AppComponent,
+    private planCuentasService: PlanCuentasService,
+    private fb: FormBuilder,
+    private toastrService: ToastrService,
+    private changeDetector: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
+    this.cargarRegistro();
+    this.appComponent.setTitle('Plan Cuentas');
     (window as any).EditarPlan = this.EditarPlan.bind(this);
     this.crearPlanForm();
-    this.cargarRegistro();
+    const body = this.el.nativeElement.ownerDocument.body;
+    this.renderer.setStyle(body, 'overflow', '');
   }
 
   filterTreeTable() {
@@ -86,6 +91,7 @@ export class PlancuentasComponent {
       this.filteredFiles = newFiles;
     }
   }
+
   crearPlanForm() {
     this.planCuentaForm = this.fb.group({
       idPlan: [0],
@@ -93,15 +99,26 @@ export class PlancuentasComponent {
       codigoPlan: ['', [Validators.required]],
       nombrePlan: ['', [Validators.required]],
       nivelPlan: [''],
-      estaActivo:[true]
+      estaActivo: [true]
     });
   }
 
   async cargarRegistro() {
-    this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    this.files = await this.planCuentasService.obtenerPlanCuentasArbol();
-    this.filteredFiles = [...this.files];
-    this.expandNodes(this.filteredFiles);
+    try {
+      this.loadingService.showLoading();
+      this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
+      this.files = await this.planCuentasService.obtenerPlanCuentasArbol();
+      this.filteredFiles = [...this.files];
+      this.expandNodes(this.filteredFiles);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al obtener el plan de cuentas', error.message);
+      } else {
+        this.toastrService.error('Error al obtener el plan de cuentas', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
+    }
   }
 
   AbrirModal(rowData: any, esEdicion: boolean) {
@@ -113,37 +130,41 @@ export class PlancuentasComponent {
     }
     $('#planModal').modal('show');
   }
-  agregarPlan(rowData:any){
 
-    let hijos = this.lstPlanCuentas.filter(element=>element.idPadre==rowData.idPlan);
-    let idHijo =this.idSiguienteHijo(hijos);
+  agregarPlan(rowData: any) {
+
+    let hijos = this.lstPlanCuentas.filter(element => element.idPadre == rowData.idPlan);
+    let idHijo = this.idSiguienteHijo(hijos, Number(rowData.nivelPlan));
     this.inicialPadre = rowData.codigoPlan;
     this.planCuentaForm = this.fb.group({
       idPlan: ['0'],
       idPadre: [rowData.idPlan],
-      codigoPlan: [idHijo+'.', [Validators.required]],
+      codigoPlan: [idHijo + '.', [Validators.required]],
       nombrePlan: [rowData.nombrePlan, [Validators.required]],
-      nivelPlan: [Number(rowData.nivelPlan)+1],
-      estaActivo:[true]
+      nivelPlan: [Number(rowData.nivelPlan) + 1],
+      estaActivo: [true]
     });
   }
-  idSiguienteHijo(hijos:any[]){
+
+  idSiguienteHijo(hijos: any[], nivel: number) {
+
     hijos.forEach(element => {
       let partes = element.codigoPlan.split('.');
-      element['indexHijo']=partes[partes.length-2];
+      element['indexHijo'] = partes[partes.length - 2];
     });
 
-    let numeroIdMaximo =0;
-    if(hijos.length>0){
-      numeroIdMaximo = Math.max(...hijos.map(obj => Number(obj.indexHijo))); 
+    let numeroIdMaximo = 0;
+
+    if (hijos.length > 0) {
+      numeroIdMaximo = Math.max(...hijos.map(obj => Number(obj.indexHijo)));
     }
 
-    if(numeroIdMaximo+1<10){
-      return '0'+(numeroIdMaximo+1);
-    }else{
-      return numeroIdMaximo+1;
+    if (numeroIdMaximo + 1 < 10 && nivel > 2) {
+      return '0' + (numeroIdMaximo + 1);
+    } else {
+      return numeroIdMaximo + 1;
     }
-   
+
   }
 
   OnSubmit(): void {
@@ -160,7 +181,7 @@ export class PlancuentasComponent {
       if (this.planCuentaForm.valid) {
         try {
           const planData: IPlanCuentas = this.planCuentaForm.value;
-          planData.codigoPlan = this.inicialPadre+this.planCuentaForm.value.codigoPlan;
+          planData.codigoPlan = this.inicialPadre + this.planCuentaForm.value.codigoPlan;
           const mensajeInsercion = await this.planCuentasService.insertarPlan(planData);
           Swal.fire({
             text: mensajeInsercion,
@@ -227,7 +248,7 @@ export class PlancuentasComponent {
   }
 
   EditarPlan(idPlan: number) {
-    this.inicialPadre='';
+    this.inicialPadre = '';
     const planActualizar = this.lstPlanCuentas.find(x => x.idPlan == idPlan);
     this.planCuentaForm = this.fb.group({
       idPlan: [planActualizar!.idPlan],
@@ -235,12 +256,11 @@ export class PlancuentasComponent {
       nombrePlan: [planActualizar!.nombrePlan, [Validators.required]],
       codigoPlan: [planActualizar!.codigoPlan, [Validators.required]],
       idPadre: [planActualizar!.idPadre],
-      estaActivo:[true]
+      estaActivo: [true]
     });
     this.planCuentaForm.get('codigoPlan')?.disable();
 
     this.changeDetector.detectChanges();
-    //this.btnActualizaPlan.nativeElement.click();
   }
 
   GetSpanishLanguage() {
@@ -255,4 +275,5 @@ export class PlancuentasComponent {
       }
     });
   }
+
 }

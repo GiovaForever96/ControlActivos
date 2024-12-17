@@ -20,13 +20,15 @@ import {ButtonModule} from 'primeng/button';
 import {DropdownModule} from 'primeng/dropdown';
 import {ProgressBarModule} from 'primeng/progressbar';
 import {InputTextModule} from 'primeng/inputtext';
+import { IndicadoresComponent } from './indicadores/indicadores.component';
 
 @NgModule({
   declarations: [
     PresupuestosComponent,
     PlancuentasComponent,
     PresupuestoComponent,
-    ResultadosComponent
+    ResultadosComponent,
+    IndicadoresComponent
   ],
   imports: [
     CommonModule,

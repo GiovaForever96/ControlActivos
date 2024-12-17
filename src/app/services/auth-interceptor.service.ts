@@ -1,13 +1,16 @@
-// src/services/auth.service.ts
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { environment } from 'src/environments/environment';
 
 // Servicio de autenticación
+@Injectable({
+  providedIn: 'root', // Esto asegura que el servicio esté disponible en toda la aplicación
+})
 export class AuthService {
   private static instance: AxiosInstance;
-  private subscribers: Array<(token: string) => void> = [];
 
-  constructor() {
+  constructor(private router: Router) {
     if (!AuthService.instance) {
       AuthService.instance = axios.create({
         baseURL: environment.apiUrl, // Cambia esto a la URL de tu API
@@ -33,18 +36,8 @@ export class AuthService {
         (response: AxiosResponse) => response,
         async (error: AxiosError) => {
           const originalRequest = error.config as AxiosRequestConfig;
-          if (error.response?.status === 401) { // No autorizado
-
-            return new Promise((resolve, reject) => {
-              this.subscribers.push((token: string) => {
-                if (originalRequest.headers) {
-                  originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                } else {
-                  originalRequest.headers = { 'Authorization': `Bearer ${token}` };
-                }
-                resolve(AuthService.instance(originalRequest));
-              });
-            });
+          if (error.response?.status === 401) {
+            console.log('No autorizado');
           }
           return Promise.reject(error);
         }
@@ -59,4 +52,14 @@ export class AuthService {
   public get apiClient(): AxiosInstance {
     return AuthService.instance;
   }
+
+  cerrarSesion() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('nombreUsuario');
+    localStorage.removeItem('lastLogin');
+    localStorage.removeItem('roles');
+    localStorage.removeItem('userName');
+    this.router.navigate(['/']);
+  }
+
 }
