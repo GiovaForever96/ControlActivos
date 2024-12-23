@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth-interceptor.service';
 import { environment } from 'src/environments/environment';
-import { IGastoMensual, IGastosRespuesta, IMesGasto } from '../models/presupuesto-gastos';
+import { IGastoMensual, IGastosRespuesta, IInformacionGastoPresupuestoGrafico, IInformacionGastoPresupuestoMesCuentaGrafico, IMesGasto } from '../models/presupuesto-gastos';
 import axios from 'axios';
 import { IGastoPresupuesto, IHistorialGastoPresupuesto, IPlanCuentasPresupuesto } from '../models/plan-cuentas';
 
@@ -52,6 +52,44 @@ export class PresupuestoGastoService {
     }
   }
 
+  async obtenerGastoPresupuestoCuentaGrafico(anio: number, idCuentaPlan: number): Promise<IInformacionGastoPresupuestoGrafico> {
+    const URL_API = `${this.baseUrl}obtenerGastoPresupuestoCuentaGrafico/${anio}/${idCuentaPlan}`;
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as IInformacionGastoPresupuestoGrafico;
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
+      } else {
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+      }
+    }
+  }
+
+  async obtenerGastoPresupuestoMesCuentaGrafico(anio: number, mes: number, idCuentaPlan: number): Promise<IInformacionGastoPresupuestoMesCuentaGrafico> {
+    const URL_API = `${this.baseUrl}obtenerGastoPresupuestoMesCuentaGrafico/${anio}/${mes}/${idCuentaPlan}`;
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as IInformacionGastoPresupuestoMesCuentaGrafico;
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
+      } else {
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+      }
+    }
+  }
+
   async agregarGastoMensual(planData: IGastoMensual[]): Promise<string> {
     const URL_API = this.baseUrl + 'agregargastoMensual';
     try {
@@ -87,11 +125,11 @@ export class PresupuestoGastoService {
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
       }
-    } 
+    }
   }
 
-  async agregarGastoAnual(numeroMeses:number,presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
-    const URL_API = this.baseUrl + 'agregarGastoAnual/'+numeroMeses;
+  async agregarGastoAnual(numeroMeses: number, presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
+    const URL_API = this.baseUrl + 'agregarGastoAnual/' + numeroMeses;
     try {
       const response = await this.authService.apiClient.post<any>(URL_API, presupuestoData);
       if (!response.data.esError) {

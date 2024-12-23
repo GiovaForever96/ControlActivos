@@ -6,6 +6,7 @@ import { PlancuentasComponent } from './plancuentas/plancuentas.component';
 import { ResultadosComponent } from './resultados/resultados.component';
 import { PresupuestoComponent } from './presupuesto/presupuesto.component';
 import { IndicadoresComponent } from './indicadores/indicadores.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 const homeRoutes: Routes = [
   {
@@ -17,7 +18,8 @@ const homeRoutes: Routes = [
       { path: 'planCuentas', component: PlancuentasComponent },
       { path: 'presupuesto', component: PresupuestoComponent },
       { path: 'resultados', component: ResultadosComponent },
-      { path: 'indicadores', component: IndicadoresComponent }
+      { path: 'indicadores', component: IndicadoresComponent },
+      { path: 'dashboard', component: DashboardComponent },
     ]
   }
 ];

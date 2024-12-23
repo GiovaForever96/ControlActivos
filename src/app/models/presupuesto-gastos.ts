@@ -4,13 +4,24 @@ export interface IMesGasto {
 }
 
 export interface IGastoMensual {
-    AnioGastoPresupuesto : number,
-    MesGastoPresupuesto ?: number,
-    IdPlan? : number,
-    ValorGastoMensual  ?: number
+    anioGastoPresupuesto: number,
+    mesGastoPresupuesto?: number,
+    idPlan?: number,
+    valorGastoMensual?: number
 }
 
 export interface IGastosRespuesta {
-    informacionGastoPresupuesto : IGastoMensual[],
-    listaMesesGastos : IMesGasto[],
+    informacionGastoPresupuesto: IGastoMensual[],
+    listaMesesGastos: IMesGasto[],
+}
+
+export interface IInformacionGastoPresupuestoGrafico {
+    informacionGastosIngresados: number[],
+    informacionPresupuestoIngresados: number[]
+}
+
+export interface IInformacionGastoPresupuestoMesCuentaGrafico {
+    informacionCuentas: string[],
+    informacionGastosIngresados: number[],
+    informacionPresupuestoIngresados: number[],
 }

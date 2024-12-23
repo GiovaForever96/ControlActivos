@@ -7,7 +7,7 @@
                 </div>
                 <div class="col-sm-6 d-none d-sm-block">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a routerLink="/home" (click)="SetInactive()">Home</a></li>
+                        <li class="breadcrumb-item"><a routerLink="/home" (click)="SetInactive()">Inicio</a></li>
                         <li class="breadcrumb-item active">Bienes</li>
                     </ol>
                 </div>
@@ -103,7 +103,8 @@
                         <div class="d-flex flex-column align-items-center">
                             <span>Seguros Suárez</span>
                             <img [src]="qrCode" alt="QR Code" style="max-width: 100%; height: auto;" />
-                            <span *ngIf="productoSeleccionado != null">{{productoSeleccionado.producto.codigoProducto}}</span>
+                            <span
+                                *ngIf="productoSeleccionado != null">{{productoSeleccionado.producto.codigoProducto}}</span>
                         </div>
                     </div>
                 </div>

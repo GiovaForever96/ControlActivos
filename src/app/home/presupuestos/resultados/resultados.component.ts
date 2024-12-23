@@ -8,7 +8,6 @@ import { LoadingService } from 'src/app/services/loading.service';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
 import { PresupuestoGastoService } from 'src/app/services/presupuesto-gasto.service';
 import { ToastrService } from 'src/app/services/toastr.service';
-import Swal from 'sweetalert2';
 declare var $: any;
 import * as XLSX from 'xlsx';
 
@@ -62,7 +61,6 @@ export class ResultadosComponent {
       const body = this.el.nativeElement.ownerDocument.body;
       this.renderer.setStyle(body, 'overflow', '');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
-      this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error al obtener el presupuesto', error.message);

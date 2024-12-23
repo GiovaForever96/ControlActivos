@@ -21,6 +21,7 @@ import {DropdownModule} from 'primeng/dropdown';
 import {ProgressBarModule} from 'primeng/progressbar';
 import {InputTextModule} from 'primeng/inputtext';
 import { IndicadoresComponent } from './indicadores/indicadores.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { IndicadoresComponent } from './indicadores/indicadores.component';
     PlancuentasComponent,
     PresupuestoComponent,
     ResultadosComponent,
-    IndicadoresComponent
+    IndicadoresComponent,
+    DashboardComponent
   ],
   imports: [
     CommonModule,

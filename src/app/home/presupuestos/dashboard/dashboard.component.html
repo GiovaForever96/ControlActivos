@@ -1,0 +1,136 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6 d-none d-sm-block">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a routerLink="/home">Inicio</a></li>
+                        <li class="breadcrumb-item active">DashBoard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fa fa-chart-pie mr-2"></i>
+                                DashBoard
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="card card-primary card-outline col-lg-12 col-sm-12 col-md-12">
+                                <div class="">
+                                    <h5 class="mt-2 mb-2">Presupuesto vs Gastos</h5>
+                                    <div class="row">
+                                        <div class="mb-2 col-lg-6 col-md-12 col-sm-12">
+                                            <label for="">Año:</label>&nbsp;
+                                            <select class="custom-select color-black"
+                                                style="height: 45px; flex-basis: 200px;" [(ngModel)]="anioDashBoard"
+                                                (change)="onChangeAnio()">
+                                                <option [value]="item" *ngFor="let item of lstAnios">
+                                                    {{item}}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-2 col-lg-6 col-md-12 col-sm-12">
+                                            <label for="">Cuenta:</label>&nbsp;
+                                            <div class="autocomplete-container w-100">
+                                                <input type="text" [(ngModel)]="nombreCuentaSeleccionada"
+                                                    (input)="onInputChange($event)" (focus)="onFocus($event)"
+                                                    (blur)="onBlur()" placeholder="Seleccione la Cuenta..."
+                                                    class="form-control">
+                                                <ul class="suggestion-list" *ngIf="visualizarSugerencias">
+                                                    <li *ngFor="let suggestion of listaFiltradaCuentasPlan"
+                                                        (click)="onSuggestionClick(suggestion)"
+                                                        (keydown)="handleKeyDown($event)">{{
+                                                        suggestion.value}}</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- dashboard.component.html -->
+                                    <div class="row">
+                                        <div class="col-lg-6 col-md-12 col-sm-12">
+                                            <canvas id="graficoGastosPresupuestosCuenta"></canvas>
+                                        </div>
+                                        <div class="col-lg-6 col-md-12 col-sm-12">
+                                            <canvas id="graficoGastosPresupuestosCuenta2"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card card-primary card-outline col-lg-12 col-sm-12 col-md-12">
+                                <div class="">
+                                    <h5 class="mt-2 mb-2">Presupuesto vs Gastos</h5>
+                                    <div class="row">
+                                        <div class="mb-2 col-lg-4 col-md-6 col-sm-12">
+                                            <label for="">Año:</label>&nbsp;
+                                            <select class="custom-select color-black"
+                                                style="height: 45px; flex-basis: 200px;" [(ngModel)]="anioDashBoard2"
+                                                (change)="onChangeAnioDash2()">
+                                                <option [value]="item" *ngFor="let item of lstAnios">
+                                                    {{item}}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-2 col-lg-4 col-md-6 col-sm-12">
+                                            <label for="">Mes:</label>&nbsp;
+                                            <select class="custom-select color-black"
+                                                style="height: 45px; flex-basis: 200px;" [(ngModel)]="mesDashBoard2"
+                                                (change)="onChangeMes()">
+                                                <option [value]="item.id" *ngFor="let item of lstMeses">
+                                                    {{item.nombre}}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-2 col-lg-4 col-md-6 col-sm-12">
+                                            <label for="">Cuenta:</label>&nbsp;
+                                            <div class="autocomplete-container w-100">
+                                                <input type="text" [(ngModel)]="nombreCuentaSeleccionadaDB2"
+                                                    (input)="onInputChangeDB2($event)" (focus)="onFocusDB2($event)"
+                                                    (blur)="onBlurDB2()" placeholder="Seleccione la Cuenta..."
+                                                    class="form-control">
+                                                <ul class="suggestion-list" *ngIf="visualizarSugerenciasDB2">
+                                                    <li *ngFor="let suggestion of listaFiltradaCuentasPlanDB2"
+                                                        (click)="onSuggestionClickDB2(suggestion)"
+                                                        (keydown)="handleKeyDownDB2($event)">{{
+                                                        suggestion.value}}</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container">
+                                        <div class="row">
+                                            <!-- Primer gráfico -->
+                                            <div
+                                                class="col-lg-6 col-md-12 col-sm-12 d-flex flex-column align-items-center justify-content-center">
+                                                <canvas id="doughnutChartPresupuestos"
+                                                    style="max-width: 300px; max-height: 300px;"></canvas>
+                                            </div>
+                                            <!-- Segundo gráfico -->
+                                            <div
+                                                class="col-lg-6 col-md-12 col-sm-12 d-flex flex-column align-items-center justify-content-center">
+                                                <canvas id="doughnutChartGastos"
+                                                    style="max-width: 300px; max-height: 300px;"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
