@@ -1,7 +1,7 @@
-import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
-import { IGastoPresupuesto, IIndicadorFinanciero, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
+import { IGastoPresupuesto, IHistorialGastoPresupuesto, IIndicadorFinanciero, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
 import { IGastoMensual, IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
 import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
 import { LoadingService } from 'src/app/services/loading.service';
@@ -10,6 +10,7 @@ import { PresupuestoGastoService } from 'src/app/services/presupuesto-gasto.serv
 import { ToastrService } from 'src/app/services/toastr.service';
 declare var $: any;
 import * as XLSX from 'xlsx';
+import * as SpanishLanguage from 'src/assets/Spanish.json';
 
 @Component({
   selector: 'app-resultados',
@@ -17,6 +18,8 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./resultados.component.css']
 })
 export class ResultadosComponent {
+
+  @ViewChild('dataTableHistorial', { static: false }) tableHistorial!: ElementRef;
 
   //Variables
   anioGasto: any = 2024;
@@ -38,6 +41,9 @@ export class ResultadosComponent {
   lstValoresIndicadoresFinancieros: IIndicadorFinanciero[] = [];
   mesGasto: number = 0;
   esActualizacionIndicadores: boolean = false;
+  lstHistorial: IHistorialGastoPresupuesto[] = [];
+  dtOptions: any;
+  dataTable: any;
 
   constructor(private planCuentasService: PlanCuentasService,
     private indicadoresService: IndicadorFinancieroService,
@@ -58,8 +64,6 @@ export class ResultadosComponent {
       this.lstAnios = await this.planCuentasService.obtenerAniosValidos();
       this.lstIndicadoresFinancieros = await this.indicadoresService.obtenerIndicadoresFinancieros(1);
       this.anioGasto = new Date().getFullYear();
-      const body = this.el.nativeElement.ownerDocument.body;
-      this.renderer.setStyle(body, 'overflow', '');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
     } catch (error) {
       if (error instanceof Error) {
@@ -86,18 +90,33 @@ export class ResultadosComponent {
 
   async abrirModal() {
     $('#planModal').modal('show');
-    this.mesGasto = 0;
   }
 
   async OnSubmit() {
     try {
       this.loadingService.showLoading();
+      //Validamos la información
+      if (this.nameFile == '') {
+        this.toastr.error("Registro gastos", "No se ha seleccionado el archivo a cargar");
+        return;
+      }
+      var existeIndicadoresVacios = this.lstIndicadoresFinancieros.filter(x => x.idPadre == 0 || x.idPadre == null).length > 0;
+      if (existeIndicadoresVacios) {
+        this.toastr.error("Registro gastos", "No se ha completado los indicadores.");
+        return;
+      }
+
       //Inserción de Gastos
       if (this.nameFile != '') {
         this.registrosExcel.forEach((element: any) => {
           let lstValores: number[] = [];
           this.lstMeses.forEach(mes => {
-            lstValores.push(element[mes.nombre] == '' ? 0 : element[mes.nombre]);
+            // lstValores.push(element[mes.nombre] == '' ? 0 : element[mes.nombre]);
+            if (element[mes.nombre] == '' || element[mes.nombre] == undefined) {
+              lstValores.push(0);
+            } else {
+              lstValores.push(element[mes.nombre] ?? 0);
+            }
           });
           let item: IPlanCuentasPresupuesto = {
             anioPresupuesto: Number(this.anioGasto),
@@ -112,13 +131,18 @@ export class ResultadosComponent {
         let sumaMensualRegistro = Array.from({ length: maxLength }, (_, index) => {
           return this.lstPlanCuentasPresupuesto.reduce((sum, item) => sum + (item.valorPresupuestoMensual[index] || 0), 0);
         });
-        let posicionValorGasto = this.obtenerUltimaPosicionValor(sumaMensualRegistro);
-        await this.presupuestoGastoService.agregarGastoAnual(posicionValorGasto + 1, this.lstPlanCuentasPresupuesto);
-        this.toastr.success("Registro gastos", "Los gastos se han registrados correctamente");
+        // let posicionValorGasto = this.obtenerUltimaPosicionValor(sumaMensualRegistro);
+        var nombreUsuario = localStorage.getItem('userName') ?? '';
+        let resultado = await this.presupuestoGastoService.agregarGastoAnual(this.mesGasto, nombreUsuario, this.lstPlanCuentasPresupuesto);
+        if (!resultado.includes('Error:')) {
+          this.toastr.success("Registro gastos", "Los gastos se han registrados correctamente");
+        } else {
+          this.toastr.error("Registro gastos", resultado);
+          this.loadingService.hideLoading();
+        }
       }
       //Inserción de indicador financiero
-      var registroModificados = this.lstIndicadoresFinancieros.filter(x => x.idPadre == 0 || x.idPadre == null).length;
-      if (registroModificados != this.lstIndicadoresFinancieros.length) {
+      if (!existeIndicadoresVacios) {
         if (this.esActualizacionIndicadores) {
           //Modificamos el registro de los valores de indicadores
           this.lstValoresIndicadoresFinancieros.forEach(valorIndicador => {
@@ -151,6 +175,7 @@ export class ResultadosComponent {
         this.toastr.error('Error al registrar gastos', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
+      this.loadingService.hideLoading();
       window.location.reload();
     }
   }
@@ -169,8 +194,8 @@ export class ResultadosComponent {
     });
     for (let index = 0; index < this.registrosExcel.length; index++) {
       if (isNaN(Number(this.registrosExcel[index].Gasto)) || String(this.registrosExcel[index].Gasto).trim() == '') {
-        this.toastr.error('Valor Gasto Incorrecto', 'Revisar valor en: ' + this.registrosExcel[index].Nombre);
-        break;
+        this.registrosExcel[index].Gasto = 0;
+        // this.toastr.error('Valor Gasto Incorrecto', 'Revisar valor en: ' + this.registrosExcel[index].Nombre);
       }
     }
   }
@@ -201,8 +226,22 @@ export class ResultadosComponent {
       this.cabeceraMeses = [];
       this.listaDatos = [];
       let registros: IGastosRespuesta = await this.presupuestoGastoService.obtenerGastosPresupuestoPlanCuenta(this.anioGasto);
+      this.lstHistorial = await this.presupuestoGastoService.obtenerHistorialGastoPresupuesto(this.anioGasto, 0);
       this.cabeceraMeses = registros.listaMesesGastos;
       this.listaDatos = registros.informacionGastoPresupuesto;
+      //Calcular el próximo mes a ingresar
+      if (registros.listaMesesGastos != undefined && registros.listaMesesGastos.length > 0) {
+        const listaMesesGastos = registros.listaMesesGastos;
+        const maxIdMes = listaMesesGastos.reduce((max, mes) =>
+          Math.max(max, mes.idMes), 0 // Suponiendo que 0 es el valor mínimo posible
+        );
+        // Sumar 1 al máximo encontrado
+        const nuevoIdMes = maxIdMes + 1;
+        this.mesGasto = nuevoIdMes;
+      } else {
+        this.mesGasto = 1;
+      }
+      console.log(this.mesGasto);
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error al obtener el presupuesto', error.message);
@@ -249,25 +288,39 @@ export class ResultadosComponent {
   }
 
   async celdaEditada(plan: any, mes: any, valorNuevo: number) {
-    if (valorNuevo < 0) {
-      this.toastr.warning("Valor incorrecto", "El valor ingresado no puede ser menor a 0");
-      valorNuevo = this.valorOriginalEditar;
-      return;
+
+    try {
+      this.loadingService.showLoading();
+
+      if (valorNuevo < 0) {
+        this.toastr.warning("Valor incorrecto", "El valor ingresado no puede ser menor a 0");
+        valorNuevo = this.valorOriginalEditar;
+        return;
+      }
+
+      if (this.valorOriginalEditar === valorNuevo) {
+        return;
+      }
+
+      const item: IGastoPresupuesto = {
+        anioGastoPresupuesto: this.anioGasto,
+        mesGastoPresupuesto: mes.idMes,
+        idPlan: plan.idPlan,
+        valorGastoMensual: valorNuevo,
+        usuarioModificacion: localStorage.getItem('userName') ?? ''
+      };
+
+      await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 0);
+      this.onChangeAnio();
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al modificar el valor del gasto', error.message);
+      } else {
+        this.toastr.error('Error al modificar el valor del gasto', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
     }
-
-    if (this.valorOriginalEditar === valorNuevo) {
-      return;
-    }
-
-    const item: IGastoPresupuesto = {
-      anioGastoPresupuesto: plan.anioPresupuesto,
-      mesGastoPresupuesto: mes.id,
-      idPlan: plan.idPlan,
-      valorGastoMensual: valorNuevo
-    };
-
-    await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
-    this.onChangeAnio();
   }
 
   async onChangeMesIndicador() {
@@ -312,6 +365,87 @@ export class ResultadosComponent {
       }
     }
     return ultimaPosicion;
+  }
+
+  visualizarHistorial(): void {
+    try {
+      this.loadingService.showLoading();
+      $('#historialModal').modal('show');
+      $('#historialModal').on('shown.bs.modal', async () => {
+        this.dtOptions = {
+          data: this.lstHistorial,
+          info: false,
+          language: {
+            ...this.GetSpanishLanguage()
+          },
+          columns: [
+            {
+              title: 'Fecha Modificación',
+              data: 'fechaModificacion',
+              render: function (data: any, type: any, row: any) {
+                if (data) {
+                  const date = new Date(data);
+                  return date.toLocaleString();  // Aquí puedes usar cualquier formato que desees
+                }
+                return '';
+              }
+            },
+            { title: 'Usuario', data: 'usuario' },
+            { title: 'Mes', data: 'mesModificacion' },
+            { title: 'Código Cta.', data: 'codigoCuenta' },
+            { title: 'Nombre Cta.', data: 'nombreCuenta' },
+            {
+              title: 'Valor anterior',
+              data: 'montoAnterior',
+              render: (data: any, type: any, full: any, meta: any) => {
+                return this.appComponent.formatoDinero(full.montoAnterior, true);
+              },
+              className: 'text-right'
+            },
+            {
+              title: 'Valor actual',
+              data: 'montoActual',
+              render: (data: any, type: any, full: any, meta: any) => {
+                return this.appComponent.formatoDinero(full.montoActual, true);
+              },
+              className: 'text-right'
+            },
+            {
+              title: 'Variación',
+              data: 'variacionMonto',
+              render: (data: any, type: any, full: any, meta: any) => {
+                return this.appComponent.formatoDinero(full.variacionMonto, true);
+              },
+              className: 'text-right'
+            },
+          ],
+          responsive: false,
+          autoWidth: false,
+          scrollX: true,
+          paging: true,
+          orderable: false,
+          destroy: true
+        };
+
+        if ($.fn.DataTable.isDataTable(this.tableHistorial.nativeElement)) {
+          $(this.tableHistorial.nativeElement).DataTable().destroy();
+        }
+        this.dataTable = $(this.tableHistorial.nativeElement).DataTable(this.dtOptions);
+
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al cargar el historial', error.message);
+      } else {
+        this.toastr.error('Error al cargar el historial', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
+    }
+  }
+
+  GetSpanishLanguage() {
+    return SpanishLanguage;
   }
 
 }

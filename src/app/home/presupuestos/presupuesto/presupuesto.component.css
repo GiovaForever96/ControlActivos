@@ -31,5 +31,13 @@ p-cellEditor input {
 .grey-text {
   background-color: rgb(230, 243, 255);
   color: black;
-  /* Cambia el color del texto si lo prefieres */
+}
+
+.p-contextmenu {
+  position: absolute !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transition: none !important;
+  z-index: 1002 !important;
 }

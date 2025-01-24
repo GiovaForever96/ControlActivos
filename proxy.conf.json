@@ -1,0 +1,7 @@
+{
+  "/proxy-image": {
+    "target": "https://cotizador.segurossuarez.com/backend/public",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

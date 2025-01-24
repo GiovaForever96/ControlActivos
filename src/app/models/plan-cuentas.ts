@@ -39,3 +39,15 @@ export interface IIndicadorFinanciero {
     idCuentaPlan: number,
     planCuenta?: IPlanCuentas
 }
+
+export interface IDetallePlanCuenta {
+    idDetallePlan: number,
+    descripcionDetalle: string,
+    montoDetalle: number,
+    estaActivo: boolean,
+    fechaHoraDetalle: Date,
+    usuarioDetalle: string,
+    idPlanDetalle: number,
+    planCuenta: IPlanCuentas,
+    mes: number
+}

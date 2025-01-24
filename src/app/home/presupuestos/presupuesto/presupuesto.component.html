@@ -1,18 +1,6 @@
 <div class="content-wrapper"
   style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
   <section class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-        </div>
-        <div class="col-sm-6 d-none d-sm-block">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a routerLink="/home">Inicio</a></li>
-            <li class="breadcrumb-item active">Presupuesto Anual</li>
-          </ol>
-        </div>
-      </div>
-    </div>
   </section>
   <section class="content">
     <div class="container-fluid">
@@ -20,102 +8,108 @@
         <div class="col-12">
           <div class="card card-primary card-outline">
             <div class="card-header">
-              <h3 class="card-title" style="padding-top: 5px;">
-                <i class="fa fa fa-money-bill-wave mr-2"></i>
-                Presupuesto Anual
-                <i class="fas fa-info-circle ml-2" style="color: blue;" *ngIf="!verTablaPresupuesto"
-                  title="Para editar el presupuesto debe cargar el inicial."></i>
-              </h3>
-              <button type="button" class="btn btn-secondary btn-sm float-right" data-toggle="modal"
-                title="Acciones en el presupuesto" *ngIf="verTablaPresupuesto && lstHistorial.length!=0"
-                (click)="visualizarHistorial()">
-                <i class="fas fa-history mr-2"></i> Historial
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <label for="">Año:</label>&nbsp;
-                <select class="custom-select color-black" style="height: 45px; flex-basis: 200px;"
-                  [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
-                  <option [value]="item" *ngFor="let item of lstAnios">
-                    {{item}}
-                  </option>
-                </select>
-                &nbsp;&nbsp;
-                <button class="btn btn-success btn-sm ml-2" (click)="abrirModal()" [disabled]="disableSubir"
-                  title="Subir Registro"><i class="fas fa-upload"></i></button>
-                <div class="d-flex justify-content-end align-items-center mb-3" style="font-size: 12px; flex-grow: 1;"
-                  *ngIf="verTablaPresupuesto">
-                  Buscar:&nbsp;&nbsp;
-                  <input [(ngModel)]="filterText" placeholder="" class="form-control col-3" />
+              <div class="row align-items-center">
+                <!-- Columna 1: Título -->
+                <div class="col-sm-12 col-md-4">
+                  <h3 class="card-title mb-0 d-flex align-items-center">
+                    <i class="fa fa-money-bill-wave mr-2"></i> Presupuesto Anual
+                    <i class="fas fa-info-circle ml-2 text-primary" *ngIf="!verTablaPresupuesto"
+                      title="Para editar el presupuesto debe cargar el inicial."></i>
+                  </h3>
+                </div>
+                <!-- Columna 2: Año y botón -->
+                <div class="col-sm-12 col-md-4">
+                  <div class="d-flex align-items-center">
+                    <label for="" class="mb-0 mr-2">Año:</label>
+                    <select class="custom-select color-black" style="height: 35px; width: 120px;"
+                      [(ngModel)]="anioPresupuesto" (change)="onChangeAnio()">
+                      <option [value]="item" *ngFor="let item of lstAnios">{{ item }}</option>
+                    </select>
+                    <button class="btn btn-success btn-sm ml-2" (click)="abrirModal()" [disabled]="disableSubir"
+                      title="Subir Registro">
+                      <i class="fas fa-upload"></i>
+                    </button>
+                  </div>
+                </div>
+                <!-- Columna 3: Buscar y botón Historial -->
+                <div class="col-sm-12 col-md-4 text-md-right text-sm-left mt-sm-2 mt-md-0" *ngIf="false">
+                  <div class="d-flex justify-content-end align-items-center">
+                    <label for="" class="mb-0 mr-2" *ngIf="verTablaPresupuesto">Buscar:</label>
+                    <input *ngIf="verTablaPresupuesto" [(ngModel)]="filterText" placeholder="Ingrese búsqueda"
+                      class="form-control form-control-sm mr-2" style="width: 200px;" />
+                    <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal"
+                      title="Acciones en el presupuesto" *ngIf="verTablaPresupuesto && lstHistorial.length != 0"
+                      (click)="visualizarHistorial()">
+                      <i class="fas fa-history mr-2"></i> Historial
+                    </button>
+                  </div>
                 </div>
               </div>
-
+            </div>
+            <div class="card-body" style="z-index: 0;">
               <div class="alert alert-primary" role="alert" *ngIf="!verTablaPresupuesto">
                 ¡No se ha cargado el presupuesto inicial para el año seleccionado!
               </div>
-
+              <p-contextMenu #cm [model]="menuItems"></p-contextMenu>
               <p-table [value]="filteredData" dataKey="id" [sortField]="'codigoPlan'" [sortOrder]="1"
-                [scrollable]="true" scrollHeight="800px" *ngIf="verTablaPresupuesto">
+                [scrollable]="true" scrollHeight="500px" [contextMenu]="cm" [contextMenuSelection]="selectedRow"
+                *ngIf="verTablaPresupuesto">
                 <ng-template pTemplate="header">
                   <tr style="font-size: 10px;">
-                    <!-- Ordenar por Código -->
-                    <th pSortableColumn="codigoPlan" pFrozenColumn id="">
+                    <th pSortableColumn="codigoPlan" pFrozenColumn id="" data-column-name="codigoPlan">
                       Código
                     </th>
-
-                    <th pSortableColumn="nombrePlan" pFrozenColumn class="celdasDer" id="">
+                    <th pSortableColumn="nombrePlan" pFrozenColumn class="celdasDer" id=""
+                      data-column-name="nombrePlan">
                       Plan
                     </th>
-
-                    <th *ngFor="let item of lstMeses" [pSortableColumn]="item.nombre" id="">
-                      {{item.nombre}}
+                    <th *ngFor="let item of lstMeses" [pSortableColumn]="item.nombre" id=""
+                      attr.data-column-name="{{ item.nombre }}">
+                      {{ item.nombre }}
                     </th>
                   </tr>
                 </ng-template>
-
                 <ng-template pTemplate="body" let-plan>
-                  <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}">
-                    <!-- Código editable -->
-                    <td pFrozenColumn>
+                  <tr style="font-size: 10px;" (contextmenu)="onRightClick($event, plan, cm)"
+                    [hidden]="!plan.tieneHijos" [ngClass]="{'grey-text': !consultaEsPenultimoNivel(plan.idPlan)}">
+                    <td pFrozenColumn data-column-name="codigoPlan">
                       <p-cellEditor>
                         <ng-template pTemplate="input">
                           <input pInputText type="text" [(ngModel)]="plan.codigoPlan" />
                         </ng-template>
                         <ng-template pTemplate="output">
-                          {{plan.codigoPlan}}
+                          {{ plan.codigoPlan }}
                         </ng-template>
                       </p-cellEditor>
                     </td>
-
-                    <td pFrozenColumn class="celdasDer">
+                    <td pFrozenColumn class="celdasDer" data-column-name="nombrePlan">
                       <p-cellEditor>
                         <ng-template pTemplate="input">
                           <input pInputText type="text" [(ngModel)]="plan.nombrePlan" />
                         </ng-template>
                         <ng-template pTemplate="output">
-                          {{plan.nombrePlan}}
+                          {{ plan.nombrePlan }}
                         </ng-template>
                       </p-cellEditor>
                     </td>
-                    <td pEditableColumn *ngFor="let mes of lstMeses">
+                    <td pEditableColumn *ngFor="let mes of lstMeses" [attr.data-column-name]="mes.nombre">
                       <p-cellEditor>
                         <ng-template pTemplate="input">
                           <input *ngIf="!plan.tieneHijos && permiteModificarRol(['FIN'])" pInputText type="number"
-                            [(ngModel)]="plan[mes.nombre]" (focus)="celdaOriginal(plan[mes.nombre],plan)"
-                            (focusout)="celdaEditada(plan,mes,plan[mes.nombre])" min="0" />
-                          <span *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">{{plan[mes.nombre] | currency:
-                            'USD'}}</span>
+                            [(ngModel)]="plan[mes.nombre]" (focus)="celdaOriginal(plan[mes.nombre], plan)"
+                            (focusout)="celdaEditada(plan, mes, plan[mes.nombre])" min="0" />
+                          <span *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">
+                            {{ plan[mes.nombre] | currency: 'USD' }}
+                          </span>
                         </ng-template>
                         <ng-template pTemplate="output">
-                          {{plan[mes.nombre] | currency: 'USD'}}
+                          {{ plan[mes.nombre] | currency: 'USD' }}
                         </ng-template>
                       </p-cellEditor>
                     </td>
                   </tr>
                 </ng-template>
               </p-table>
-
             </div>
           </div>
         </div>
@@ -171,6 +165,178 @@
         <div class="modal-body">
           <table #dataTableHistorial class="table table-bordered table-striped" style="width: 100%;">
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="detalleCuentaModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Detalle, Cuenta:
+            {{informacionFilaDetalle?.codigoPlan??''}} {{informacionFilaDetalle?.nombrePlan??''}}, Mes:
+            {{nombreMesDetalle}}/{{anioPresupuesto}}
+          </h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="cerrarModalDetalle()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="detalleForm" (ngSubmit)="onSubmitDetalle()" class="needs-validation">
+            <div class="row align-items-center">
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                <div class="row align-items-center">
+                  <label for="descripcion" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Descripción:</label>
+                  <div class="col-lg-9 col-md-8 col-sm-12">
+                    <input type="text" id="descripcion" class="form-control" formControlName="descripcion"
+                      placeholder="Descripción">
+                    <div *ngIf="detalleForm.get('descripcion')?.invalid && detalleForm.get('descripcion')?.touched"
+                      class="invalid-feedback">
+                      Este campo es obligatorio.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                <div class="row align-items-center">
+                  <label for="monto" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Monto:</label>
+                  <div class="col-lg-9 col-md-8 col-sm-12">
+                    <div class="input-group">
+                      <span class="input-group-text">$</span>
+                      <input type="number" id="monto" class="form-control" formControlName="monto"
+                        placeholder="Monto detalle" min="0">
+                    </div>
+                    <div *ngIf="detalleForm.get('monto')?.invalid && detalleForm.get('monto')?.touched"
+                      class="invalid-feedback">
+                      Este campo es obligatorio y debe ser mayor o igual a 0.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-2 col-md-12 col-sm-12 text-end">
+                <button type="submit" class="btn btn-success form-group" [disabled]="detalleForm.invalid">
+                  <i class="fas fa-plus-circle"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+          <!-- Tabla con scroll horizontal -->
+          <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+            <!-- Clase para hacer la tabla scrollable -->
+            <table class="table table-bordered text-center">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Descripción</th>
+                  <th>Monto</th>
+                  <th></th> <!-- Sin encabezado para la columna de acciones -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let registro of lstDetallesPlanCuenta; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ registro.descripcionDetalle }}</td>
+                  <td>{{ registro.montoDetalle | currency }}</td>
+                  <td>
+                    <button type="button" class="btn btn-danger btn-sm" (click)="eliminarRegistro(i)">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Mostrar el total -->
+          <div class="d-flex justify-content-end mt-3">
+            <h5 style="font-size: 15px;">Total: <span class="fw-bold">{{ calcularTotal() | currency }}</span></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="copiarValorModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Copiar Valor Presupuesto Mes:
+            {{nombreMesDetalle}}/{{anioPresupuesto}}</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+            (click)="cerrarModalCopiarValor()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="copiarValorForm" (ngSubmit)="onSubmitCopiarValores()" class="needs-validation">
+            <div class="row align-items-center">
+              <!-- Descripción -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                <label for="descripcion" class="form-label">Descripción:</label>
+                <input type="text" id="descripcion" class="form-control" formControlName="descripcion"
+                  placeholder="Descripción" />
+              </div>
+
+              <!-- Monto Original y Cantidad de Meses -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group d-flex align-items-center">
+                <!-- Monto Original -->
+                <div class="flex-grow-1 me-3">
+                  <label for="montoOriginal" class="form-label">Monto Original:</label>
+                  <input type="number" id="montoOriginal" class="form-control" formControlName="montoOriginal"
+                    readonly />
+                </div>
+
+                <!-- Cantidad de Meses -->
+                <div class="flex-grow-1 ml-3">
+                  <label for="cantidadMeses" class="form-label"> Hasta:</label>
+                  <select id="cantidadMeses" class="custom-select" formControlName="cantidadMeses">
+                    <option *ngFor="let mes of lstMesesModal" [value]="mes.id">{{ mes.nombre }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tipo de Operación -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                <label for="tipoOperacion" class="form-label">Tipo de Operación:</label>
+                <select id="tipoOperacion" class="custom-select" formControlName="tipoOperacion"
+                  (change)="onTipoOperacionChange($event)">
+                  <option value="" disabled selected>Seleccione una operación</option>
+                  <option value="aumentar">Aumentar</option>
+                  <option value="disminuir">Disminuir</option>
+                  <option value="igual">Igual</option>
+                </select>
+              </div>
+
+              <!-- Tipo de Cálculo (Visible solo si la operación no es igual) -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group" *ngIf="mostrarCalculo">
+                <label for="tipoCalculo" class="form-label">Tipo de Cálculo:</label>
+                <select id="tipoCalculo" class="custom-select" formControlName="tipoCalculo">
+                  <option value="" disabled selected>Seleccione un tipo de cálculo</option>
+                  <option value="valor">Valor</option>
+                  <option value="porcentaje">Porcentaje</option>
+                </select>
+              </div>
+
+              <!-- Valor o Porcentaje (Visible solo si la operación no es igual) -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group" *ngIf="mostrarCalculo">
+                <label for="valorPorcentaje" class="form-label">Valor/Porcentaje:</label>
+                <input type="number" id="valorPorcentaje" class="form-control" formControlName="valorPorcentaje"
+                  placeholder="Ingrese el valor o porcentaje" />
+              </div>
+
+              <!-- Monto Modificado -->
+              <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                <label for="montoModificado" class="form-label">Monto Modificado:</label>
+                <input type="number" id="montoModificado" class="form-control" formControlName="montoModificado"
+                  readonly />
+              </div>
+
+              <!-- Botón de enviar -->
+              <div class="col-lg-12 text-end">
+                <button type="submit" class="btn btn-success" [disabled]="copiarValorForm.invalid">
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>

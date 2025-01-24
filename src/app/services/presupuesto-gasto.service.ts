@@ -109,8 +109,8 @@ export class PresupuestoGastoService {
     }
   }
 
-  async agregarPresupuestoAnual(presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
-    const URL_API = this.baseUrl + 'agregarPresupuestoAnual';
+  async agregarPresupuestoAnual(presupuestoData: IPlanCuentasPresupuesto[],usuario:string): Promise<string> {
+    const URL_API = `${this.baseUrl}agregarPresupuestoAnual/${usuario}`;
     try {
       const response = await this.authService.apiClient.post<any>(URL_API, presupuestoData);
       if (!response.data.esError) {
@@ -128,8 +128,8 @@ export class PresupuestoGastoService {
     }
   }
 
-  async agregarGastoAnual(numeroMeses: number, presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
-    const URL_API = this.baseUrl + 'agregarGastoAnual/' + numeroMeses;
+  async agregarGastoAnual(numeroMeses: number, usuario: string, presupuestoData: IPlanCuentasPresupuesto[]): Promise<string> {
+    const URL_API = `${this.baseUrl}agregarGastoAnual/${numeroMeses}/${usuario}`;
     try {
       const response = await this.authService.apiClient.post<any>(URL_API, presupuestoData);
       if (!response.data.esError) {
@@ -140,9 +140,9 @@ export class PresupuestoGastoService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
-        throw new Error(`${serverMessage}`);
+        return 'Error:' + serverMessage;
       } else {
-        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+        return `Error:${error ?? 'Error desconocido.\nContactese con TI.'}`;
       }
     }
   }

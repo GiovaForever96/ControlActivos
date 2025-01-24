@@ -10,6 +10,8 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { HomeModule } from './home/home.module';
 import { RegistroInventarioComponent } from './registro-inventario/registro-inventario.component';
 import { AuthService } from './services/auth-interceptor.service';
+import { ContextMenuModule } from 'primeng/contextmenu';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // Importar aquí
 
 @NgModule({
   declarations: [
@@ -25,6 +27,8 @@ import { AuthService } from './services/auth-interceptor.service';
     FormsModule,
     ZXingScannerModule,
     HomeModule,
+    ContextMenuModule,
+    BrowserAnimationsModule
   ],
   providers: [
     AuthService

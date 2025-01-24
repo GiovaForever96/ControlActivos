@@ -2,6 +2,7 @@ import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
 import { IPlanCuentas } from 'src/app/models/plan-cuentas';
 import { IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
+import { DataService } from 'src/app/services/data.service';
 import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
 import { LoadingService } from 'src/app/services/loading.service';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
@@ -18,6 +19,7 @@ export class IndicadoresComponent {
 
   //#region 
   anioIndicador: any = 2024;
+  mesIndicador: any = "";
   lstPlanCuentas: (IPlanCuentas & Record<string, any>)[] = [];
   lstIndicadoresFinancieros: IPlanCuentas[] = [];
   lstMeses: any[] = [];
@@ -29,6 +31,8 @@ export class IndicadoresComponent {
   lstIndicadoresPorcentaje: string[] = ['15.', '16.', '17.', '18.', '20.'];
   informacionIndicadoresFinancieros: any;
   informacionIndicadoresFinancierosReporte: any;
+  base64Image = 'data:image/png;base64,<TU_BASE64_AQUÍ>';
+
   //#endregion
 
   constructor(
@@ -38,6 +42,7 @@ export class IndicadoresComponent {
     private renderer: Renderer2,
     private planCuentasService: PlanCuentasService,
     private indicadoresService: IndicadorFinancieroService,
+    private dataService: DataService,
     private appComponent: AppComponent) {
     this.lstMeses = appComponent.obtenerMesesAnio();
   }
@@ -51,6 +56,7 @@ export class IndicadoresComponent {
       const body = this.el.nativeElement.ownerDocument.body;
       this.renderer.setStyle(body, 'overflow', '');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
+      this.base64Image = await this.imageToBase64String("https://cotizador.segurossuarez.com/backend/public/img/EncabezadoIndicadores.jpg");
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error Indicadores Financieros', error.message);
@@ -97,7 +103,7 @@ export class IndicadoresComponent {
   }
 
   visualizarDocumento(nombreMes: any) {
-
+    this.mesIndicador = nombreMes;
     //Obtener los valores para las tablas
     var activoCorriente = this.obtenerValorIndicador(562, nombreMes);
     var pasivoCorriente = this.obtenerValorIndicador(563, nombreMes);
@@ -221,10 +227,19 @@ export class IndicadoresComponent {
 
   generarInformePdf() {
     const documentDefinition: any = {
+      background: [
+        {
+          image: this.base64Image, // Imagen como fondo
+          width: 600, // Ajusta el tamaño de la imagen
+          absolutePosition: { x: 0, y: 0 }, // Posición en el documento
+          opacity: 1, // Nivel de transparencia (para fondo)
+        }
+      ],
+      pageMargins: [50, 165, 50, 75], // Márgenes: [izquierda, superior, derecha, inferior]
       content: [
         // Agregar los textos antes de la tabla
         {
-          text: 'ÍNDICES FINANCIEROS ' + this.anioIndicador,
+          text: 'ÍNDICES FINANCIEROS ' + this.mesIndicador + '/' + this.anioIndicador,
           fontSize: 11,
           style: 'title',
           bold: true,
@@ -275,17 +290,25 @@ export class IndicadoresComponent {
           lineHeight: 1,
         }
       },
-      footer: (currentPage: number, pageCount: number) => {
-        return [
-          {
-            text: `Página ${currentPage} de ${pageCount}\t\tFecha Generación: ${new Date().toLocaleString()}.`,
-            alignment: 'center',
-            fontSize: 7,
-            margin: [0, 10],
-            bold: true
-          }
-        ];
-      }
+      // footer: (currentPage: number, pageCount: number) => {
+      //   return {
+      //     columns: [
+      //       {
+      //         image: this.base64Image,
+      //         width: 100,
+      //         alignment: 'left', // Ajusta según tu diseño
+      //       },
+      //       {
+      //         text: `Página ${currentPage} de ${pageCount}\t\tFecha Generación: ${new Date().toLocaleString()}.`,
+      //         alignment: 'center',
+      //         fontSize: 7,
+      //         margin: [0, 10],
+      //         bold: true,
+      //       }
+      //     ],
+      //     margin: [40, 10], // Ajusta los márgenes si es necesario
+      //   };
+      // }
     };
 
     // Iterar sobre la información para crear las tablas
@@ -330,6 +353,17 @@ export class IndicadoresComponent {
     // Crear y abrir el PDF
     pdfMake.createPdf(documentDefinition).open();
 
+  }
+
+  async imageToBase64String(imageUrl: string): Promise<string> {
+    const proxyUrl = 'https://cotizador.segurossuarez.com/backend/public/api/proxy-image?url=' + encodeURIComponent(imageUrl);
+    try {
+      const base64 = await this.dataService.getImage(proxyUrl);
+      return base64;
+    } catch (error: any) {
+      this.toastr.error('Error al cargar la imagen:', error);
+      return '';
+    }
   }
 
 }

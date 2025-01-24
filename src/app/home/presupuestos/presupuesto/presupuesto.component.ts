@@ -1,6 +1,8 @@
-import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MenuItem } from 'primeng/api';
 import { AppComponent } from 'src/app/app.component';
-import { IGastoPresupuesto, IHistorialGastoPresupuesto, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
+import { IDetallePlanCuenta, IGastoPresupuesto, IHistorialGastoPresupuesto, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
 import { LoadingService } from 'src/app/services/loading.service';
 import { PlanCuentasService } from 'src/app/services/plan-cuentas.service';
 import { PresupuestoGastoService } from 'src/app/services/presupuesto-gasto.service';
@@ -18,21 +20,43 @@ export class PresupuestoComponent {
 
   @ViewChild('dataTableHistorial', { static: false }) tableHistorial!: ElementRef;
 
+  //#region Menu Contextual
+  menuItems: MenuItem[] = [];
+  selectedRow: any;
+  //#endregion
+
   constructor(private planCuentasService: PlanCuentasService,
     private el: ElementRef,
     private renderer: Renderer2,
     private appComponent: AppComponent,
     private presupuestoGastoService: PresupuestoGastoService,
     private loadingService: LoadingService,
-    private toastr: ToastrService
+    private cdr: ChangeDetectorRef,
+    private toastr: ToastrService,
+    private fb: FormBuilder
   ) {
     this.lstMeses = appComponent.obtenerMesesAnio();
+    this.detalleForm = this.fb.group({
+      descripcion: ['', [Validators.required]],
+      monto: [null, [Validators.required, Validators.min(0)]]
+    });
+    this.copiarValorForm = this.fb.group({
+      descripcion: ['', [Validators.required]],
+      montoOriginal: [0, [Validators.required, Validators.min(0)]],
+      tipoOperacion: ['', Validators.required],
+      tipoCalculo: [''],
+      valorPorcentaje: [0],
+      montoModificado: [0, Validators.required],
+      cantidadMeses: [0, Validators.required],
+    });
+    this.calcularMontoModificado();
   }
   //Variables
   lstPlanCuentas: (IPlanCuentas & Record<string, any>)[] = [];
   lstPresupuestos: any[] = [];
   lstPlanCuentasPresupuesto: IPlanCuentasPresupuesto[] = [];
   lstMeses: any[] = [];
+  lstMesesModal: any[] = [];
   anioPresupuesto: any;
   filterText: string = '';
   disableSubir: boolean = false;
@@ -47,6 +71,13 @@ export class PresupuestoComponent {
   lstHistorial: IHistorialGastoPresupuesto[] = [];
   dtOptions: any;
   dataTable: any;
+  informacionFilaDetalle: any;
+  nombreMesDetalle: string = '';
+  detalleForm: FormGroup = null!;
+  copiarValorForm: FormGroup = null!;
+  lstDetallesPlanCuenta: IDetallePlanCuenta[] = [];
+  existeCambios: boolean = false;
+  mostrarCalculo: boolean = true;
 
   async ngOnInit() {
     try {
@@ -55,8 +86,22 @@ export class PresupuestoComponent {
       this.lstAnios = await this.planCuentasService.obtenerAniosValidos();
       this.anioPresupuesto = new Date().getFullYear();
       const body = this.el.nativeElement.ownerDocument.body;
-      this.renderer.setStyle(body, 'overflow', '');
+      this.renderer.setStyle(body, 'overflow', 'hidden');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
+      this.existeCambios = false;
+      // Define los elementos del menú contextual
+      this.menuItems = [
+        {
+          label: 'Agregar Detalle',
+          icon: 'pi pi-plus-circle',
+          command: () => this.agregarDetalle(this.selectedRow)
+        },
+        {
+          label: 'Copiar Valor',
+          icon: 'pi pi-copy',
+          command: () => this.copiarValorPresupuesto(this.selectedRow)
+        }
+      ];
       this.cargarPlanCuentas();
     } catch (error) {
       if (error instanceof Error) {
@@ -71,7 +116,6 @@ export class PresupuestoComponent {
 
   async cargarPlanCuentas() {
     this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
-    this.lstPresupuestos = await this.presupuestoGastoService.obtenerPresupuestoCuentaPlanAnual(this.anioPresupuesto);
     this.lstPlanCuentas.forEach(cuenta => {
       let encontro = false;
       this.lstPresupuestos.forEach(element => {
@@ -124,6 +168,7 @@ export class PresupuestoComponent {
 
   async guardarPresupuesto() {
     this.lstPresupuestos.forEach(element => {
+      var esUltimoNivel = this.lstPlanCuentas.filter(x => x.idPadre == element.idPlan);
       let lstValores: number[] = [];
       this.lstMeses.forEach(mes => {
         lstValores.push(element[mes.nombre]);
@@ -135,7 +180,8 @@ export class PresupuestoComponent {
       };
       this.lstPlanCuentasPresupuesto.push(item);
     });
-    await this.presupuestoGastoService.agregarPresupuestoAnual(this.lstPlanCuentasPresupuesto);
+    var nombreUsuario = localStorage.getItem('userName') ?? '';
+    await this.presupuestoGastoService.agregarPresupuestoAnual(this.lstPlanCuentasPresupuesto, nombreUsuario);
     this.toastr.success("Guardado información", "Información presupuesto actualizado correctamente");
   }
 
@@ -154,7 +200,6 @@ export class PresupuestoComponent {
       this.lstPlanCuentas = await this.planCuentasService.obtenerPlanCuentas();
       this.lstPresupuestos = await this.presupuestoGastoService.obtenerPresupuestoCuentaPlanAnual(this.anioPresupuesto);
       this.lstHistorial = await this.presupuestoGastoService.obtenerHistorialGastoPresupuesto(this.anioPresupuesto, 1);
-
       this.lstPlanCuentas.forEach(cuenta => {
         let encontro = false;
         this.lstPresupuestos.forEach(element => {
@@ -264,11 +309,18 @@ export class PresupuestoComponent {
         this.lstPlanCuentas.forEach(element => {
           let lstValores: number[] = [];
           this.lstMeses.forEach(mes => {
-            lstValores.push(element[mes.nombre]);
+            if (element[mes.nombre] == '' || element[mes.nombre] == undefined) {
+              lstValores.push(0);
+            } else {
+              lstValores.push(element[mes.nombre] ?? 0);
+            }
           });
+          // let tieneHijos = this.lstPlanCuentas.filter(x => x.idPadre == element.idPlan).length > 0;
+          // let valoresAux = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           let item: IPlanCuentasPresupuesto = {
             anioPresupuesto: this.anioPresupuesto,
             idPlan: element.idPlan,
+            // valorPresupuestoMensual: tieneHijos ? lstValores : valoresAux
             valorPresupuestoMensual: lstValores
           };
           this.lstPlanCuentasPresupuesto.push(item);
@@ -288,7 +340,8 @@ export class PresupuestoComponent {
   async guardarInformacion() {
     try {
       this.loadingService.showLoading();
-      await this.presupuestoGastoService.agregarPresupuestoAnual(this.lstPlanCuentasPresupuesto);
+      var nombreUsuario = localStorage.getItem('userName') ?? ''
+      await this.presupuestoGastoService.agregarPresupuestoAnual(this.lstPlanCuentasPresupuesto, nombreUsuario);
       this.toastr.success("Guardado información", "Información almacenada correctamente");
       this.loadingService.hideLoading();
     } catch (error) {
@@ -315,8 +368,10 @@ export class PresupuestoComponent {
         valorNuevo = this.valorOriginalEditar;
         return;
       }
-      if (this.valorOriginalEditar === valorNuevo)
+      if (this.valorOriginalEditar === valorNuevo) {
+        this.loadingService.hideLoading();
         return;
+      }
 
       const item: IGastoPresupuesto = {
         anioGastoPresupuesto: plan.anioPresupuesto,
@@ -355,6 +410,17 @@ export class PresupuestoComponent {
             ...this.GetSpanishLanguage()
           },
           columns: [
+            {
+              title: 'Fecha Modificación',
+              data: 'fechaModificacion',
+              render: function (data: any, type: any, row: any) {
+                if (data) {
+                  const date = new Date(data);
+                  return date.toLocaleString();
+                }
+                return '';
+              }
+            },
             { title: 'Usuario', data: 'usuario' },
             { title: 'Mes', data: 'mesModificacion' },
             { title: 'Código Cta.', data: 'codigoCuenta' },
@@ -409,8 +475,359 @@ export class PresupuestoComponent {
     }
   }
 
+  onRightClick(event: MouseEvent, rowData: any, cm: any) {
+
+    event.preventDefault();
+
+    if (!this.consultaEsPenultimoNivel(rowData.idPlan)) return;
+
+    const target = event.target as HTMLElement;
+    const columnElement = target.closest('td[data-column-name], th[data-column-name]');
+    this.nombreMesDetalle = columnElement?.getAttribute('data-column-name') ?? '';
+
+    if (this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)) {
+      this.selectedRow = rowData;
+      // Coordenadas iniciales del clic
+      let clickX = event.clientX - 250;
+      let clickY = event.clientY - 100;
+      // Mostrar el menú contextual
+      cm.show(event);
+      // Agregar un detector de clic global para cerrar el menú
+      const closeMenu = (e: MouseEvent) => {
+        const menuElement = document.querySelector('.p-contextmenu') as HTMLElement;
+        if (menuElement && !menuElement.contains(e.target as Node)) {
+          cm.hide();
+          document.removeEventListener('click', closeMenu);
+        }
+      };
+      document.addEventListener('click', closeMenu);
+      setTimeout(() => {
+        const menuElement = document.querySelector('.p-contextmenu') as HTMLElement;
+        if (menuElement) {
+          // Obtener dimensiones del menú
+          const menuWidth = menuElement.offsetWidth;
+          const menuHeight = menuElement.offsetHeight;
+          // Obtener dimensiones de la ventana
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+          // Verificar si el menú se desborda horizontalmente
+          if (clickX + menuWidth + 300 > windowWidth) {
+            clickX = windowWidth - menuWidth - 400;
+          }
+          // Verificar si el menú se desborda verticalmente
+          if (clickY + menuHeight + 200 > windowHeight) {
+            clickY = windowHeight - menuHeight - 100;
+          }
+          // Aplicar las coordenadas ajustadas
+          menuElement.style.left = `${clickX}px`;
+          menuElement.style.top = `${clickY}px`;
+          menuElement.style.position = 'absolute';
+          menuElement.style.zIndex = '1002';
+          menuElement.style.visibility = 'visible';
+          menuElement.style.transition = 'none';
+          // Forzar la detección de cambios
+          this.cdr.detectChanges();
+        }
+      }, 0);
+    }
+  }
+
+  agregarDetalle(row: any) {
+    try {
+
+      this.loadingService.showLoading();
+      this.lstDetallesPlanCuenta = [];
+      this.informacionFilaDetalle = row;
+      let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
+      $('#detalleCuentaModal').modal('show');
+      $('#detalleCuentaModal').off('shown.bs.modal');
+      $('#detalleCuentaModal').on('shown.bs.modal', async () => {
+        try {
+          let idPlan = this.informacionFilaDetalle.idPlan;
+          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
+          this.detalleForm.reset();
+        } catch (error: any) {
+          this.toastr.error('Error al cargar los detalles del plan', error.message);
+        }
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al abrir el modal de detalles', error.message);
+      } else {
+        this.toastr.error('Error al abrir el modal de detalles', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  cerrarModalDetalle() {
+    $('#detalleCuentaModal').modal('hide');
+    if (this.existeCambios) {
+      window.location.reload();
+    }
+  }
+
+  consultaEsPenultimoNivel(idPlan: number): boolean {
+    let idHijos = this.lstPlanCuentas
+      .filter(x => x.idPadre === idPlan)
+      .map(x => x.idPlan);
+
+    let sonPadres = idHijos.some(hijoId =>
+      this.lstPlanCuentas.some(x => x.idPadre === hijoId)
+    );
+    return !sonPadres;
+  }
+
+  async onSubmitDetalle() {
+    try {
+      this.loadingService.showLoading();
+      if (this.detalleForm.valid) {
+        let informacion = this.detalleForm.value;
+        //Creación de objeto
+        let detallePlanCuenta: IDetallePlanCuenta = {
+          descripcionDetalle: informacion.descripcion,
+          montoDetalle: informacion.monto,
+          estaActivo: true,
+          fechaHoraDetalle: new Date(),
+          usuarioDetalle: localStorage.getItem('userName') ?? '',
+          idPlanDetalle: this.informacionFilaDetalle.idPlan,
+          planCuenta: null!,
+          idDetallePlan: 0,
+          mes: this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id ?? 0
+        };
+        this.lstDetallesPlanCuenta.push(detallePlanCuenta);
+        //Reiniciar formulario
+        this.detalleForm.reset();
+        //Agregar a la lista en la base de datos
+        const mensajeInsercion = await this.planCuentasService.insertarDetallePlanCuenta(detallePlanCuenta);
+        this.toastr.success('Detalle de plan de cuenta', mensajeInsercion);
+        //Actualizar el valor total de la cuenta por mes
+        this.actualizarValorGastoPresupuesto(this.informacionFilaDetalle.idPlan);
+      } else {
+        this.toastr.error('Error en el formulario', 'Por favor, complete los campos requeridos.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al agregar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  async eliminarRegistro(index: number) {
+    try {
+      this.loadingService.showLoading();
+      let informacionDetalle = this.lstDetallesPlanCuenta[index];
+      this.lstDetallesPlanCuenta.splice(index, 1);
+      const mensajeEliminacion = await this.planCuentasService.eliminarDetallePlanCuenta(informacionDetalle.idDetallePlan);
+      this.toastr.success('Detalle de plan de cuenta', mensajeEliminacion);
+      //Actualizar el valor total de la cuenta por mes
+      this.actualizarValorGastoPresupuesto(this.informacionFilaDetalle.idPlan);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al eliminar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al eliminar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  calcularTotal(): number {
+    return this.lstDetallesPlanCuenta.reduce((total, registro) => total + registro.montoDetalle, 0);
+  }
+
+  async actualizarValorGastoPresupuesto(idPlan: number) {
+    try {
+      this.loadingService.showLoading();
+      //Actualizar el valor total de la cuenta por mes
+      const item: IGastoPresupuesto = {
+        anioGastoPresupuesto: this.anioPresupuesto,
+        mesGastoPresupuesto: this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id ?? 0,
+        idPlan: idPlan,
+        valorGastoMensual: this.calcularTotal(),
+        usuarioModificacion: localStorage.getItem('userName') ?? ''
+      };
+      const mensajeActualizacion = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
+      this.toastr.success('Detalle de plan de cuenta', mensajeActualizacion);
+      this.existeCambios = true;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al agregar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  copiarValorPresupuesto(row: any) {
+    try {
+      this.loadingService.showLoading();
+      let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
+      let valorPresupuesto = row.valorPresupuestoMensual[idMes - 1];
+      if (valorPresupuesto <= 0) {
+        this.toastr.warning("Valor incorrecto", "El valor ingresado no puede ser menor o igual a 0");
+        return;
+      }
+      if (idMes == 12) {
+        this.toastr.warning("Copiar Valores", "No se puede copiar el valor de Diciembre");
+        return;
+      }
+      // this.lstDetallesPlanCuenta = [];
+      this.informacionFilaDetalle = row;
+      $('#copiarValorModal').modal('show');
+      $('#copiarValorModal').off('shown.bs.modal');
+      $('#copiarValorModal').on('shown.bs.modal', async () => {
+        try {
+          this.copiarValorForm.reset();
+          this.copiarValorForm.patchValue({
+            descripcion: '',
+            montoOriginal: valorPresupuesto,
+            tipoOperacion: '',
+            tipoCalculo: '',
+            valorPorcentaje: 0,
+            montoModificado: 0,
+            cantidadMeses: idMes + 1
+          });
+          //Cantidad máxima de meses
+          this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes);
+          // let idPlan = this.informacionFilaDetalle.idPlan;
+          // this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
+          // this.detalleForm.reset();
+        } catch (error: any) {
+          this.toastr.error('Error al cargar los detalles del plan', error.message);
+        }
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al abrir el modal de detalles', error.message);
+      } else {
+        this.toastr.error('Error al abrir el modal de detalles', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  cerrarModalCopiarValor() {
+    $('#copiarValorModal').modal('hide');
+  }
+
+  calcularMontoModificado(): void {
+    this.copiarValorForm.valueChanges.subscribe((formValues) => {
+      const { montoOriginal, tipoOperacion, tipoCalculo, valorPorcentaje } = formValues;
+      // Verificamos si hay un monto original y tipo de operación
+      if (montoOriginal != null && tipoOperacion) {
+        let montoModificado = montoOriginal;
+        // Si la operación es "igual", no validamos tipoCalculo ni valorPorcentaje
+        if (tipoOperacion === 'igual') {
+          montoModificado = montoOriginal;
+        } else {
+          // Validamos que tipoCalculo y valorPorcentaje sean válidos para las demás operaciones
+          if (tipoCalculo && valorPorcentaje != null) {
+            const valor =
+              tipoCalculo === 'porcentaje' ? (montoOriginal * valorPorcentaje) / 100 : valorPorcentaje;
+            if (tipoOperacion === 'aumentar') {
+              montoModificado = montoOriginal + valor;
+            } else if (tipoOperacion === 'disminuir') {
+              montoModificado = montoOriginal - valor;
+            }
+          }
+        }
+        // Redondeamos el resultado a 2 decimales
+        montoModificado = parseFloat(montoModificado.toFixed(2));
+        // Actualizamos el campo de "Monto Modificado" sin emitir un nuevo evento
+        this.copiarValorForm.get('montoModificado')?.setValue(montoModificado, { emitEvent: false });
+      }
+    });
+  }
+
+  onTipoOperacionChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value; // Cast para obtener la propiedad 'value'
+    // Lógica adicional, si es necesario
+    this.mostrarCalculo = value !== 'igual';
+
+    if (value === 'igual') {
+      this.copiarValorForm.patchValue({ tipoCalculo: '', valorPorcentaje: null });
+    }
+  }
+
+  async onSubmitCopiarValores() {
+    try {
+      this.loadingService.showLoading();
+      if (this.copiarValorForm.valid) {
+        let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
+        let informacion = this.copiarValorForm.value;
+        for (let index = idMes + 1; index <= informacion.cantidadMeses; index++) {
+          this.loadingService.showLoading();
+          //Actualizar el valor total de la cuenta por mes
+          const item: IGastoPresupuesto = {
+            anioGastoPresupuesto: this.anioPresupuesto,
+            mesGastoPresupuesto: index,
+            idPlan: this.informacionFilaDetalle.idPlan,
+            valorGastoMensual: informacion.montoModificado,
+            usuarioModificacion: localStorage.getItem('userName') ?? ''
+          };
+          try {
+            //Creación de objeto
+            let detallePlanCuenta: IDetallePlanCuenta = {
+              descripcionDetalle: informacion.descripcion,
+              montoDetalle: informacion.montoModificado,
+              estaActivo: true,
+              fechaHoraDetalle: new Date(),
+              usuarioDetalle: localStorage.getItem('userName') ?? '',
+              idPlanDetalle: this.informacionFilaDetalle.idPlan,
+              planCuenta: null!,
+              idDetallePlan: 0,
+              mes: index
+            };
+            //Agregar a la lista en la base de datos
+            await this.planCuentasService.insertarDetallePlanCuenta(detallePlanCuenta);
+            // Esperar la finalización de la operación asíncrona
+            const mensajeActualizacion = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
+            this.toastr.success('Detalle de plan de cuenta', mensajeActualizacion);
+          } catch (error: any) {
+            // Manejar errores de la operación
+            this.toastr.error('Error actualizando el gasto', error.message || 'Error desconocido');
+            console.error(error);
+          } finally { }
+        }
+      } else {
+        this.toastr.error('Error en el formulario', 'Por favor, complete los campos requeridos.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al agregar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+        window.location.reload();
+      }, 3000);
+    }
   }
 
 }
