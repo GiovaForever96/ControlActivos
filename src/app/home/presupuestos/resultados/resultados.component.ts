@@ -93,19 +93,18 @@ export class ResultadosComponent {
   }
 
   async OnSubmit() {
+    //Validamos la información
+    if (this.nameFile == '') {
+      this.toastr.error("Registro gastos", "No se ha seleccionado el archivo a cargar");
+      return;
+    }
+    var existeIndicadoresVacios = this.lstIndicadoresFinancieros.filter(x => x.idPadre == 0 || x.idPadre == null).length > 0;
+    if (existeIndicadoresVacios) {
+      this.toastr.error("Registro gastos", "No se ha completado los indicadores.");
+      return;
+    }
     try {
       this.loadingService.showLoading();
-      //Validamos la información
-      if (this.nameFile == '') {
-        this.toastr.error("Registro gastos", "No se ha seleccionado el archivo a cargar");
-        return;
-      }
-      var existeIndicadoresVacios = this.lstIndicadoresFinancieros.filter(x => x.idPadre == 0 || x.idPadre == null).length > 0;
-      if (existeIndicadoresVacios) {
-        this.toastr.error("Registro gastos", "No se ha completado los indicadores.");
-        return;
-      }
-
       //Inserción de Gastos
       if (this.nameFile != '') {
         this.registrosExcel.forEach((element: any) => {
