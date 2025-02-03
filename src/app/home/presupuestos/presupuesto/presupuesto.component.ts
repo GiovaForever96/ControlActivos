@@ -32,6 +32,7 @@ export class PresupuestoComponent {
     private presupuestoGastoService: PresupuestoGastoService,
     private loadingService: LoadingService,
     private cdr: ChangeDetectorRef,
+    private planCuentaService: PlanCuentasService,
     private toastr: ToastrService,
     private fb: FormBuilder
   ) {
@@ -76,8 +77,13 @@ export class PresupuestoComponent {
   detalleForm: FormGroup = null!;
   copiarValorForm: FormGroup = null!;
   lstDetallesPlanCuenta: IDetallePlanCuenta[] = [];
+  lstDetallesPlanCuentaCopia: IDetallePlanCuenta[] = [];
   existeCambios: boolean = false;
   mostrarCalculo: boolean = true;
+  lstDetallePlan: IDetallePlanCuenta[] = [];
+  esEdicion: boolean = false;
+  indiceEdicion: number = 0;
+  idDetallePlan: number = 0;
 
   async ngOnInit() {
     try {
@@ -89,6 +95,7 @@ export class PresupuestoComponent {
       this.renderer.setStyle(body, 'overflow', 'hidden');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
       this.existeCambios = false;
+      this.lstDetallePlan = await this.planCuentaService.obtenerDetallePlanCuenta();
       // Define los elementos del menú contextual
       this.menuItems = [
         {
@@ -158,7 +165,6 @@ export class PresupuestoComponent {
     });
   }
 
-  // Propiedad para almacenar los datos filtrados
   get filteredData() {
     return this.lstPresupuestos.filter(plan =>
       plan['codigoPlan']?.toLowerCase().includes(this.filterText?.toLowerCase()) ||
@@ -286,7 +292,6 @@ export class PresupuestoComponent {
           this.registrosExcel = arraylist;
         }
       }
-      //Agregamos el nombre del archivo
       const input = event.target as HTMLInputElement;
       if (input?.files?.length) {
         this.fileName = input.files[0].name;
@@ -315,12 +320,9 @@ export class PresupuestoComponent {
               lstValores.push(element[mes.nombre] ?? 0);
             }
           });
-          // let tieneHijos = this.lstPlanCuentas.filter(x => x.idPadre == element.idPlan).length > 0;
-          // let valoresAux = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           let item: IPlanCuentasPresupuesto = {
             anioPresupuesto: this.anioPresupuesto,
             idPlan: element.idPlan,
-            // valorPresupuestoMensual: tieneHijos ? lstValores : valoresAux
             valorPresupuestoMensual: lstValores
           };
           this.lstPlanCuentasPresupuesto.push(item);
@@ -359,9 +361,7 @@ export class PresupuestoComponent {
   }
 
   async celdaEditada(plan: any, mes: any, valorNuevo: number) {
-
     try {
-
       this.loadingService.showLoading();
       if (valorNuevo < 0) {
         this.toastr.warning("Valor incorrecto", "El valor ingresado no puede ser menor a 0");
@@ -539,10 +539,13 @@ export class PresupuestoComponent {
       this.lstDetallesPlanCuenta = [];
       this.informacionFilaDetalle = row;
       let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
+      this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes);
+      this.lstMesesModal.unshift({ id: 0, nombre: "Todos", seleccionado: false });
       $('#detalleCuentaModal').modal('show');
       $('#detalleCuentaModal').off('shown.bs.modal');
       $('#detalleCuentaModal').on('shown.bs.modal', async () => {
         try {
+          this.esEdicion = false;
           let idPlan = this.informacionFilaDetalle.idPlan;
           this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
           this.detalleForm.reset();
@@ -563,10 +566,59 @@ export class PresupuestoComponent {
     }
   }
 
-  cerrarModalDetalle() {
+  async cerrarModalDetalle() {
+    this.loadingService.showLoading();
     $('#detalleCuentaModal').modal('hide');
-    if (this.existeCambios) {
-      window.location.reload();
+    let mesesCopiarDetalle = this.lstMesesModal.filter(x => x.seleccionado);
+    if (mesesCopiarDetalle.length > 0) {
+      try {
+        let idPlan = this.informacionFilaDetalle.idPlan;
+        let promesas: Promise<any>[] = [];
+        for (const mes of mesesCopiarDetalle) {
+          try {
+            // Obtener detalle del plan de cuentas
+            this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, mes.id);
+            // Copiar detalles a los meses seleccionados
+            for (const informacion of this.lstDetallesPlanCuentaCopia) {
+              informacion.mes = mes.id;
+              promesas.push(this.planCuentasService.insertarDetallePlanCuenta(informacion));
+            }
+            // Calcular totales
+            let totalCuentaMes = this.calcularTotal();
+            let totalDetalle = this.lstDetallesPlanCuentaCopia.reduce((total, registro) => total + registro.montoDetalle, 0);
+            // Actualizar presupuesto
+            const item: IGastoPresupuesto = {
+              anioGastoPresupuesto: this.anioPresupuesto,
+              mesGastoPresupuesto: mes.id,
+              idPlan: idPlan,
+              valorGastoMensual: Number(totalCuentaMes) + Number(totalDetalle),
+              usuarioModificacion: localStorage.getItem('userName') ?? ''
+            };
+            promesas.push(this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1));
+          } catch (error: any) {
+            this.toastr.error('Copiar Detalle', error.message);
+          }
+        }
+        // Esperar a que todas las promesas se resuelvan antes de continuar
+        await Promise.all(promesas);
+      } catch (error: any) {
+        this.toastr.error('Error al procesar los datos', error.message);
+      } finally {
+        // Limpiar datos y recargar después de completar todos los procesos
+        this.lstDetallesPlanCuentaCopia = [];
+        this.lstMesesModal.forEach(item => item.seleccionado = false);
+        if (this.existeCambios) {
+          setTimeout(() => {
+            this.loadingService.hideLoading();
+            window.location.reload();
+          }, 3000);
+        }
+      }
+    } else {
+      if (this.existeCambios) {
+        window.location.reload();
+      }
+      this.loadingService.hideLoading();
     }
   }
 
@@ -583,32 +635,50 @@ export class PresupuestoComponent {
 
   async onSubmitDetalle() {
     try {
-      this.loadingService.showLoading();
-      if (this.detalleForm.valid) {
-        let informacion = this.detalleForm.value;
-        //Creación de objeto
-        let detallePlanCuenta: IDetallePlanCuenta = {
-          descripcionDetalle: informacion.descripcion,
-          montoDetalle: informacion.monto,
-          estaActivo: true,
-          fechaHoraDetalle: new Date(),
-          usuarioDetalle: localStorage.getItem('userName') ?? '',
-          idPlanDetalle: this.informacionFilaDetalle.idPlan,
-          planCuenta: null!,
-          idDetallePlan: 0,
-          mes: this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id ?? 0
-        };
-        this.lstDetallesPlanCuenta.push(detallePlanCuenta);
-        //Reiniciar formulario
-        this.detalleForm.reset();
-        //Agregar a la lista en la base de datos
-        const mensajeInsercion = await this.planCuentasService.insertarDetallePlanCuenta(detallePlanCuenta);
-        this.toastr.success('Detalle de plan de cuenta', mensajeInsercion);
-        //Actualizar el valor total de la cuenta por mes
-        this.actualizarValorGastoPresupuesto(this.informacionFilaDetalle.idPlan);
-      } else {
+      this.loadingService.showLoading(); // Mostrar carga
+
+      if (!this.detalleForm.valid) {
         this.toastr.error('Error en el formulario', 'Por favor, complete los campos requeridos.');
+        return;  // Terminar si el formulario no es válido
       }
+
+      let informacion = this.detalleForm.value;
+
+      if (this.esEdicion) {
+        // Si es una edición, terminarla correctamente
+        this.esEdicion = false;
+        await this.eliminarRegistro(this.indiceEdicion);
+        this.indiceEdicion = 0;
+      }
+
+      // Crear objeto del detalle del plan de cuenta
+      let detallePlanCuenta: IDetallePlanCuenta = {
+        descripcionDetalle: informacion.descripcion,
+        montoDetalle: informacion.monto,
+        estaActivo: true,
+        fechaHoraDetalle: new Date(),
+        usuarioDetalle: localStorage.getItem('userName') ?? '',
+        idPlanDetalle: this.informacionFilaDetalle.idPlan,
+        planCuenta: null!,
+        idDetallePlan: 0,
+        mes: this.lstMeses.find(x => x.nombre === this.nombreMesDetalle)?.id ?? 0,
+        anio: this.anioPresupuesto
+      };
+
+      // Agregar el nuevo detalle a las listas locales
+      this.lstDetallesPlanCuenta.push(detallePlanCuenta);
+      this.lstDetallesPlanCuentaCopia.push(detallePlanCuenta);
+
+      // Resetear el formulario
+      this.detalleForm.reset();
+
+      // Intentar la inserción en la base de datos
+      const mensajeInsercion = await this.planCuentasService.insertarDetallePlanCuenta(detallePlanCuenta);
+      this.toastr.success('Detalle de plan de cuenta', mensajeInsercion);
+
+      // Actualizar el presupuesto correspondiente
+      this.actualizarValorGastoPresupuesto(this.informacionFilaDetalle.idPlan);
+
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error al agregar el detalle', error.message);
@@ -616,9 +686,7 @@ export class PresupuestoComponent {
         this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
-      setTimeout(() => {
-        this.loadingService.hideLoading();
-      }, 3000);
+      this.loadingService.hideLoading(); // Ocultar carga sin retrasos
     }
   }
 
@@ -692,7 +760,6 @@ export class PresupuestoComponent {
         this.toastr.warning("Copiar Valores", "No se puede copiar el valor de Diciembre");
         return;
       }
-      // this.lstDetallesPlanCuenta = [];
       this.informacionFilaDetalle = row;
       $('#copiarValorModal').modal('show');
       $('#copiarValorModal').off('shown.bs.modal');
@@ -700,7 +767,7 @@ export class PresupuestoComponent {
         try {
           this.copiarValorForm.reset();
           this.copiarValorForm.patchValue({
-            descripcion: '',
+            descripcion: `${row.codigoPlan}-${row.nombrePlan}`,
             montoOriginal: valorPresupuesto,
             tipoOperacion: '',
             tipoCalculo: '',
@@ -708,11 +775,7 @@ export class PresupuestoComponent {
             montoModificado: 0,
             cantidadMeses: idMes + 1
           });
-          //Cantidad máxima de meses
           this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes);
-          // let idPlan = this.informacionFilaDetalle.idPlan;
-          // this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
-          // this.detalleForm.reset();
         } catch (error: any) {
           this.toastr.error('Error al cargar los detalles del plan', error.message);
         }
@@ -740,7 +803,6 @@ export class PresupuestoComponent {
       // Verificamos si hay un monto original y tipo de operación
       if (montoOriginal != null && tipoOperacion) {
         let montoModificado = montoOriginal;
-        // Si la operación es "igual", no validamos tipoCalculo ni valorPorcentaje
         if (tipoOperacion === 'igual') {
           montoModificado = montoOriginal;
         } else {
@@ -755,19 +817,15 @@ export class PresupuestoComponent {
             }
           }
         }
-        // Redondeamos el resultado a 2 decimales
         montoModificado = parseFloat(montoModificado.toFixed(2));
-        // Actualizamos el campo de "Monto Modificado" sin emitir un nuevo evento
         this.copiarValorForm.get('montoModificado')?.setValue(montoModificado, { emitEvent: false });
       }
     });
   }
 
   onTipoOperacionChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value; // Cast para obtener la propiedad 'value'
-    // Lógica adicional, si es necesario
+    const value = (event.target as HTMLSelectElement).value;
     this.mostrarCalculo = value !== 'igual';
-
     if (value === 'igual') {
       this.copiarValorForm.patchValue({ tipoCalculo: '', valorPorcentaje: null });
     }
@@ -790,9 +848,10 @@ export class PresupuestoComponent {
             usuarioModificacion: localStorage.getItem('userName') ?? ''
           };
           try {
+            let nombreMes = this.lstMeses[index - 1].nombre;
             //Creación de objeto
             let detallePlanCuenta: IDetallePlanCuenta = {
-              descripcionDetalle: informacion.descripcion,
+              descripcionDetalle: `${informacion.descripcion}-${nombreMes}`,
               montoDetalle: informacion.montoModificado,
               estaActivo: true,
               fechaHoraDetalle: new Date(),
@@ -800,7 +859,8 @@ export class PresupuestoComponent {
               idPlanDetalle: this.informacionFilaDetalle.idPlan,
               planCuenta: null!,
               idDetallePlan: 0,
-              mes: index
+              mes: index,
+              anio: this.anioPresupuesto
             };
             //Agregar a la lista en la base de datos
             await this.planCuentasService.insertarDetallePlanCuenta(detallePlanCuenta);
@@ -810,7 +870,6 @@ export class PresupuestoComponent {
           } catch (error: any) {
             // Manejar errores de la operación
             this.toastr.error('Error actualizando el gasto', error.message || 'Error desconocido');
-            console.error(error);
           } finally { }
         }
       } else {
@@ -823,11 +882,54 @@ export class PresupuestoComponent {
         this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
+      let timeOut = this.lstMesesModal.filter(x => x.seleccionado).length;
       setTimeout(() => {
         this.loadingService.hideLoading();
         window.location.reload();
+      }, timeOut * 1000);
+    }
+  }
+
+  toggleSelectAll() {
+    const todos = this.lstMesesModal.find(item => item.id === 0);
+    if (todos)
+      this.lstMesesModal.forEach(item => item.seleccionado = todos.seleccionado);
+  }
+
+  updateSelectAll() {
+    const todos = this.lstMesesModal.find(item => item.id === 0);
+    if (todos)
+      todos.seleccionado = this.lstMesesModal.slice(1).every(item => item.seleccionado);
+  }
+
+  tieneDetallePlan(idPlan: number, idMes: number) {
+    let detallePlanCuenta = this.lstDetallePlan.filter(x => x.planCuenta.idPlan == idPlan && x.mes == idMes && x.anio == this.anioPresupuesto);
+    return detallePlanCuenta.length <= 1;
+  }
+
+  async editarRegistro(index: number) {
+    try {
+      this.esEdicion = true;
+      let detallePlan = this.lstDetallesPlanCuenta[index];
+      this.idDetallePlan = detallePlan.idDetallePlan;
+      this.indiceEdicion = index;
+      this.detalleForm.patchValue({ 'descripcion': detallePlan.descripcionDetalle, 'monto': detallePlan.montoDetalle });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al eliminar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al eliminar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
       }, 3000);
     }
+  }
+
+  cancelarEdicion() {
+    this.detalleForm.reset();
+    this.esEdicion = false;
   }
 
 }

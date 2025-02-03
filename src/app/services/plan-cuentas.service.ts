@@ -128,6 +128,25 @@ export class PlanCuentasService {
     }
   }
 
+  async obtenerDetallePlanCuenta(): Promise<IDetallePlanCuenta[]> {
+    const URL_API = `${this.baseUrlDetalle}obtenerDetalles`;
+    try {
+      const response = await this.authService.apiClient.get<any>(URL_API);
+      if (!response.data.esError) {
+        return response.data.resultado as IDetallePlanCuenta[];
+      } else {
+        throw new Error(response.data.mensaje);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        throw new Error(`${serverMessage}`);
+      } else {
+        throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
+      }
+    }
+  }
+
   async obtenerDetallePlanCuentaPorId(idPlan: number, idMes: number): Promise<IDetallePlanCuenta[]> {
     const URL_API = `${this.baseUrlDetalle}obtenerDetallesPorPlan/${idPlan}/${idMes}`;
     try {

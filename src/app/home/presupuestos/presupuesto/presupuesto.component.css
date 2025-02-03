@@ -41,3 +41,24 @@ p-cellEditor input {
   transition: none !important;
   z-index: 1002 !important;
 }
+
+.checklist-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0px;
+  max-width: 800px;
+  font-size: small;
+}
+
+.checklist-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: contents;
+}
+
+.checklist-container li {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}

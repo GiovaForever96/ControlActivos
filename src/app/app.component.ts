@@ -52,9 +52,9 @@ export class AppComponent {
 
   obtenerMesesAnio(): any {
     return [
-      { id: 1, nombre: 'Enero' }, { id: 2, nombre: 'Febrero' }, { id: 3, nombre: 'Marzo' }, { id: 4, nombre: 'Abril' },
-      { id: 5, nombre: 'Mayo' }, { id: 6, nombre: 'Junio' }, { id: 7, nombre: 'Julio' }, { id: 8, nombre: 'Agosto' },
-      { id: 9, nombre: 'Septiembre' }, { id: 10, nombre: 'Octubre' }, { id: 11, nombre: 'Noviembre' }, { id: 12, nombre: 'Diciembre' },
+      { id: 1, nombre: 'Enero', seleccionado: false }, { id: 2, nombre: 'Febrero', seleccionado: false }, { id: 3, nombre: 'Marzo', seleccionado: false }, { id: 4, nombre: 'Abril', seleccionado: false },
+      { id: 5, nombre: 'Mayo', seleccionado: false }, { id: 6, nombre: 'Junio', seleccionado: false }, { id: 7, nombre: 'Julio', seleccionado: false }, { id: 8, nombre: 'Agosto', seleccionado: false },
+      { id: 9, nombre: 'Septiembre', seleccionado: false }, { id: 10, nombre: 'Octubre', seleccionado: false }, { id: 11, nombre: 'Noviembre', seleccionado: false }, { id: 12, nombre: 'Diciembre', seleccionado: false },
     ];
   }
 

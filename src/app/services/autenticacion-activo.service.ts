@@ -23,6 +23,7 @@ export class AutenticacionActivoService {
         localStorage.setItem('lastLogin', response.data.lastLogin);
         localStorage.setItem('roles', response.data.roles);
         localStorage.setItem('userName', inicioSesionData.username);
+        localStorage.setItem('indicadoresFinancieros', response.data.indicadoresFinancieros);
         return "OK";
       } else {
         return response.data.mensaje;

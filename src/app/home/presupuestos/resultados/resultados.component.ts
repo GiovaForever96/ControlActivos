@@ -1,7 +1,7 @@
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppComponent } from 'src/app/app.component';
-import { IGastoPresupuesto, IHistorialGastoPresupuesto, IIndicadorFinanciero, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
+import { IDetallePlanCuenta, IGastoPresupuesto, IHistorialGastoPresupuesto, IIndicadorFinanciero, IPlanCuentas, IPlanCuentasPresupuesto } from 'src/app/models/plan-cuentas';
 import { IGastoMensual, IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
 import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
 import { LoadingService } from 'src/app/services/loading.service';
@@ -44,6 +44,7 @@ export class ResultadosComponent {
   lstHistorial: IHistorialGastoPresupuesto[] = [];
   dtOptions: any;
   dataTable: any;
+  lstDetallePlanCuenta: IDetallePlanCuenta[] = [];
 
   constructor(private planCuentasService: PlanCuentasService,
     private indicadoresService: IndicadorFinancieroService,
@@ -53,6 +54,7 @@ export class ResultadosComponent {
     private presupuestoGastoService: PresupuestoGastoService,
     private toastr: ToastrService,
     private loadingService: LoadingService,
+    private planCuentaService: PlanCuentasService,
     private appComponent: AppComponent) {
     this.lstMeses = appComponent.obtenerMesesAnio();
   }
@@ -63,6 +65,7 @@ export class ResultadosComponent {
       this.appComponent.setTitle('Gastos Mensuales');
       this.lstAnios = await this.planCuentasService.obtenerAniosValidos();
       this.lstIndicadoresFinancieros = await this.indicadoresService.obtenerIndicadoresFinancieros(1);
+      this.lstDetallePlanCuenta = await this.planCuentaService.obtenerDetallePlanCuenta();
       this.anioGasto = new Date().getFullYear();
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
     } catch (error) {
@@ -240,7 +243,6 @@ export class ResultadosComponent {
       } else {
         this.mesGasto = 1;
       }
-      console.log(this.mesGasto);
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error al obtener el presupuesto', error.message);
@@ -445,6 +447,20 @@ export class ResultadosComponent {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  obtenerInformacion(idPlan: any, mes: any): string | undefined {
+    let mensajeTooltip: string = "Información:\n";
+    let detalleCuenta = this.lstDetallePlanCuenta.filter(x => x.planCuenta!.idPlan == idPlan &&
+      x.mes == mes &&
+      x.anio == this.anioGasto);
+    if (detalleCuenta.length > 0) {
+      detalleCuenta.forEach(x => {
+        mensajeTooltip += `${x.descripcionDetalle}: ${this.appComponent.formatoDinero(x.montoDetalle, true)}\n`;
+      });
+      return mensajeTooltip;
+    }
+    return undefined;
   }
 
 }

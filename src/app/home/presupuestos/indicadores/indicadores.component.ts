@@ -1,6 +1,6 @@
 import { Component, ElementRef, Renderer2 } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IPlanCuentas } from 'src/app/models/plan-cuentas';
+import { IIndicadoresFinancierosCalculos, IPlanCuentas } from 'src/app/models/plan-cuentas';
 import { IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
 import { DataService } from 'src/app/services/data.service';
 import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
@@ -31,6 +31,7 @@ export class IndicadoresComponent {
   lstIndicadoresPorcentaje: string[] = ['15.', '16.', '17.', '18.', '20.'];
   informacionIndicadoresFinancieros: any;
   informacionIndicadoresFinancierosReporte: any;
+  indicadoresFinancierosCalculos: IIndicadoresFinancierosCalculos = null!;
   base64Image = 'data:image/png;base64,<TU_BASE64_AQUÍ>';
 
   //#endregion
@@ -57,6 +58,10 @@ export class IndicadoresComponent {
       this.renderer.setStyle(body, 'overflow', '');
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
       this.base64Image = await this.imageToBase64String("https://cotizador.segurossuarez.com/backend/public/img/EncabezadoIndicadores.jpg");
+      const storedData = localStorage.getItem("indicadoresFinancieros");
+      this.indicadoresFinancierosCalculos = storedData
+        ? (JSON.parse(storedData) as IIndicadoresFinancierosCalculos)
+        : null!;
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error Indicadores Financieros', error.message);
@@ -103,24 +108,28 @@ export class IndicadoresComponent {
   }
 
   visualizarDocumento(nombreMes: any) {
+    if (this.indicadoresFinancierosCalculos == null) {
+      this.toastr.warning("Indicadores Financieros", "No se encontró los códigos de los indicadores financieros");
+      return;
+    }
     this.mesIndicador = nombreMes;
     //Obtener los valores para las tablas
-    var activoCorriente = this.obtenerValorIndicador(562, nombreMes);
-    var pasivoCorriente = this.obtenerValorIndicador(563, nombreMes);
-    var indiceLiquidez = this.obtenerValorIndicador(571, nombreMes);
-    var indicePruebaAcida = this.obtenerValorIndicador(571, nombreMes);
-    var utilidadNeta = this.obtenerValorIndicador(566, nombreMes);
-    var activosTotal = this.obtenerValorIndicador(561, nombreMes);
-    var ROA = this.obtenerValorIndicador(572, nombreMes) * 100;
-    var patrimonio = this.obtenerValorIndicador(565, nombreMes);
-    var ROE = this.obtenerValorIndicador(573, nombreMes) * 100;
-    var utilidadBruta = this.obtenerValorIndicador(570, nombreMes);
-    var ventas = this.obtenerValorIndicador(569, nombreMes);
-    var margenBruto = this.obtenerValorIndicador(574, nombreMes) * 100;
-    var margenNeto = this.obtenerValorIndicador(575, nombreMes) * 100;
-    var capitalTrabajo = this.obtenerValorIndicador(576, nombreMes);
-    var pasivoTotal = this.obtenerValorIndicador(564, nombreMes);
-    var apalancamientoTotal = this.obtenerValorIndicador(577, nombreMes) * 100;
+    var activoCorriente = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.ActivoCorriente, nombreMes);
+    var pasivoCorriente = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.PasivoCorriente, nombreMes);
+    var indiceLiquidez = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Liquidez, nombreMes);
+    var indicePruebaAcida = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Liquidez, nombreMes);
+    var utilidadNeta = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.UtilidadNeta, nombreMes);
+    var activosTotal = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.ActivoTotal, nombreMes);
+    var ROA = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.RentabilidadROA, nombreMes) * 100;
+    var patrimonio = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Patrimonio, nombreMes);
+    var ROE = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.RentabiidadROE, nombreMes) * 100;
+    var utilidadBruta = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.UtilidadBruta, nombreMes);
+    var ventas = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Ventas, nombreMes);
+    var margenBruto = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.MargenBrutoUtilidad, nombreMes) * 100;
+    var margenNeto = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.MargenNetoUtilidad, nombreMes) * 100;
+    var capitalTrabajo = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.CapitalTrabajoNeto, nombreMes);
+    var pasivoTotal = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.PasivoTotal, nombreMes);
+    var apalancamientoTotal = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.ApalancamientoTotal, nombreMes) * 100;
     this.informacionIndicadoresFinancieros = [
       {
         headers: ['DESCRIPCION', 'ACTIVO CORRIENTE', 'PASIVO CORRIENTE', 'VALOR INDICE'],
@@ -289,26 +298,7 @@ export class IndicadoresComponent {
           margin: [0, 5, 0, 10],
           lineHeight: 1,
         }
-      },
-      // footer: (currentPage: number, pageCount: number) => {
-      //   return {
-      //     columns: [
-      //       {
-      //         image: this.base64Image,
-      //         width: 100,
-      //         alignment: 'left', // Ajusta según tu diseño
-      //       },
-      //       {
-      //         text: `Página ${currentPage} de ${pageCount}\t\tFecha Generación: ${new Date().toLocaleString()}.`,
-      //         alignment: 'center',
-      //         fontSize: 7,
-      //         margin: [0, 10],
-      //         bold: true,
-      //       }
-      //     ],
-      //     margin: [40, 10], // Ajusta los márgenes si es necesario
-      //   };
-      // }
+      }
     };
 
     // Iterar sobre la información para crear las tablas

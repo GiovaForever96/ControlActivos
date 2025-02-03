@@ -90,10 +90,15 @@
                                                 <p-cellEditor>
                                                     <ng-template pTemplate="input">
                                                         <input pInputText type="number"
-                                                            [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes]">
+                                                            [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes]"
+                                                            [pTooltip]="obtenerInformacion(plan.idPlan, mes.nombreMes)"
+                                                            tooltipPosition="top">
                                                     </ng-template>
                                                     <ng-template pTemplate="output">
-                                                        {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
+                                                        <span [pTooltip]="obtenerInformacion(plan.idPlan,mes.idMes)"
+                                                            tooltipPosition="top">
+                                                            {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
+                                                        </span>
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
@@ -119,8 +124,8 @@
                                                 </p-cellEditor>
                                             </td>
                                             <td
-                                                [ngClass]="{'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]}">
-                                                <p-cellEditor>
+                                                [ngClass]="plan.tieneHijos?{'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]}:{}">
+                                                <p-cellEditor *ngIf="plan.tieneHijos">
                                                     <ng-template pTemplate="input">
                                                         <input pInputText type="number">
                                                     </ng-template>
@@ -132,7 +137,7 @@
                                                 </p-cellEditor>
                                             </td>
                                             <td>
-                                                <p-cellEditor>
+                                                <p-cellEditor *ngIf="plan.tieneHijos">
                                                     <ng-template pTemplate="input">
                                                         <input pInputText type="number" [(ngModel)]="plan.porcentaje">
                                                     </ng-template>
@@ -142,7 +147,7 @@
                                                 </p-cellEditor>
                                             </td>
                                             <td class="celdasDer">
-                                                <p-cellEditor>
+                                                <p-cellEditor *ngIf="plan.tieneHijos">
                                                     <ng-template pTemplate="output">
                                                         <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]"
                                                             class="fas fa-arrow-circle-up fa-lg"

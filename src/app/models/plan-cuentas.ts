@@ -49,5 +49,24 @@ export interface IDetallePlanCuenta {
     usuarioDetalle: string,
     idPlanDetalle: number,
     planCuenta: IPlanCuentas,
-    mes: number
+    mes: number,
+    anio: number
+}
+
+export interface IIndicadoresFinancierosCalculos {
+    ActivoTotal: number,
+    ActivoCorriente: number,
+    PasivoCorriente: number,
+    PasivoTotal: number,
+    Patrimonio: number,
+    UtilidadNeta: number,
+    Ventas: number,
+    UtilidadBruta: number,
+    Liquidez: number,
+    RentabilidadROA: number,
+    RentabiidadROE: number,
+    MargenBrutoUtilidad: number,
+    MargenNetoUtilidad: number,
+    CapitalTrabajoNeto: number,
+    ApalancamientoTotal: number
 }

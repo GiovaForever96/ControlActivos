@@ -95,15 +95,23 @@
                     <td pEditableColumn *ngFor="let mes of lstMeses" [attr.data-column-name]="mes.nombre">
                       <p-cellEditor>
                         <ng-template pTemplate="input">
-                          <input *ngIf="!plan.tieneHijos && permiteModificarRol(['FIN'])" pInputText type="number"
-                            [(ngModel)]="plan[mes.nombre]" (focus)="celdaOriginal(plan[mes.nombre], plan)"
-                            (focusout)="celdaEditada(plan, mes, plan[mes.nombre])" min="0" />
-                          <span *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">
+                          <input
+                            *ngIf="tieneDetallePlan(plan.idPlan,mes.id)&&consultaEsPenultimoNivel(plan.idPlan) && permiteModificarRol(['FIN'])"
+                            pInputText type="number" [(ngModel)]="plan[mes.nombre]"
+                            (focus)="celdaOriginal(plan[mes.nombre], plan)"
+                            (focusout)="celdaEditada(plan, mes, plan[mes.nombre])"
+                            (keydown.enter)="celdaEditada(plan, mes, plan[mes.nombre])" min="0" />
+                          <span
+                            [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.id) ? 'underline' : 'none' }"
+                            *ngIf="!tieneDetallePlan(plan.idPlan,mes.id)||!consultaEsPenultimoNivel(plan.idPlan)||!permiteModificarRol(['FIN'])">
                             {{ plan[mes.nombre] | currency: 'USD' }}
                           </span>
                         </ng-template>
                         <ng-template pTemplate="output">
-                          {{ plan[mes.nombre] | currency: 'USD' }}
+                          <span
+                            [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.id) ? 'underline' : 'none' }">
+                            {{ plan[mes.nombre] | currency: 'USD' }}
+                          </span>
                         </ng-template>
                       </p-cellEditor>
                     </td>
@@ -215,11 +223,28 @@
               </div>
               <div class="col-lg-2 col-md-12 col-sm-12 text-end">
                 <button type="submit" class="btn btn-success form-group" [disabled]="detalleForm.invalid">
-                  <i class="fas fa-plus-circle"></i>
+                  <i [ngClass]="esEdicion ? 'fas fa-save' : 'fas fa-plus-circle'"></i>
+                </button>
+                <button type="submit" class="btn btn-warning form-group ml-2" [disabled]="detalleForm.invalid"
+                  *ngIf="esEdicion" (click)="cancelarEdicion()">
+                  <i class="fas fa-ban"></i>
                 </button>
               </div>
             </div>
           </form>
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="checklist-container">
+              <ul>
+                <li *ngFor="let item of lstMesesModal">
+                  <label>
+                    <input type="checkbox" [(ngModel)]="item.seleccionado"
+                      (change)="item.id === 0 ? toggleSelectAll() : updateSelectAll()" />
+                    {{ item.nombre }}
+                  </label>
+                </li>
+              </ul>
+            </div>
+          </div>
           <!-- Tabla con scroll horizontal -->
           <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
             <!-- Clase para hacer la tabla scrollable -->
@@ -238,6 +263,9 @@
                   <td>{{ registro.descripcionDetalle }}</td>
                   <td>{{ registro.montoDetalle | currency }}</td>
                   <td>
+                    <button type="button" class="btn btn-info btn-sm mr-2" (click)="editarRegistro(i)">
+                      <i class="fas fa-edit"></i>
+                    </button>
                     <button type="button" class="btn btn-danger btn-sm" (click)="eliminarRegistro(i)">
                       <i class="fas fa-trash-alt"></i>
                     </button>
@@ -272,9 +300,8 @@
               <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                 <label for="descripcion" class="form-label">Descripción:</label>
                 <input type="text" id="descripcion" class="form-control" formControlName="descripcion"
-                  placeholder="Descripción" />
+                  placeholder="Descripción" readonly />
               </div>
-
               <!-- Monto Original y Cantidad de Meses -->
               <div class="col-lg-6 col-md-6 col-sm-12 form-group d-flex align-items-center">
                 <!-- Monto Original -->
@@ -283,7 +310,6 @@
                   <input type="number" id="montoOriginal" class="form-control" formControlName="montoOriginal"
                     readonly />
                 </div>
-
                 <!-- Cantidad de Meses -->
                 <div class="flex-grow-1 ml-3">
                   <label for="cantidadMeses" class="form-label"> Hasta:</label>
@@ -292,7 +318,6 @@
                   </select>
                 </div>
               </div>
-
               <!-- Tipo de Operación -->
               <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                 <label for="tipoOperacion" class="form-label">Tipo de Operación:</label>
@@ -304,7 +329,6 @@
                   <option value="igual">Igual</option>
                 </select>
               </div>
-
               <!-- Tipo de Cálculo (Visible solo si la operación no es igual) -->
               <div class="col-lg-6 col-md-6 col-sm-12 form-group" *ngIf="mostrarCalculo">
                 <label for="tipoCalculo" class="form-label">Tipo de Cálculo:</label>
@@ -314,21 +338,18 @@
                   <option value="porcentaje">Porcentaje</option>
                 </select>
               </div>
-
               <!-- Valor o Porcentaje (Visible solo si la operación no es igual) -->
               <div class="col-lg-6 col-md-6 col-sm-12 form-group" *ngIf="mostrarCalculo">
                 <label for="valorPorcentaje" class="form-label">Valor/Porcentaje:</label>
                 <input type="number" id="valorPorcentaje" class="form-control" formControlName="valorPorcentaje"
                   placeholder="Ingrese el valor o porcentaje" />
               </div>
-
               <!-- Monto Modificado -->
               <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                 <label for="montoModificado" class="form-label">Monto Modificado:</label>
                 <input type="number" id="montoModificado" class="form-control" formControlName="montoModificado"
                   readonly />
               </div>
-
               <!-- Botón de enviar -->
               <div class="col-lg-12 text-end">
                 <button type="submit" class="btn btn-success" [disabled]="copiarValorForm.invalid">
