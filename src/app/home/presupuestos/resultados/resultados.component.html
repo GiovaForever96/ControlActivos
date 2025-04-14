@@ -96,6 +96,7 @@
                                                     </ng-template>
                                                     <ng-template pTemplate="output">
                                                         <span [pTooltip]="obtenerInformacion(plan.idPlan,mes.idMes)"
+                                                            [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.idMes) ? 'underline' : 'none' }"
                                                             tooltipPosition="top">
                                                             {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
                                                         </span>
@@ -163,6 +164,27 @@
                                         </ng-container>
                                     </tr>
                                 </ng-template>
+                                <ng-template pTemplate="footer">
+                                    <tr style="font-size: 10px; font-weight: bold;">
+                                        <td pFrozenColumn colspan="2" class="text-right">Total:</td>
+                                        <ng-container *ngFor="let mes of cabeceraMeses">
+                                            <td class="text-right">
+                                                {{ getTotal(mes.nombreMes, 'presupuesto') | currency: 'USD' }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{ getTotal(mes.nombreMes, 'gastos') | currency: 'USD' }}
+                                            </td>
+                                            <td class="text-right">
+                                                <!-- {{ getTotalDiferencia(mes.nombreMes) | currency: 'USD' }} -->
+                                            </td>
+                                            <td class="text-right">
+                                                <!-- {{ getTotalPorcentaje(mes.nombreMes) | percent:'1.2-2' }} -->
+                                            </td>
+                                            <td class="celdasDer"></td>
+                                        </ng-container>
+                                    </tr>
+                                </ng-template>
+
                             </p-table>
                             <div *ngIf="filteredData && filteredData.length === 0"
                                 style="text-align: center;font-weight: bold;">

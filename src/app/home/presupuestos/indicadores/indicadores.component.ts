@@ -238,15 +238,14 @@ export class IndicadoresComponent {
     const documentDefinition: any = {
       background: [
         {
-          image: this.base64Image, // Imagen como fondo
-          width: 600, // Ajusta el tamaño de la imagen
-          absolutePosition: { x: 0, y: 0 }, // Posición en el documento
-          opacity: 1, // Nivel de transparencia (para fondo)
+          image: this.base64Image,
+          width: 600,
+          absolutePosition: { x: 0, y: 0 },
+          opacity: 1,
         }
       ],
-      pageMargins: [50, 165, 50, 75], // Márgenes: [izquierda, superior, derecha, inferior]
+      pageMargins: [50, 165, 50, 75],
       content: [
-        // Agregar los textos antes de la tabla
         {
           text: 'ÍNDICES FINANCIEROS ' + this.mesIndicador + '/' + this.anioIndicador,
           fontSize: 11,
@@ -297,23 +296,26 @@ export class IndicadoresComponent {
           fontSize: 9,
           margin: [0, 5, 0, 10],
           lineHeight: 1,
+        },
+        firmaInfo: {
+          fontSize: 9,
+          alignment: 'center',
+          margin: [0, 10, 0, 10],
+          lineHeight: 1,
         }
       }
     };
 
-    // Iterar sobre la información para crear las tablas
     this.informacionIndicadoresFinancieros.forEach((indicador: any) => {
       const table = {
         table: {
           headerRows: 1,
           widths: ['auto', '*', '*', '*'],
           body: [
-            // Celdas de encabezado con fondo
             indicador.headers.map((header: any) => ({
               text: header,
               style: 'tableHeader'
             })),
-            // Filas con celdas que tienen los bordes
             ...indicador.rows.map((row: any) =>
               row.map((cell: any) => ({
                 text: cell,
@@ -325,10 +327,8 @@ export class IndicadoresComponent {
         style: 'table'
       };
 
-      // Agregar la tabla al documento
       documentDefinition.content.push(table);
 
-      // Agregar el resumen editable si existe
       if (indicador.editableResumen) {
         documentDefinition.content.push({
           text: [
@@ -340,10 +340,25 @@ export class IndicadoresComponent {
       }
     });
 
-    // Crear y abrir el PDF
-    pdfMake.createPdf(documentDefinition).open();
+    documentDefinition.content.push({
+      columns: [
+        {
+          text: '\n\n\n\n\n----------------------------------------------------------------------\nIng. José Miguel Suárez Mantilla\nGerente General',
+          style: 'firmaInfo',
+          width: '50%'
+        },
+        {
+          text: '\n\n\n\n\n----------------------------------------------------------------------\nIng. Enma Jeannette Gavilanes Valverde\nContadora',
+          style: 'firmaInfo',
+          width: '50%'
+        }
+      ],
+      columnGap: 10
+    });
 
+    pdfMake.createPdf(documentDefinition).open();
   }
+
 
   async imageToBase64String(imageUrl: string): Promise<string> {
     const proxyUrl = 'https://cotizador.segurossuarez.com/backend/public/api/proxy-image?url=' + encodeURIComponent(imageUrl);

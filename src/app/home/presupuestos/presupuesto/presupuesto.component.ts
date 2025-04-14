@@ -9,6 +9,7 @@ import { PresupuestoGastoService } from 'src/app/services/presupuesto-gasto.serv
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 declare var $: any;
 
 @Component({
@@ -37,6 +38,9 @@ export class PresupuestoComponent {
     private fb: FormBuilder
   ) {
     this.lstMeses = appComponent.obtenerMesesAnio();
+    if (this.lstMeses.length > 0) {
+      this.lstMeses.push({ id: 13, nombre: 'Σ Meses', seleccionado: false })
+    }
     this.detalleForm = this.fb.group({
       descripcion: ['', [Validators.required]],
       monto: [null, [Validators.required, Validators.min(0)]]
@@ -84,6 +88,7 @@ export class PresupuestoComponent {
   esEdicion: boolean = false;
   indiceEdicion: number = 0;
   idDetallePlan: number = 0;
+  lstDetallePlanCuenta: IDetallePlanCuenta[] = [];
 
   async ngOnInit() {
     try {
@@ -96,17 +101,25 @@ export class PresupuestoComponent {
       this.lstRoles = localStorage.getItem('roles')?.split(',') ?? [];
       this.existeCambios = false;
       this.lstDetallePlan = await this.planCuentaService.obtenerDetallePlanCuenta();
+      this.lstDetallePlanCuenta = await this.planCuentaService.obtenerDetallePlanCuenta();
       // Define los elementos del menú contextual
       this.menuItems = [
         {
           label: 'Agregar Detalle',
           icon: 'pi pi-plus-circle',
+          disabled: !this.permiteModificarRol(['FIN']),
           command: () => this.agregarDetalle(this.selectedRow)
         },
         {
           label: 'Copiar Valor',
           icon: 'pi pi-copy',
+          disabled: !this.permiteModificarRol(['FIN']),
           command: () => this.copiarValorPresupuesto(this.selectedRow)
+        }, {
+          label: 'Eliminar Detalle',
+          icon: 'pi pi-times',
+          disabled: !this.permiteModificarRol(['FIN']),
+          command: () => this.eliminarDetalleCuenta(this.selectedRow)
         }
       ];
       this.cargarPlanCuentas();
@@ -150,7 +163,6 @@ export class PresupuestoComponent {
       }
     });
     this.ordenarLista();
-
   }
 
   ordenarLista() {
@@ -539,7 +551,7 @@ export class PresupuestoComponent {
       this.lstDetallesPlanCuenta = [];
       this.informacionFilaDetalle = row;
       let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
-      this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes);
+      this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes && x.id != 13);
       this.lstMesesModal.unshift({ id: 0, nombre: "Todos", seleccionado: false });
       $('#detalleCuentaModal').modal('show');
       $('#detalleCuentaModal').off('shown.bs.modal');
@@ -569,7 +581,7 @@ export class PresupuestoComponent {
   async cerrarModalDetalle() {
     this.loadingService.showLoading();
     $('#detalleCuentaModal').modal('hide');
-    let mesesCopiarDetalle = this.lstMesesModal.filter(x => x.seleccionado);
+    let mesesCopiarDetalle = this.lstMesesModal.filter(x => x.seleccionado && x.id != 0);
     if (mesesCopiarDetalle.length > 0) {
       try {
         let idPlan = this.informacionFilaDetalle.idPlan;
@@ -712,6 +724,49 @@ export class PresupuestoComponent {
     }
   }
 
+  async eliminarDetalleRegistros(index: number) {
+    try {
+      // //Eliminación del registro actual
+      this.loadingService.showLoading();
+      let promesas: Promise<any>[] = [];
+      let informacionDetalle = this.lstDetallesPlanCuenta[index];
+      let lstMesesSeleccionados = this.lstMesesModal.filter(x => x.seleccionado && x.id != 0);
+      let detallePlanIdDescripcion = await this.planCuentaService.obtenerDetallePlanCuentaPorIdDescripcion(informacionDetalle.idPlanDetalle,
+        informacionDetalle.descripcionDetalle);
+      //Agregamos la eliminación del mes seleccionado
+      this.lstDetallesPlanCuenta.splice(index, 1);
+      promesas.push(this.planCuentasService.eliminarDetallePlanCuenta(informacionDetalle.idDetallePlan));
+      //Actualizar el valor total de la cuenta por mes
+      promesas.push(this.actualizarValorGastoPresupuesto(this.informacionFilaDetalle.idPlan));
+      //Consulta de identificador detalle plan
+      if (lstMesesSeleccionados.length > 0) {
+        lstMesesSeleccionados.forEach(mesSeleccionado => {
+          let informacionDetalleMes = detallePlanIdDescripcion.find(x => x.mes == mesSeleccionado.id);
+          if (informacionDetalleMes != undefined) {
+            let detalleCuentaMes = this.lstDetallePlan.filter(x => x.idPlanDetalle == informacionDetalle.idPlanDetalle && x.mes == mesSeleccionado.id);
+            let montoCuentaMes = detalleCuentaMes.reduce((total, registro) => total + registro.montoDetalle, 0);
+            let nuevoMonto = Number(montoCuentaMes ?? 0) - Number(informacionDetalle.montoDetalle);
+            promesas.push(this.planCuentasService.eliminarDetallePlanCuenta(informacionDetalleMes.idDetallePlan));
+            promesas.push(this.actualizarValorGastoPresupuestoMasivo(informacionDetalle.idPlanDetalle, mesSeleccionado.id, nuevoMonto));
+          }
+        });
+      }
+      // Ejecutamos las promesas generadas
+      await Promise.all(promesas);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al eliminar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al eliminar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+        window.location.reload();
+      }, 3000);
+    }
+  }
+
   calcularTotal(): number {
     return this.lstDetallesPlanCuenta.reduce((total, registro) => total + registro.montoDetalle, 0);
   }
@@ -725,6 +780,33 @@ export class PresupuestoComponent {
         mesGastoPresupuesto: this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id ?? 0,
         idPlan: idPlan,
         valorGastoMensual: this.calcularTotal(),
+        usuarioModificacion: localStorage.getItem('userName') ?? ''
+      };
+      const mensajeActualizacion = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
+      this.toastr.success('Detalle de plan de cuenta', mensajeActualizacion);
+      this.existeCambios = true;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al agregar el detalle', error.message);
+      } else {
+        this.toastr.error('Error al agregar el detalle', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  async actualizarValorGastoPresupuestoMasivo(idPlan: number, mes: number, monto: number) {
+    try {
+      this.loadingService.showLoading();
+      //Actualizar el valor total de la cuenta por mes
+      const item: IGastoPresupuesto = {
+        anioGastoPresupuesto: this.anioPresupuesto,
+        mesGastoPresupuesto: mes,
+        idPlan: idPlan,
+        valorGastoMensual: monto,
         usuarioModificacion: localStorage.getItem('userName') ?? ''
       };
       const mensajeActualizacion = await this.presupuestoGastoService.actualizarValorGastoPresupuesto(item, 1);
@@ -890,6 +972,43 @@ export class PresupuestoComponent {
     }
   }
 
+  eliminarDetalleCuenta(row: any) {
+    try {
+
+      this.loadingService.showLoading();
+      this.lstDetallesPlanCuenta = [];
+      this.informacionFilaDetalle = row;
+      let idMes = this.lstMeses.find(x => x.nombre == this.nombreMesDetalle)?.id;
+      this.lstMesesModal = this.lstMeses.filter(x => x.id > idMes && x.id != 13);
+      this.lstMesesModal.unshift({ id: 0, nombre: "Todos", seleccionado: false });
+      $('#eliminarDetalleCuentaModal').modal('show');
+      $('#eliminarDetalleCuentaModal').off('shown.bs.modal');
+      $('#eliminarDetalleCuentaModal').on('shown.bs.modal', async () => {
+        try {
+          this.esEdicion = false;
+          let idPlan = this.informacionFilaDetalle.idPlan;
+          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
+        } catch (error: any) {
+          this.toastr.error('Error al cargar los detalles del plan', error.message);
+        }
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastr.error('Error al abrir el modal de detalles', error.message);
+      } else {
+        this.toastr.error('Error al abrir el modal de detalles', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      setTimeout(() => {
+        this.loadingService.hideLoading();
+      }, 3000);
+    }
+  }
+
+  async cerrarModalEliminarDetalle() {
+    $('#eliminarDetalleCuentaModal').modal('hide');
+  }
+
   toggleSelectAll() {
     const todos = this.lstMesesModal.find(item => item.id === 0);
     if (todos)
@@ -900,6 +1019,46 @@ export class PresupuestoComponent {
     const todos = this.lstMesesModal.find(item => item.id === 0);
     if (todos)
       todos.seleccionado = this.lstMesesModal.slice(1).every(item => item.seleccionado);
+  }
+
+  obtenerInformacion(idPlan: any, mes: any): string | undefined {
+    let mensajeTooltip: string = "Información:\n";
+    let detalleCuenta = this.lstDetallePlanCuenta.filter(x => x.planCuenta!.idPlan == idPlan &&
+      x.mes == mes &&
+      x.anio == this.anioPresupuesto);
+    if (detalleCuenta.length > 0) {
+      detalleCuenta.forEach(x => {
+        mensajeTooltip += `${x.descripcionDetalle}: ${this.appComponent.formatoDinero(x.montoDetalle, true)}\n`;
+      });
+      return mensajeTooltip;
+    }
+    return undefined;
+  }
+
+  exportarExcel() {
+    const datos = this.filteredData.map(plan => {
+      let row: Record<string, any> = {
+        "Código": plan.codigoPlan,
+        "Plan": plan.nombrePlan
+      };
+
+      // Agregar dinámicamente los valores de los meses
+      this.lstMeses.forEach(mes => {
+        row[mes.nombre] = plan[mes.nombre] || 0; // Evitar valores undefined
+      });
+
+      return row;
+    });
+
+    // Crear una hoja de Excel
+    const worksheet = XLSX.utils.json_to_sheet(datos);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Presupuesto");
+
+    // Guardar el archivo
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, 'Presupuesto.xlsx');
   }
 
   tieneDetallePlan(idPlan: number, idMes: number) {
@@ -930,6 +1089,20 @@ export class PresupuestoComponent {
   cancelarEdicion() {
     this.detalleForm.reset();
     this.esEdicion = false;
+  }
+
+  getTotal(month: string): number {
+    return this.filteredData.reduce((acc, plan) => {
+      const valor = Number(plan[month]) || 0;
+
+      if (plan.codigoPlan === '4.') {
+        return acc + valor; // Suma los valores del plan 4.
+      } else if (plan.codigoPlan === '5.') {
+        return acc - valor; // Resta los valores del plan 5.
+      }
+
+      return acc; // Si no es ni 4. ni 5., no hace nada.
+    }, 0);
   }
 
 }

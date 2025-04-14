@@ -5,7 +5,7 @@ import { ToastrService } from '../services/toastr.service';
 import { AppComponent } from '../app.component';
 import { environment } from 'src/environments/environment';
 import { AutenticacionActivoService } from '../services/autenticacion-activo.service';
-import { IInicioSesionActivo } from '../models/inicio-sesion-activo';
+import { IActualizacionContrasenia, IInicioSesionActivo } from '../models/inicio-sesion-activo';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -63,8 +63,58 @@ export class LoginComponent implements OnInit {
         const inicioSesionData: IInicioSesionActivo = this.loginForm.value;
         inicioSesionData.platformId = environment.idPlatform;
         let respuestaAutenticacion = await this.autenticacionService.iniciarSesion(inicioSesionData);
-        if (respuestaAutenticacion == "OK")
-          window.location.href = 'home';
+        if (respuestaAutenticacion == "OK") {
+          let storedValue = localStorage.getItem("actualizarContrasenia");
+          let cambiarContrasenia: boolean = storedValue === "true";
+          if (cambiarContrasenia) {
+            Swal.fire({
+              title: 'Actualiza tu contraseña',
+              text: 'Por favor, ingresa tu nueva contraseña:',
+              input: 'password',
+              inputPlaceholder: 'Nueva contraseña',
+              showCancelButton: true,
+              confirmButtonText: 'Actualizar',
+              cancelButtonText: 'Cancelar',
+              inputValidator: (value) => {
+                if (!value) {
+                  return 'Debes ingresar una contraseña';
+                }
+                return null;
+              }
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                const nuevaContrasenia = result.value;
+                let informacionCambioContrasenia: IActualizacionContrasenia = {
+                  userId: inicioSesionData.username,
+                  platformId: environment.idPlatform,
+                  password: nuevaContrasenia
+                };
+
+                // Mostrar loading mientras se actualiza la información
+                Swal.fire({
+                  title: 'Actualizando información',
+                  text: 'Por favor, espera...',
+                  allowOutsideClick: false,
+                  didOpen: () => {
+                    Swal.showLoading();
+                  }
+                });
+
+                let responseActualizacion = await this.autenticacionService.actualizarContrasenia(informacionCambioContrasenia);
+
+                // Cerrar el loading
+                Swal.close();
+
+                if (responseActualizacion === "OK") {
+                  localStorage.removeItem("actualizarContrasenia");
+                  window.location.reload();
+                }
+              }
+            });
+          } else {
+            window.location.href = 'home';
+          }
+        }
         else {
           this.toastrService.error("Error inicio sesión", respuestaAutenticacion);
           this.loginForm.reset();

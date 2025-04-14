@@ -96,6 +96,7 @@ export class ResultadosComponent {
   }
 
   async OnSubmit() {
+    let esError = false;
     //Validamos la información
     if (this.nameFile == '') {
       this.toastr.error("Registro gastos", "No se ha seleccionado el archivo a cargar");
@@ -152,6 +153,7 @@ export class ResultadosComponent {
               valorIndicador.planCuenta = undefined
           });
           let respuestaPeticion = await this.indicadoresService.actualizarValorIndicadoresFinancieros(this.lstValoresIndicadoresFinancieros);
+          esError = false;
           setTimeout(() => { this.toastr.success("Guardado Exitosamente", respuestaPeticion); }, 1000);
         } else {
           this.lstValoresIndicadoresFinancieros = [];
@@ -164,13 +166,16 @@ export class ResultadosComponent {
               idCuentaPlan: indicadorFinanciero.idPlan,
               planCuenta: undefined
             };
+            esError = false;
             this.lstValoresIndicadoresFinancieros.push(valorIndicadorFinanciero);
           });
           let respuestaPeticion = await this.indicadoresService.agregarValorIndicadoresFinancieros(this.lstValoresIndicadoresFinancieros);
+          console.log(respuestaPeticion);
           setTimeout(() => { this.toastr.success("Guardado Exitosamente", respuestaPeticion); }, 1000);
         }
       }
     } catch (error) {
+      esError = true;
       if (error instanceof Error) {
         this.toastr.error('Error al registrar gastos', error.message);
       } else {
@@ -178,7 +183,9 @@ export class ResultadosComponent {
       }
     } finally {
       this.loadingService.hideLoading();
-      window.location.reload();
+      if (!esError) {
+        window.location.reload();
+      }
     }
   }
 
@@ -461,6 +468,37 @@ export class ResultadosComponent {
       return mensajeTooltip;
     }
     return undefined;
+  }
+
+  tieneDetallePlan(idPlan: number, idMes: any) {
+    let detallePlanCuenta = this.lstDetallePlanCuenta.filter(x => x.planCuenta.idPlan == idPlan && x.mes == idMes && x.anio == this.anioGasto);
+    return detallePlanCuenta.length <= 1;
+  }
+
+  getTotal(month: string, type: string): number {
+    return this.filteredData.reduce((acc, plan) => {
+      const key = month + (type === 'gastos' ? 'G' : '');
+      const valor = Number(plan.mesGastoPresupuesto[key]) || 0;
+
+      if (plan.codigoPlan === '4.') {
+        return acc + valor; // Suma los valores del plan 4.
+      } else if (plan.codigoPlan === '5.') {
+        return acc - valor; // Resta los valores del plan 5.
+      }
+
+      return acc; // Si no es ni 4. ni 5., no hace nada.
+    }, 0);
+  }
+
+
+  getTotalDiferencia(month: string): number {
+    return this.getTotal(month, 'presupuesto') - this.getTotal(month, 'gastos');
+  }
+
+  getTotalPorcentaje(month: string): number {
+    const presupuesto = this.getTotal(month, 'presupuesto');
+    const gastos = this.getTotal(month, 'gastos');
+    return presupuesto > 0 ? (gastos / presupuesto) : 0;
   }
 
 }

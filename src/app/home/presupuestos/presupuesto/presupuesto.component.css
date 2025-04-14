@@ -62,3 +62,11 @@ p-cellEditor input {
   align-items: center;
   white-space: nowrap;
 }
+
+.custom-tooltip {
+  font-size: 5px !important;
+  background-color: #333 !important;
+  color: white !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+}

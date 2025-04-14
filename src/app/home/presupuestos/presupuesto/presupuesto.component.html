@@ -32,15 +32,17 @@
                   </div>
                 </div>
                 <!-- Columna 3: Buscar y botón Historial -->
-                <div class="col-sm-12 col-md-4 text-md-right text-sm-left mt-sm-2 mt-md-0" *ngIf="false">
-                  <div class="d-flex justify-content-end align-items-center">
+                <div class="col-sm-12 col-md-4 text-md-right text-sm-left mt-sm-2 mt-md-0">
+                  <div class="d-flex justify-content-end align-items-center" *ngIf="false">
                     <label for="" class="mb-0 mr-2" *ngIf="verTablaPresupuesto">Buscar:</label>
                     <input *ngIf="verTablaPresupuesto" [(ngModel)]="filterText" placeholder="Ingrese búsqueda"
                       class="form-control form-control-sm mr-2" style="width: 200px;" />
-                    <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal"
-                      title="Acciones en el presupuesto" *ngIf="verTablaPresupuesto && lstHistorial.length != 0"
-                      (click)="visualizarHistorial()">
-                      <i class="fas fa-history mr-2"></i> Historial
+                  </div>
+                  <div class="d-flex justify-content-end align-items-center">
+                    <button type="button" class="btn btn-success btn-sm" data-toggle="modal"
+                      title="Exportar información presupuesto" *ngIf="verTablaPresupuesto && lstHistorial.length != 0"
+                      (click)="exportarExcel()">
+                      <i class="fas fa-file-excel mr-2"></i> Exportar
                     </button>
                   </div>
                 </div>
@@ -71,7 +73,7 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-plan>
                   <tr style="font-size: 10px;" (contextmenu)="onRightClick($event, plan, cm)"
-                    [hidden]="!plan.tieneHijos" [ngClass]="{'grey-text': !consultaEsPenultimoNivel(plan.idPlan)}">
+                    [ngClass]="{'grey-text': plan.tieneHijos}">
                     <td pFrozenColumn data-column-name="codigoPlan">
                       <p-cellEditor>
                         <ng-template pTemplate="input">
@@ -96,24 +98,37 @@
                       <p-cellEditor>
                         <ng-template pTemplate="input">
                           <input
-                            *ngIf="tieneDetallePlan(plan.idPlan,mes.id)&&consultaEsPenultimoNivel(plan.idPlan) && permiteModificarRol(['FIN'])"
+                            *ngIf="tieneDetallePlan(plan.idPlan,mes.id)&&!plan.tieneHijos && permiteModificarRol(['FIN'])"
                             pInputText type="number" [(ngModel)]="plan[mes.nombre]"
-                            (focus)="celdaOriginal(plan[mes.nombre], plan)"
+                            [pTooltip]="!permiteModificarRol(['FIN'])?obtenerInformacion(plan.idPlan,mes.id):''"
+                            tooltipStyleClass="custom-tooltip" (focus)="celdaOriginal(plan[mes.nombre], plan)"
                             (focusout)="celdaEditada(plan, mes, plan[mes.nombre])"
                             (keydown.enter)="celdaEditada(plan, mes, plan[mes.nombre])" min="0" />
-                          <span
+                          <span [pTooltip]="!permiteModificarRol(['FIN'])?obtenerInformacion(plan.idPlan,mes.id):''"
+                            tooltipStyleClass="custom-tooltip"
                             [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.id) ? 'underline' : 'none' }"
-                            *ngIf="!tieneDetallePlan(plan.idPlan,mes.id)||!consultaEsPenultimoNivel(plan.idPlan)||!permiteModificarRol(['FIN'])">
+                            *ngIf="!tieneDetallePlan(plan.idPlan,mes.id)||plan.tieneHijos||!permiteModificarRol(['FIN'])">
                             {{ plan[mes.nombre] | currency: 'USD' }}
                           </span>
                         </ng-template>
                         <ng-template pTemplate="output">
-                          <span
+                          <span [pTooltip]="!permiteModificarRol(['FIN'])?obtenerInformacion(plan.idPlan,mes.id):''"
+                            tooltipStyleClass="custom-tooltip"
                             [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.id) ? 'underline' : 'none' }">
                             {{ plan[mes.nombre] | currency: 'USD' }}
                           </span>
                         </ng-template>
                       </p-cellEditor>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="footer">
+                  <tr style="font-size: 10px; font-weight: bold;">
+                    <!-- Las dos primeras columnas se agrupan para el label de "Total" -->
+                    <td pFrozenColumn colspan="2" class="text-right">Total:</td>
+                    <!-- Para cada mes, se muestra la sumatoria -->
+                    <td *ngFor="let mes of lstMeses" class="text-right">
+                      {{ getTotal(mes.nombre) | currency: 'USD' }}
                     </td>
                   </tr>
                 </ng-template>
@@ -358,6 +373,63 @@
               </div>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="eliminarDetalleCuentaModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Detalle, Cuenta:
+            {{informacionFilaDetalle?.codigoPlan??''}} {{informacionFilaDetalle?.nombrePlan??''}}, Mes:
+            {{nombreMesDetalle}}/{{anioPresupuesto}}
+          </h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+            (click)="cerrarModalEliminarDetalle()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="checklist-container">
+              <ul>
+                <li *ngFor="let item of lstMesesModal">
+                  <label>
+                    <input type="checkbox" [(ngModel)]="item.seleccionado"
+                      (change)="item.id === 0 ? toggleSelectAll() : updateSelectAll()" />
+                    {{ item.nombre }}
+                  </label>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!-- Tabla con scroll horizontal -->
+          <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+            <!-- Clase para hacer la tabla scrollable -->
+            <table class="table table-bordered text-center">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Descripción</th>
+                  <th>Monto</th>
+                  <th></th> <!-- Sin encabezado para la columna de acciones -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let registro of lstDetallesPlanCuenta; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ registro.descripcionDetalle }}</td>
+                  <td>{{ registro.montoDetalle | currency }}</td>
+                  <td>
+                    <button type="button" class="btn btn-danger btn-sm" (click)="eliminarDetalleRegistros(i)">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
