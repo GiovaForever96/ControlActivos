@@ -166,7 +166,7 @@
                                 </ng-template>
                                 <ng-template pTemplate="footer">
                                     <tr style="font-size: 10px; font-weight: bold;">
-                                        <td pFrozenColumn colspan="2" class="text-right">Total:</td>
+                                        <td pFrozenColumn colspan="2" class="text-right">Ganancia/Perdida:</td>
                                         <ng-container *ngFor="let mes of cabeceraMeses">
                                             <td class="text-right">
                                                 {{ getTotal(mes.nombreMes, 'presupuesto') | currency: 'USD' }}
