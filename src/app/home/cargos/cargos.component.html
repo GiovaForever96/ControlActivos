@@ -15,19 +15,19 @@
                     <div class="card card-primary card-outline">
                         <div class="card-header">
                             <h3 class="card-title" style="padding-top: 5px;">
-                                <i class="fas fa-landmark mr-2"></i>
-                                Marcas
+                                <i class="pi pi-briefcase mr-2"></i>
+                                Cargos
                             </h3>
                             <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
                                 (click)="AbrirModal(false)">
-                                <i class="fas fa-plus-circle mr-2"></i> Agregar marca
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar cargo
                             </button>
-                            <button #btnActualizaMarca type="button" hidden data-toggle="modal"
+                            <button #btnActualizaCargo type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">
                             </button>
                         </div>
                         <div class="card-body">
-                            <table #dataTableMarcas class="table table-bordered table-striped" style="width: 100%;">
+                            <table #dataTableCargos class="table table-bordered table-striped" style="width: 100%;">
                             </table>
                         </div>
                     </div>
@@ -35,30 +35,30 @@
             </div>
         </div>
     </section>
-    <div class="modal fade" id="marcaModal">
+    <div class="modal fade" id="cargoModal">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">{{ isEditing ? 'Actualizar marca' : 'Agregar marca' }}</h4>
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar cargo' : 'Agregar cargo' }}</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form [formGroup]="marcaForm" (ngSubmit)="OnSubmit()">
+                <form [formGroup]="cargoForm" (ngSubmit)="OnSubmit()">
                     <div class="modal-body">
                         <div class="card-body row">
                             <div class="col-lg-12 form-group">
                                 <div class="row align-items-center">
-                                    <label for="nombreMarca" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre
-                                        de la marca:</label>
+                                    <label for="nombreCargo" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre
+                                        del cargo:</label>
                                     <div class="col-lg-9 col-md-8 col-sm-12">
                                         <input type="text"
-                                            [ngClass]="{ 'is-invalid': marcaForm.get('nombreMarca')!.errors && marcaForm.get('nombreMarca')!.touched}"
-                                            class="form-control" placeholder="Nombre de la marca"
-                                            formControlName="nombreMarca">
+                                            [ngClass]="{ 'is-invalid': cargoForm.get('nombreCargo')!.errors && cargoForm.get('nombreCargo')!.touched}"
+                                            class="form-control" placeholder="Nombre del cargo"
+                                            formControlName="nombreCargo">
                                         <div class="invalid-feedback"
-                                            *ngIf="marcaForm.get('nombreMarca')!.errors && marcaForm.get('nombreMarca')!.touched">
-                                            El nombre de la marca es obligatorio
+                                            *ngIf="cargoForm.get('nombreCargo')!.errors && cargoForm.get('nombreCargo')!.touched">
+                                            El nombre del cargo es obligatorio
                                         </div>
                                     </div>
                                 </div>

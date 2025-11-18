@@ -1,0 +1,150 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="pi pi-building mr-2"></i>
+                                Sucursales
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal(false)">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar sucursal
+                            </button>
+                            <button #btnActualizaSucursal type="button" hidden data-toggle="modal"
+                                (click)="AbrirModal(true)">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableSucursales class="table table-bordered table-striped" style="width: 100%;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="sucursalModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar sucursal' : 'Agregar sucursal' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="sucursalForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body row">
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="descripcionSucursal"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombre
+                                        de la sucursal</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': sucursalForm.get('descripcionSucursal')!.errors && sucursalForm.get('descripcionSucursal')!.touched}"
+                                            class="form-control" placeholder="Descripcion de la sucursal"
+                                            formControlName="descripcionSucursal">
+                                        <div class="invalid-feedback"
+                                            *ngIf="sucursalForm.get('descripcionSucursal')!.errors && sucursalForm.get('descripcionSucursal')!.touched">
+                                            El nombre de la sucursal es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="direccion"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Dirección</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': sucursalForm.get('direccion')!.errors && sucursalForm.get('direccion')!.touched}"
+                                            class="form-control" placeholder="Direccion de la sucursal"
+                                            formControlName="direccion">
+                                        <div class="invalid-feedback"
+                                            *ngIf="sucursalForm.get('direccion')!.errors && sucursalForm.get('direccion')!.touched">
+                                            La dirección de la sucursal es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="telefono"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Teléfono</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched}"
+                                            class="form-control" placeholder="Teléfono de la sucursal"
+                                            formControlName="telefono">
+                                        <div class="invalid-feedback"
+                                            *ngIf="sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched">
+                                            El Teléfono de la sucursal es obligatorio
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="urlUbicacion" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Coordenadas </label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <input type="text"
+                                            [ngClass]="{ 'is-invalid': sucursalForm.get('urlUbicacion')!.errors && sucursalForm.get('urlUbicacion')!.touched}"
+                                            class="form-control" placeholder="Coordenadas de la sucursal"
+                                            formControlName="urlUbicacion">
+                                        <div class="invalid-feedback"
+                                            *ngIf="sucursalForm.get('urlUbicacion')!.errors && sucursalForm.get('urlUbicacion')!.touched">
+                                            Las coordenadas de la ubicación son obligatorias.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 form-group">
+                                <div class="row align-items-center">
+                                    <label for="esOficina" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Es
+                                        Oficina</label>
+                                    <div class="col-lg-9 col-md-8 col-sm-12">
+                                        <select class="form-control"
+                                            [ngClass]="{ 'is-invalid': sucursalForm.get('esOficina')!.errors && sucursalForm.get('esOficina')!.touched}"
+                                            formControlName="esOficina">
+                                            id="esOficina"
+                                            <option [ngValue]="true">Sí</option>
+                                            <option [ngValue]="false">No</option>
+                                        </select>
+                                        <div class="invalid-feedback"
+                                            *ngIf="sucursalForm.get('esOficina')!.errors && sucursalForm.get('esOficina')!.touched">
+                                            Debe seleccionar una opción.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

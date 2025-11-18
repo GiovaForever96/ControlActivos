@@ -13,6 +13,11 @@ import { CustodiosComponent } from './custodios/custodios.component';
 import { ActivosComponent } from './activos/activos.component';
 import { InventarioComponent } from './inventario/inventario.component';
 import { AuthService } from '../services/auth-interceptor.service';
+import { DepartamentosComponent } from './departamentos/departamentos.component';
+import { CargosComponent } from './cargos/cargos.component';
+import { SucursalesComponent } from './sucursales/sucursales.component';
+import { EmpleadosComponent } from './empleados/empleados.component';
+
 
 @NgModule({
    declarations: [
@@ -23,7 +28,11 @@ import { AuthService } from '../services/auth-interceptor.service';
       ModelosComponent,
       CustodiosComponent,
       ActivosComponent,
-      InventarioComponent
+      InventarioComponent,
+      DepartamentosComponent,
+      CargosComponent,
+      SucursalesComponent,
+      EmpleadosComponent
    ],
    imports: [
       CommonModule,

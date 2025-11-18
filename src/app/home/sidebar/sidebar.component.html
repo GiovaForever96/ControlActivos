@@ -7,6 +7,46 @@
     <nav class="mt-2">
         <ul name="mainParent" class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
             data-accordion="false">
+            <!-- Nómina -->
+            <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                <a href="javascript:void(0)" class="nav-link">
+                    <i class="nav-icon fas fa-users mr-2" style="color: white;"> </i>
+                    <p style="color: white;">Nómina
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
+                </a>
+                <ul name="childParent" class="nav nav-treeview">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/cargos" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon pi pi-briefcase mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Cargos</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/departamentos" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon pi pi-sitemap mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Departamentos</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/sucursales" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon pi pi-building mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Sucursales</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/empleados" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Empleados</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <!-- Control de Activos -->
             <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
                 <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-landmark mr-2" style="color: white;"> </i>
@@ -52,6 +92,7 @@
                     </li>
                 </ul>
             </li>
+
             <!-- Presupuestos -->
             <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
                 <a href="javascript:void(0)" class="nav-link">

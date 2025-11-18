@@ -7,6 +7,10 @@ import { ModelosComponent } from './modelos/modelos.component';
 import { CustodiosComponent } from './custodios/custodios.component';
 import { ActivosComponent } from './activos/activos.component';
 import { InventarioComponent } from './inventario/inventario.component';
+import { DepartamentosComponent } from './departamentos/departamentos.component';
+import { CargosComponent } from './cargos/cargos.component';
+import { SucursalesComponent } from './sucursales/sucursales.component';
+import { EmpleadosComponent } from './empleados/empleados.component';
 
 const homeRoutes: Routes = [
   {
@@ -20,6 +24,10 @@ const homeRoutes: Routes = [
       { path: 'custodios', component: CustodiosComponent },
       { path: 'bienes', component: ActivosComponent },
       { path: 'inventario', component: InventarioComponent },
+      { path: 'departamentos', component: DepartamentosComponent },
+      { path: 'cargos', component: CargosComponent },
+      { path: 'sucursales', component: SucursalesComponent },
+      { path: 'empleados', component: EmpleadosComponent},
       { path: 'presupuestos', loadChildren: () => import('./presupuestos/presupuestos.module').then(m => m.PresupuestosModule) },
     ]
   }

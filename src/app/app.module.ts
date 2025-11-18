@@ -11,14 +11,15 @@ import { HomeModule } from './home/home.module';
 import { RegistroInventarioComponent } from './registro-inventario/registro-inventario.component';
 import { AuthService } from './services/auth-interceptor.service';
 import { ContextMenuModule } from 'primeng/contextmenu';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // Importar aquí
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 
 @NgModule({
   declarations: [
     AppComponent,
     LoadingComponent,
     ConsultaInformacionComponent,
-    RegistroInventarioComponent
+    RegistroInventarioComponent,
   ],
   imports: [
     BrowserModule,

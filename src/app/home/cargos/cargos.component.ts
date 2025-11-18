@@ -7,9 +7,9 @@ import {
   ViewChild,
 } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IMarcaActivo } from 'src/app/models/marca-activo';
+import { ICargoActivo } from 'src/app/models/cargo-activo';
 import { LoadingService } from 'src/app/services/loading.service';
-import { MarcaActivoService } from 'src/app/services/marca-activo.service';
+import { CargoActivoService } from 'src/app/services/cargo-activo.service';
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
@@ -18,26 +18,27 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 declare var $: any;
 
 @Component({
-  selector: 'app-marcas',
-  templateUrl: './marcas.component.html',
-  styleUrls: ['./marcas.component.css'],
+  selector: 'app-cargos',
+  templateUrl: './cargos.component.html',
+  styleUrls: ['./cargos.component.css'],
 })
-export class MarcasComponent implements OnInit {
-  @ViewChild('dataTableMarcas', { static: false }) tableMarcas!: ElementRef;
-  @ViewChild('btnActualizaMarca', { static: true })
-  btnActualizaMarca!: ElementRef;
+export class CargosComponent implements OnInit {
+  @ViewChild('dataTableCargos', { static: false })
+  tableCargos!: ElementRef;
+  @ViewChild('btnActualizaCargo', { static: true })
+  btnActualizaCargo!: ElementRef;
 
   isEditing: boolean = false;
-  lstMarcas: IMarcaActivo[] = [];
+  lstCargos: ICargoActivo[] = [];
   dtOptions: any;
   dataTable: any;
-  marcaForm!: FormGroup;
+  cargoForm!: FormGroup;
 
   constructor(
     private loadingService: LoadingService,
     private appComponent: AppComponent,
     private homeComponent: HomeComponent,
-    private marcasService: MarcaActivoService,
+    private cargosService: CargoActivoService,
     private fb: FormBuilder,
     private changeDetector: ChangeDetectorRef,
     private el: ElementRef,
@@ -46,47 +47,48 @@ export class MarcasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    (window as any).EliminarMarca = this.EliminarMarca.bind(this);
-    (window as any).EditarMarca = this.EditarMarca.bind(this);
-    this.CargarListadoMarcas();
-    this.CrearMarcaForm();
+    (window as any).EliminarCargo = this.EliminarCargo.bind(this);
+    (window as any).EditarCargo = this.EditarCargo.bind(this);
+    this.CargarListadoCargos();
+    this.CrearCargoForm();
     const body = this.el.nativeElement.ownerDocument.body;
     this.renderer.setStyle(body, 'overflow', '');
   }
 
-  CrearMarcaForm() {
-    this.marcaForm = this.fb.group({
-      idMarca: [0, [Validators.required]],
-      nombreMarca: ['', [Validators.required, Validators.maxLength(300)]],
+  CrearCargoForm() {
+    this.cargoForm = this.fb.group({
+      idCargo: [0, [Validators.required]],
+      nombreCargo: ['', [Validators.required, Validators.maxLength(300)]],
       estaActivo: [true, [Validators.required]],
     });
   }
 
-  async CargarListadoMarcas() {
+  async CargarListadoCargos() {
     try {
       this.loadingService.showLoading();
-      this.appComponent.setTitle('Marcas');
-      this.lstMarcas = await this.marcasService.obtenerMarcas();
+      this.appComponent.setTitle('Cargos');
+      this.lstCargos = await this.cargosService.obtenerCargos();
       this.dtOptions = {
-        data: this.lstMarcas,
+        data: this.lstCargos,
         info: false,
         language: {
           ...this.GetSpanishLanguage(),
         },
         columns: [
-          { title: 'Id.', 
-            data: 'idMarca',
-            width: '50px', 
+          {
+            title: 'Id.',
+            data: 'idCargo',
+            width: '50px',
           },
-          { title: 'Marca', data: 'nombreMarca' },
+          { title: 'Cargo', data: 'nombreCargo' },
           {
             targets: -1,
             orderable: false,
             searchable: false,
             render: function (data: any, type: any, full: any, meta: any) {
               return `
-              <button type="button" class="btn btn-primary btn-sm" onclick="EditarMarca(${full.idMarca})"><i class="fas fa-edit"></i></button>
-              <button type="button" class="btn btn-danger btn-sm" onclick="EliminarMarca(${full.idMarca})"><i class="fas fa-trash-alt"></i></button>`;
+              <button type="button" class="btn btn-primary btn-sm ml-2 mr-2" onclick="EditarCargo(${full.idCargo})"><i class="fas fa-edit"></i></button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="EliminarCargo(${full.idCargo})"><i class="fas fa-trash-alt"></i></button>`;
             },
             className: 'text-center btn-acciones-column',
             width: '100px',
@@ -97,14 +99,14 @@ export class MarcasComponent implements OnInit {
         scrollX: true,
         ordering: false,
       };
-      this.dataTable = $(this.tableMarcas.nativeElement);
+      this.dataTable = $(this.tableCargos.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al obtener las marcas', error.message);
+        this.toastrService.error('Error al obtener los cargos', error.message);
       } else {
         this.toastrService.error(
-          'Error al obtener las marcas',
+          'Error al obtener los cargos',
           'Solicitar soporte al departamento de TI.'
         );
       }
@@ -113,14 +115,14 @@ export class MarcasComponent implements OnInit {
     }
   }
 
-  async EliminarMarca(idMarca: number) {
+  async EliminarCargo(idCargo: number) {
     try {
-      const marcaSeleccionada = this.lstMarcas.find(
-        (x) => x.idMarca == idMarca
+      const cargoSeleccionado = this.lstCargos.find(
+        (x) => x.idCargo == idCargo
       );
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar la marca ${
-          marcaSeleccionada!.nombreMarca
+        title: `¿Estás seguro de eliminar el cargo ${
+          cargoSeleccionado!.nombreCargo
         }?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
@@ -132,7 +134,7 @@ export class MarcasComponent implements OnInit {
       });
       if (result.isConfirmed) {
         Swal.fire({
-          title: 'Eliminando marca...',
+          title: 'Eliminando cargo...',
           text: 'Por favor espere.',
           allowOutsideClick: false,
           didOpen: () => {
@@ -140,18 +142,18 @@ export class MarcasComponent implements OnInit {
           },
         });
         try {
-          const mensajeEliminacion = await this.marcasService.eliminarMarca(
-            idMarca
+          const mensajeEliminacion = await this.cargosService.eliminarCargo(
+            idCargo
           );
           Swal.fire({
-            text: `${mensajeEliminacion}: ${marcaSeleccionada!.nombreMarca}`,
+            text: `${mensajeEliminacion}`,
             icon: 'success',
           }).then(() => {
             window.location.reload();
           });
         } catch (error) {
           this.toastrService.error(
-            'Error al eliminar la marca del activo',
+            'Error al eliminar el cargo del activo',
             'Solicitar soporte al departamento de TI.'
           );
           Swal.close();
@@ -159,36 +161,36 @@ export class MarcasComponent implements OnInit {
       } else {
         this.toastrService.info(
           'Operación cancelada',
-          'El usuario cancelo la acción de eliminar la marca'
+          'El usuario cancelo la acción de eliminar el cargo'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error(
-          'Error al eliminar la marca del activo',
+          'Error al eliminar el cargo del activo',
           error.message
         );
       } else {
         this.toastrService.error(
-          'Error al eliminar la marca del activo',
+          'Error al eliminar el cargo del activo',
           'Solicitar soporte al departamento de TI.'
         );
       }
     }
   }
 
-  EditarMarca(idMarca: number) {
-    const marcaActualizar = this.lstMarcas.find((x) => x.idMarca == idMarca);
-    this.marcaForm = this.fb.group({
-      idMarca: [marcaActualizar!.idMarca, [Validators.required]],
-      nombreMarca: [
-        marcaActualizar!.nombreMarca,
+  EditarCargo(idCargo: number) {
+    const cargoActualizar = this.lstCargos.find((x) => x.idCargo == idCargo);
+    this.cargoForm = this.fb.group({
+      idCargo: [cargoActualizar!.idCargo, [Validators.required]],
+      nombreCargo: [
+        cargoActualizar!.nombreCargo,
         [Validators.required, Validators.maxLength(300)],
       ],
-      estaActivo: [marcaActualizar!.estaActivo, [Validators.required]],
+      estaActivo: [cargoActualizar!.estaActivo, [Validators.required]],
     });
     this.changeDetector.detectChanges();
-    this.btnActualizaMarca.nativeElement.click();
+    this.btnActualizaCargo.nativeElement.click();
   }
 
   SetInactive() {
@@ -198,35 +200,36 @@ export class MarcasComponent implements OnInit {
   AbrirModal(esEdicion: boolean) {
     this.isEditing = esEdicion;
     if (!esEdicion) {
-      this.CrearMarcaForm();
+      this.CrearCargoForm();
     }
-    $('#marcaModal').modal('show');
+    $('#cargoModal').modal('show');
   }
 
   OnSubmit(): void {
-    let marca = this.marcaForm.get('nombreMarca')?.value;
-    if (marca.trim().length === 0) {
+    let cargo = this.cargoForm.get('nombreCargo')?.value;
+    if (cargo.trim().length === 0) {
       this.toastrService.error(
-        'Error al guardar la marca',
-        'El nombre de la marca no puede estar vacío o contener solo espacios.'
+        'Error al guardar el cargo',
+        'El nombre del cargo no puede estar vacío o contener solo espacios.'
       );
       return;
     }
     if (this.isEditing) {
-      this.ActualizarMarca();
+      this.ActualizarCargo();
     } else {
-      this.CrearMarca();
+      this.CrearCargo();
     }
   }
 
-  async CrearMarca() {
+  async CrearCargo() {
     try {
       this.loadingService.showLoading();
-      if (this.marcaForm.valid) {
+      if (this.cargoForm.valid) {
         try {
-          const marcaData: IMarcaActivo = this.marcaForm.value;
-          const mensajeInsercion = await this.marcasService.insertarMarca(
-            marcaData
+          const cargoData: ICargoActivo = this.cargoForm.value;
+          cargoData.nombreCargo = cargoData.nombreCargo.trim();
+          const mensajeInsercion = await this.cargosService.insertarCargo(
+            cargoData
           );
           Swal.fire({
             text: mensajeInsercion,
@@ -237,29 +240,29 @@ export class MarcasComponent implements OnInit {
         } catch (error) {
           if (error instanceof Error) {
             this.toastrService.error(
-              'Error al agregar la marca',
+              'Error al agregar el cargo',
               error.message
             );
           } else {
             this.toastrService.error(
-              'Error al agregar la marca',
+              'Error al agregar el cargo',
               'Solicitar soporte al departamento de TI.'
             );
           }
         }
       } else {
-        this.appComponent.validateAllFormFields(this.marcaForm);
+        this.appComponent.validateAllFormFields(this.cargoForm);
         this.toastrService.error(
-          'Error al agregar la marca',
+          'Error al agregar el cargo',
           'No se llenaron todos los campos necesarios.'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al agregar la marca', error.message);
+        this.toastrService.error('Error al agregar el cargo', error.message);
       } else {
         this.toastrService.error(
-          'Error al agregar la marca',
+          'Error al agregar el cargo',
           'Solicitar soporte al departamento de TI.'
         );
       }
@@ -268,15 +271,15 @@ export class MarcasComponent implements OnInit {
     }
   }
 
-  async ActualizarMarca() {
+  async ActualizarCargo() {
     try {
       this.loadingService.showLoading();
-      if (this.marcaForm.valid) {
+      if (this.cargoForm.valid) {
         try {
-          const marcaActualizadoData: IMarcaActivo = this.marcaForm.value;
-          const mensajeActualizacion = await this.marcasService.actualizarMarca(
-            marcaActualizadoData.idMarca,
-            marcaActualizadoData
+          const cargoActualizadoData: ICargoActivo = this.cargoForm.value;
+          const mensajeActualizacion = await this.cargosService.actualizarCargo(
+            cargoActualizadoData.idCargo,
+            cargoActualizadoData
           );
           Swal.fire({
             text: mensajeActualizacion,
@@ -287,29 +290,29 @@ export class MarcasComponent implements OnInit {
         } catch (error) {
           if (error instanceof Error) {
             this.toastrService.error(
-              'Error al actualizar la marca',
+              'Error al actualizar el cargo',
               error.message
             );
           } else {
             this.toastrService.error(
-              'Error al actualizar la marca',
+              'Error al actualizar el cargo',
               'Solicitar soporte al departamento de TI.'
             );
           }
         }
       } else {
-        this.appComponent.validateAllFormFields(this.marcaForm);
+        this.appComponent.validateAllFormFields(this.cargoForm);
         this.toastrService.error(
-          'Error al actualizar la marca',
+          'Error al actualizar el cargo',
           'No se llenaron todos los campos necesarios.'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al actualizar la marca', error.message);
+        this.toastrService.error('Error al actualizar el cargo', error.message);
       } else {
         this.toastrService.error(
-          'Error al actualizar la marca',
+          'Error al actualizar el cargo',
           'Solicitar soporte al departamento de TI.'
         );
       }

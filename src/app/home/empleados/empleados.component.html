@@ -1,0 +1,258 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-user-alt mr-2"></i>
+                                Empleados
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal(false)">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar empleado
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal">
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button> 
+                            <button #btnActualizaEmpleado type="button" hidden data-toggle="modal"
+                                (click)="AbrirModal(true)">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableEmpleados class="table table-bordered table-striped" style="width: 100%;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="empleadoModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar empleado' : 'Agregar empleado' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="empleadoForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <h6 class="text-dark border-bottom pb-2">Información Empleado</h6>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="cedulaEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Cédula:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('cedulaEmpleado')!.errors && empleadoForm.get('cedulaEmpleado')!.touched}"
+                                                class="form-control" placeholder="Cédula del empleado"
+                                                formControlName="cedulaEmpleado" (blur)="validarCedula()"
+                                                (keypress)="soloNumeros($event)">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('cedulaEmpleado')!.errors && empleadoForm.get('cedulaEmpleado')!.touched">
+                                                La cédula del empleado es obligatoria.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="fotoEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Foto
+                                            del empleado:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched}"
+                                                class="form-control" placeholder="Foto del empleado"
+                                                formControlName="fotoEmpleado">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched">
+                                                La ruta de la foto del empleado es obligatoria.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="nombreEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Nombres:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched}"
+                                                class="form-control" placeholder="Nombre del empleado"
+                                                formControlName="nombreEmpleado">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched">
+                                                El nombre del empleado es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="apellidoEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Apellidos:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched}"
+                                                class="form-control" placeholder="Apellido del empleado"
+                                                formControlName="apellidoEmpleado">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched">
+                                                El apellido del empleado es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="telefonoEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Teléfono:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('telefonoEmpleado')!.errors && empleadoForm.get('telefonoEmpleado')!.touched}"
+                                                class="form-control" placeholder="Teléfono del empleado"
+                                                formControlName="telefonoEmpleado" (keypress)="soloNumeros($event)">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('telefonoEmpleado')!.errors && empleadoForm.get('telefonoEmpleado')!.touched">
+                                                El teléfono del empleado es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="emailEmpleado"
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Correo
+                                            Electrónico:</label>
+                                        <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('emailEmpleado')!.errors && empleadoForm.get('emailEmpleado')!.touched}"
+                                                class="form-control" placeholder="Email del empleado"
+                                                formControlName="emailEmpleado">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('emailEmpleado')!.errors && empleadoForm.get('emailEmpleado')!.touched">
+                                                La estructura del correo electrónico no está bien.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-body">
+                        <h6 class="text-dark border-bottom pb-2">Información Empleado</h6>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="nombreSucursal"
+                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Sucursal:</label>
+                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="sucursalControl" (input)="FilterSucursales()"
+                                                (focus)="visualizarSucursales = true;" (blur)="HideSucursales()"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('idSucursal')!.errors && empleadoForm.get('idSucursal')!.touched }">
+                                            <ul *ngIf="visualizarSucursales" class="list-group">
+                                                <li class="list-group-item"
+                                                    *ngFor="let sucursal of lstSucursalesFiltrados"
+                                                    (mousedown)="SelectSucursal(sucursal)">
+                                                    {{sucursal.descripcionSucursal}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('idSucursal')!.errors && empleadoForm.get('idSucursal')!.touched">
+                                                Debe seleccionar la sucursal a la que pertenece el empleado.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="nombreDepartamento"
+                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Departamento:</label>
+                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="departamentoControl" (input)="FilterDepartamentos()"
+                                                (focus)="visualizarDepartamentos = true;" (blur)="HideDepartamentos()"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('idDepartamento')!.errors && empleadoForm.get('idDepartamento')!.touched }">
+                                            <ul *ngIf="visualizarDepartamentos" class="list-group">
+                                                <li class="list-group-item"
+                                                    *ngFor="let departamento of lstDepartamentosFiltrados"
+                                                    (mousedown)="SelectDepartamento(departamento)">
+                                                    {{departamento.nombreDepartamento}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('idDepartamento')!.errors && empleadoForm.get('idDepartamento')!.touched">
+                                                Debe seleccionar el departamento del empleado.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 col-md-12 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="nombreCargo"
+                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Cargo:</label>
+                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="cargoControl" (input)="FilterCargos()"
+                                                (focus)="visualizarCargos = true;" (blur)="HideCargos()"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('idCargo')!.errors && empleadoForm.get('idCargo')!.touched }">
+                                            <ul *ngIf="visualizarCargos" class="list-group">
+                                                <li class="list-group-item" *ngFor="let cargo of lstCargosFiltrados"
+                                                    (mousedown)="SelectCargo(cargo)">
+                                                    {{cargo.nombreCargo}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('idCargo')!.errors && empleadoForm.get('idCargo')!.touched">
+                                                Debe seleccionar el cargo del empleado.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

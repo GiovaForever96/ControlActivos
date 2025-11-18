@@ -1,23 +1,22 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { IMarcaActivo } from '../models/marca-activo';
+import { ICargoActivo } from '../models/cargo-activo';
 import axios from 'axios';
 import { AuthService } from './auth-interceptor.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MarcaActivoService {
+export class CargoActivoService {
   constructor(private authService: AuthService) {}
+  baseUrl = environment.apiUrl + 'CargoActivo/';
 
-  baseUrl = environment.apiUrl + 'MarcaActivo/';
-
-  async obtenerMarcas(): Promise<IMarcaActivo[]> {
-    const URL_API = this.baseUrl + 'obtenerMarcas';
+  async obtenerCargos(): Promise<ICargoActivo[]> {
+    const URL_API = this.baseUrl + 'obtenerCargos';
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
-        return response.data.resultado as IMarcaActivo[];
+        return response.data.resultado as ICargoActivo[];
       } else {
         throw new Error(response.data.mensaje);
       }
@@ -33,12 +32,12 @@ export class MarcaActivoService {
     }
   }
 
-  async insertarMarca(marcaData: IMarcaActivo): Promise<string> {
-    const URL_API = this.baseUrl + 'agregarMarca';
+  async insertarCargo(cargoData: ICargoActivo): Promise<string> {
+    const URL_API = this.baseUrl + 'agregarCargo';
     try {
       const response = await this.authService.apiClient.post<any>(
         URL_API,
-        marcaData
+        cargoData
       );
       if (!response.data.esError) {
         return response.data.mensaje;
@@ -57,15 +56,15 @@ export class MarcaActivoService {
     }
   }
 
-  async actualizarMarca(
-    idMarca: number,
-    marcaActualizado: IMarcaActivo
+  async actualizarCargo(
+    idCargo: number,
+    cargoActualizado: ICargoActivo
   ): Promise<string> {
-    const URL_API = `${this.baseUrl}actualizarMarca/${idMarca}`;
+    const URL_API = `${this.baseUrl}actualizarCargo/${idCargo}`;
     try {
       const response = await this.authService.apiClient.put<any>(
         URL_API,
-        marcaActualizado
+        cargoActualizado
       );
       if (!response.data.esError) {
         return response.data.mensaje;
@@ -84,12 +83,12 @@ export class MarcaActivoService {
     }
   }
 
-  async eliminarMarca(idMarca: number): Promise<string> {
-    const URL_API = `${this.baseUrl}eliminarMarca/${idMarca}`;
+  async eliminarCargo(idCargo: number): Promise<string> {
+    const URL_API = `${this.baseUrl}eliminarCargo/${idCargo}`;
     try {
       const response = await this.authService.apiClient.delete<any>(URL_API);
       if (!response.data.esError) {
-        return 'Marca eliminada exitosamente';
+        return response.data.mensaje;
       } else {
         throw new Error(response.data.mensaje);
       }

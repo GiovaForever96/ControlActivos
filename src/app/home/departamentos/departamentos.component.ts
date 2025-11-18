@@ -7,9 +7,9 @@ import {
   ViewChild,
 } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IMarcaActivo } from 'src/app/models/marca-activo';
+import { IDepartamentoActivo } from 'src/app/models/departamento-activo';
 import { LoadingService } from 'src/app/services/loading.service';
-import { MarcaActivoService } from 'src/app/services/marca-activo.service';
+import { DepartamentoActivoService } from 'src/app/services/departamento-activo.service';
 import { ToastrService } from 'src/app/services/toastr.service';
 import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
@@ -18,26 +18,27 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 declare var $: any;
 
 @Component({
-  selector: 'app-marcas',
-  templateUrl: './marcas.component.html',
-  styleUrls: ['./marcas.component.css'],
+  selector: 'app-departamentos',
+  templateUrl: './departamentos.component.html',
+  styleUrls: ['./departamentos.component.css'],
 })
-export class MarcasComponent implements OnInit {
-  @ViewChild('dataTableMarcas', { static: false }) tableMarcas!: ElementRef;
-  @ViewChild('btnActualizaMarca', { static: true })
-  btnActualizaMarca!: ElementRef;
+export class DepartamentosComponent implements OnInit {
+  @ViewChild('dataTableDepartamentos', { static: false })
+  tableDepartamentos!: ElementRef;
+  @ViewChild('btnActualizaDepartamento', { static: true })
+  btnActualizaDepartamento!: ElementRef;
 
   isEditing: boolean = false;
-  lstMarcas: IMarcaActivo[] = [];
+  lstDepartamentos: IDepartamentoActivo[] = [];
   dtOptions: any;
   dataTable: any;
-  marcaForm!: FormGroup;
+  departamentoForm!: FormGroup;
 
   constructor(
     private loadingService: LoadingService,
     private appComponent: AppComponent,
     private homeComponent: HomeComponent,
-    private marcasService: MarcaActivoService,
+    private departamentosService: DepartamentoActivoService,
     private fb: FormBuilder,
     private changeDetector: ChangeDetectorRef,
     private el: ElementRef,
@@ -46,47 +47,52 @@ export class MarcasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    (window as any).EliminarMarca = this.EliminarMarca.bind(this);
-    (window as any).EditarMarca = this.EditarMarca.bind(this);
-    this.CargarListadoMarcas();
-    this.CrearMarcaForm();
+    (window as any).EliminarDepartamento = this.EliminarDepartamento.bind(this);
+    (window as any).EditarDepartamento = this.EditarDepartamento.bind(this);
+    this.CargarListadoDepartamentos();
+    this.CrearDepartamentoForm();
     const body = this.el.nativeElement.ownerDocument.body;
     this.renderer.setStyle(body, 'overflow', '');
   }
 
-  CrearMarcaForm() {
-    this.marcaForm = this.fb.group({
-      idMarca: [0, [Validators.required]],
-      nombreMarca: ['', [Validators.required, Validators.maxLength(300)]],
+  CrearDepartamentoForm() {
+    this.departamentoForm = this.fb.group({
+      idDepartamento: [0, [Validators.required]],
+      nombreDepartamento: [
+        '',
+        [Validators.required, Validators.maxLength(300)],
+      ],
       estaActivo: [true, [Validators.required]],
     });
   }
 
-  async CargarListadoMarcas() {
+  async CargarListadoDepartamentos() {
     try {
       this.loadingService.showLoading();
-      this.appComponent.setTitle('Marcas');
-      this.lstMarcas = await this.marcasService.obtenerMarcas();
+      this.appComponent.setTitle('Departamentos');
+      this.lstDepartamentos =
+        await this.departamentosService.obtenerDepartamentos();
       this.dtOptions = {
-        data: this.lstMarcas,
+        data: this.lstDepartamentos,
         info: false,
         language: {
           ...this.GetSpanishLanguage(),
         },
         columns: [
-          { title: 'Id.', 
-            data: 'idMarca',
-            width: '50px', 
+          { 
+            title: 'Id.', 
+            data: 'idDepartamento',
+            width: '50px',
           },
-          { title: 'Marca', data: 'nombreMarca' },
+          { title: 'Departamento', data: 'nombreDepartamento' },
           {
             targets: -1,
             orderable: false,
             searchable: false,
             render: function (data: any, type: any, full: any, meta: any) {
               return `
-              <button type="button" class="btn btn-primary btn-sm" onclick="EditarMarca(${full.idMarca})"><i class="fas fa-edit"></i></button>
-              <button type="button" class="btn btn-danger btn-sm" onclick="EliminarMarca(${full.idMarca})"><i class="fas fa-trash-alt"></i></button>`;
+              <button type="button" class="btn btn-primary btn-sm" onclick="EditarDepartamento(${full.idDepartamento})"><i class="fas fa-edit"></i></button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="EliminarDepartamento(${full.idDepartamento})"><i class="fas fa-trash-alt"></i></button>`;
             },
             className: 'text-center btn-acciones-column',
             width: '100px',
@@ -97,14 +103,17 @@ export class MarcasComponent implements OnInit {
         scrollX: true,
         ordering: false,
       };
-      this.dataTable = $(this.tableMarcas.nativeElement);
+      this.dataTable = $(this.tableDepartamentos.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al obtener las marcas', error.message);
+        this.toastrService.error(
+          'Error al obtener los departamentos',
+          error.message
+        );
       } else {
         this.toastrService.error(
-          'Error al obtener las marcas',
+          'Error al obtener los departamentos',
           'Solicitar soporte al departamento de TI.'
         );
       }
@@ -113,14 +122,14 @@ export class MarcasComponent implements OnInit {
     }
   }
 
-  async EliminarMarca(idMarca: number) {
+  async EliminarDepartamento(idDepartamento: number) {
     try {
-      const marcaSeleccionada = this.lstMarcas.find(
-        (x) => x.idMarca == idMarca
+      const departamentoSeleccionado = this.lstDepartamentos.find(
+        (x) => x.idDepartamento == idDepartamento
       );
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar la marca ${
-          marcaSeleccionada!.nombreMarca
+        title: `¿Estás seguro de eliminar el departamento ${
+          departamentoSeleccionado!.nombreDepartamento
         }?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
@@ -132,7 +141,7 @@ export class MarcasComponent implements OnInit {
       });
       if (result.isConfirmed) {
         Swal.fire({
-          title: 'Eliminando marca...',
+          title: 'Eliminando departamento...',
           text: 'Por favor espere.',
           allowOutsideClick: false,
           didOpen: () => {
@@ -140,18 +149,19 @@ export class MarcasComponent implements OnInit {
           },
         });
         try {
-          const mensajeEliminacion = await this.marcasService.eliminarMarca(
-            idMarca
-          );
+          const mensajeEliminacion =
+            await this.departamentosService.eliminarDepartamento(
+              idDepartamento
+            );
           Swal.fire({
-            text: `${mensajeEliminacion}: ${marcaSeleccionada!.nombreMarca}`,
+            text: `${mensajeEliminacion}`,
             icon: 'success',
           }).then(() => {
             window.location.reload();
           });
         } catch (error) {
           this.toastrService.error(
-            'Error al eliminar la marca del activo',
+            'Error al eliminar el departamento del activo',
             'Solicitar soporte al departamento de TI.'
           );
           Swal.close();
@@ -159,36 +169,41 @@ export class MarcasComponent implements OnInit {
       } else {
         this.toastrService.info(
           'Operación cancelada',
-          'El usuario cancelo la acción de eliminar la marca'
+          'El usuario cancelo la acción de eliminar el departamento'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error(
-          'Error al eliminar la marca del activo',
+          'Error al eliminar el departamento del activo',
           error.message
         );
       } else {
         this.toastrService.error(
-          'Error al eliminar la marca del activo',
+          'Error al eliminar el departamento del activo',
           'Solicitar soporte al departamento de TI.'
         );
       }
     }
   }
 
-  EditarMarca(idMarca: number) {
-    const marcaActualizar = this.lstMarcas.find((x) => x.idMarca == idMarca);
-    this.marcaForm = this.fb.group({
-      idMarca: [marcaActualizar!.idMarca, [Validators.required]],
-      nombreMarca: [
-        marcaActualizar!.nombreMarca,
+  EditarDepartamento(idDepartamento: number) {
+    const departamentoActualizar = this.lstDepartamentos.find(
+      (x) => x.idDepartamento == idDepartamento
+    );
+    this.departamentoForm = this.fb.group({
+      idDepartamento: [
+        departamentoActualizar!.idDepartamento,
+        [Validators.required],
+      ],
+      nombreDepartamento: [
+        departamentoActualizar!.nombreDepartamento,
         [Validators.required, Validators.maxLength(300)],
       ],
-      estaActivo: [marcaActualizar!.estaActivo, [Validators.required]],
+      estaActivo: [departamentoActualizar!.estaActivo, [Validators.required]],
     });
     this.changeDetector.detectChanges();
-    this.btnActualizaMarca.nativeElement.click();
+    this.btnActualizaDepartamento.nativeElement.click();
   }
 
   SetInactive() {
@@ -198,36 +213,37 @@ export class MarcasComponent implements OnInit {
   AbrirModal(esEdicion: boolean) {
     this.isEditing = esEdicion;
     if (!esEdicion) {
-      this.CrearMarcaForm();
+      this.CrearDepartamentoForm();
     }
-    $('#marcaModal').modal('show');
+    $('#departamentoModal').modal('show');
   }
 
   OnSubmit(): void {
-    let marca = this.marcaForm.get('nombreMarca')?.value;
-    if (marca.trim().length === 0) {
+    let departamento = this.departamentoForm.get('nombreDepartamento')?.value;
+    if (departamento.trim().length === 0) {
       this.toastrService.error(
-        'Error al guardar la marca',
-        'El nombre de la marca no puede estar vacío o contener solo espacios.'
+        'Error al guardar el departamento',
+        'El nombre del departamento no puede estar vacío o contener solo espacios.'
       );
       return;
     }
     if (this.isEditing) {
-      this.ActualizarMarca();
+      this.ActualizarDepartamento();
     } else {
-      this.CrearMarca();
+      this.CrearDepartamento();
     }
   }
 
-  async CrearMarca() {
+  async CrearDepartamento() {
     try {
       this.loadingService.showLoading();
-      if (this.marcaForm.valid) {
+      if (this.departamentoForm.valid) {
         try {
-          const marcaData: IMarcaActivo = this.marcaForm.value;
-          const mensajeInsercion = await this.marcasService.insertarMarca(
-            marcaData
-          );
+          const departamentoData: IDepartamentoActivo = this.departamentoForm.value;
+          departamentoData.nombreDepartamento = departamentoData.nombreDepartamento.trim();
+          const mensajeInsercion = await this.departamentosService.insertarDepartamento(
+              departamentoData
+            );
           Swal.fire({
             text: mensajeInsercion,
             icon: 'success',
@@ -237,29 +253,32 @@ export class MarcasComponent implements OnInit {
         } catch (error) {
           if (error instanceof Error) {
             this.toastrService.error(
-              'Error al agregar la marca',
+              'Error al agregar el departamento',
               error.message
             );
           } else {
             this.toastrService.error(
-              'Error al agregar la marca',
+              'Error al agregar el departamento',
               'Solicitar soporte al departamento de TI.'
             );
           }
         }
       } else {
-        this.appComponent.validateAllFormFields(this.marcaForm);
+        this.appComponent.validateAllFormFields(this.departamentoForm);
         this.toastrService.error(
-          'Error al agregar la marca',
+          'Error al agregar el departamento',
           'No se llenaron todos los campos necesarios.'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al agregar la marca', error.message);
+        this.toastrService.error(
+          'Error al agregar el departamento',
+          error.message
+        );
       } else {
         this.toastrService.error(
-          'Error al agregar la marca',
+          'Error al agregar el departamento',
           'Solicitar soporte al departamento de TI.'
         );
       }
@@ -268,16 +287,18 @@ export class MarcasComponent implements OnInit {
     }
   }
 
-  async ActualizarMarca() {
+  async ActualizarDepartamento() {
     try {
       this.loadingService.showLoading();
-      if (this.marcaForm.valid) {
+      if (this.departamentoForm.valid) {
         try {
-          const marcaActualizadoData: IMarcaActivo = this.marcaForm.value;
-          const mensajeActualizacion = await this.marcasService.actualizarMarca(
-            marcaActualizadoData.idMarca,
-            marcaActualizadoData
-          );
+          const departamentoActualizadoData: IDepartamentoActivo =
+            this.departamentoForm.value;
+          const mensajeActualizacion =
+            await this.departamentosService.actualizarDepartamento(
+              departamentoActualizadoData.idDepartamento,
+              departamentoActualizadoData
+            );
           Swal.fire({
             text: mensajeActualizacion,
             icon: 'success',
@@ -287,29 +308,32 @@ export class MarcasComponent implements OnInit {
         } catch (error) {
           if (error instanceof Error) {
             this.toastrService.error(
-              'Error al actualizar la marca',
+              'Error al actualizar el departamento',
               error.message
             );
           } else {
             this.toastrService.error(
-              'Error al actualizar la marca',
+              'Error al actualizar el departamento',
               'Solicitar soporte al departamento de TI.'
             );
           }
         }
       } else {
-        this.appComponent.validateAllFormFields(this.marcaForm);
+        this.appComponent.validateAllFormFields(this.departamentoForm);
         this.toastrService.error(
-          'Error al actualizar la marca',
+          'Error al actualizar el departamento',
           'No se llenaron todos los campos necesarios.'
         );
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error('Error al actualizar la marca', error.message);
+        this.toastrService.error(
+          'Error al actualizar el departamento',
+          error.message
+        );
       } else {
         this.toastrService.error(
-          'Error al actualizar la marca',
+          'Error al actualizar el departamento',
           'Solicitar soporte al departamento de TI.'
         );
       }

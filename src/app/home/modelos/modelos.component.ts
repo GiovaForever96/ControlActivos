@@ -67,38 +67,29 @@ export class ModelosComponent {
           ...this.GetSpanishLanguage()
         },
         columns: [
-          { title: 'Id.', data: 'idModelo' },
+          { title: 'Id.', 
+            data: 'idModelo',
+            width: '50px',
+          },
           { title: 'Marca', data: 'marca.nombreMarca' },
           { title: 'Modelo', data: 'nombreModelo' },
-          {
-            targets: -2,
-            searchable: false,
-            render: function (data: any, type: any, full: any, meta: any) {
-              return `<button type="button" class="btn btn-primary btn-sm" onclick="EditarModelo(${full.idModelo})"><i class="fas fa-edit"></i></button>`;
-            },
-            className: 'text-center btn-acciones-column'
-          },
           {
             targets: -1,
             orderable: false,
             searchable: false,
             render: function (data: any, type: any, full: any, meta: any) {
-              return `<button type="button" class="btn btn-danger btn-sm" onclick="EliminarModelo(${full.idModelo})"><i class="fas fa-trash-alt"></i></button>`;
+              return `
+              <button type="button" class="btn btn-primary btn-sm" onclick="EditarModelo(${full.idModelo})"><i class="fas fa-edit"></i></button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="EliminarModelo(${full.idModelo})"><i class="fas fa-trash-alt"></i></button>`;
             },
-            className: 'text-center btn-acciones-column'
-          }
-        ],
-        columnDefs: [
-          {
-            targets: [3, 4],
-            orderable: false,
-            searchable: false,
-            width: '50px'
-          }
+            className: 'text-center btn-acciones-column',
+            width: '100px',
+          },
         ],
         responsive: false,
         autoWidth: false,
         scrollX: true,
+        ordering: false,
       };
       this.dataTable = $(this.tableModelos.nativeElement);
       this.dataTable.DataTable(this.dtOptions);
@@ -174,6 +165,14 @@ export class ModelosComponent {
   }
 
   OnSubmit() {
+    let modelo = this.modeloForm.get('nombreModelo')?.value;
+    if (modelo.trim().length === 0) {
+      this.toastrService.error(
+        'Error al guardar el modelo',
+        'El nombre del modelo no puede estar vacío o contener solo espacios.'
+      );
+      return;
+    }
     if (this.isEditing) {
       this.ActualizarModelo();
     } else {
@@ -186,7 +185,7 @@ export class ModelosComponent {
     if (!esEdicion) {
       this.CrearModeloForm();
     }
-    $('#marcaModal').modal('show');
+    $('#modeloModal').modal('show');
   }
 
   EditarModelo(idModelo: number) {
