@@ -15,6 +15,7 @@ import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
 declare var $: any;
 
 @Component({
@@ -376,5 +377,41 @@ export class SucursalesComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  soloNumeros(event: KeyboardEvent): void {
+    const key = event.key;
+    if (!/^\d+$/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  descargarTable() {
+    const columnas = [
+      { key: 'idSucursal', header: 'ID Sucursal' },
+      { key: 'descripcionSucursal', header: 'Nombre de la Sucursal' },
+      { key: 'direccion', header: 'Direccion' },
+      { key: 'telefono', header: 'Teléfono' },
+      { key: 'esOficina', header: 'Oficina' },
+    ];
+    const sucursales = this.lstSucursales.map((suc) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        row[col.header] = suc[col.key as keyof ISucursalActivo];
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(sucursales);
+    const headers = Object.keys(sucursales[0]);
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(
+        h.length,
+        ...sucursales.map((r) => (r[h] ? String(r[h]).length : 0))
+      );
+      return { wch: max + 4 };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sucursales');
+    XLSX.writeFile(wb, 'Sucursales.xlsx');
   }
 }

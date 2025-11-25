@@ -15,6 +15,7 @@ import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
 declare var $: any;
 
 @Component({
@@ -79,8 +80,8 @@ export class DepartamentosComponent implements OnInit {
           ...this.GetSpanishLanguage(),
         },
         columns: [
-          { 
-            title: 'Id.', 
+          {
+            title: 'Id.',
             data: 'idDepartamento',
             width: '50px',
           },
@@ -239,9 +240,12 @@ export class DepartamentosComponent implements OnInit {
       this.loadingService.showLoading();
       if (this.departamentoForm.valid) {
         try {
-          const departamentoData: IDepartamentoActivo = this.departamentoForm.value;
-          departamentoData.nombreDepartamento = departamentoData.nombreDepartamento.trim();
-          const mensajeInsercion = await this.departamentosService.insertarDepartamento(
+          const departamentoData: IDepartamentoActivo =
+            this.departamentoForm.value;
+          departamentoData.nombreDepartamento =
+            departamentoData.nombreDepartamento.trim();
+          const mensajeInsercion =
+            await this.departamentosService.insertarDepartamento(
               departamentoData
             );
           Swal.fire({
@@ -344,5 +348,31 @@ export class DepartamentosComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  descargarTable() {
+    const columnas = [
+      { key: 'idDepartamento', header: 'ID Departamento' },
+      { key: 'nombreDepartamento', header: 'Nombre del Departamento' },
+    ];
+    const departamentos = this.lstDepartamentos.map((dep) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        row[col.header] = dep[col.key as keyof IDepartamentoActivo];
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(departamentos);
+    const headers = Object.keys(departamentos[0]);
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(
+        h.length,
+        ...departamentos.map((r) => (r[h] ? String(r[h]).length : 0))
+      );
+      return { wch: max + 2 };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Departamentos');
+    XLSX.writeFile(wb, 'Departamentos.xlsx');
   }
 }

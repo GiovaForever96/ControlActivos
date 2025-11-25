@@ -15,6 +15,7 @@ import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
 declare var $: any;
 
 @Component({
@@ -323,5 +324,31 @@ export class CargosComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  descargarTable() {
+    const columnas = [
+      { key: 'idCargo', header: 'ID Cargo' },
+      { key: 'nombreCargo', header: 'Nombre del Cargo' },
+    ];
+    const cargos = this.lstCargos.map((car) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        row[col.header] = car[col.key as keyof ICargoActivo];
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(cargos);
+    const headers = Object.keys(cargos[0]);
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(
+        h.length,
+        ...cargos.map((r) => (r[h] ? String(r[h]).length : 0))
+      );
+      return { wch: max + 2 };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Cargos');
+    XLSX.writeFile(wb, 'Cargos.xlsx');
   }
 }

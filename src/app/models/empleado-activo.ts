@@ -10,4 +10,5 @@ export interface IEmpleadoActivo {
     idDepartamento: number;
     idSucursal: number; 
     estaActivo: boolean
+    fotoUrl: string;
 }

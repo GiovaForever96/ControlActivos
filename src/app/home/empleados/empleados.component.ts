@@ -20,6 +20,7 @@ import { IDepartamentoActivo } from 'src/app/models/departamento-activo';
 import { DepartamentoActivoService } from 'src/app/services/departamento-activo.service';
 import { ISucursalActivo } from 'src/app/models/sucursal-activo';
 import { SucursalActivoService } from 'src/app/services/sucursal-activo.service';
+import * as XLSX from 'xlsx';
 import {
   FormBuilder,
   FormControl,
@@ -56,6 +57,8 @@ export class EmpleadosComponent implements OnInit {
   visualizarCargos = false;
   visualizarDepartamentos = false;
   visualizarSucursales = false;
+  previewUrl: string | ArrayBuffer | null = null;
+  imagenEmpleado: File | null = null;
 
   constructor(
     private loadingService: LoadingService,
@@ -91,11 +94,12 @@ export class EmpleadosComponent implements OnInit {
       apellidoEmpleado: ['', [Validators.required]],
       telefonoEmpleado: ['', [Validators.required]],
       emailEmpleado: ['', [Validators.required, Validators.email]],
-      fotoEmpleado: [''],
+      fotoEmpleado: [{ value: '', disabled: true }],
       idCargo: ['', [Validators.required]],
       idDepartamento: ['', [Validators.required]],
       idSucursal: ['', [Validators.required]],
       estaActivo: [true, [Validators.required]],
+      fotoUrl:['']
     });
   }
 
@@ -287,6 +291,7 @@ export class EmpleadosComponent implements OnInit {
         [Validators.required, Validators.maxLength(300)],
       ],
       estaActivo: [empleadoActualizar!.estaActivo, [Validators.required]],
+      fotoUrl:[empleadoActualizar!.fotoUrl]
     });
     let informacionCargo = this.lstCargos.find(
       (x) => x.idCargo == empleadoActualizar?.idCargo
@@ -300,11 +305,8 @@ export class EmpleadosComponent implements OnInit {
     this.SelectCargo(informacionCargo!);
     this.SelectDepartamento(informacionDepartamento!);
     this.SelectSucursal(informacionSucursal!);
-
-    // this.cargoControl.setValue(empleadoActualizar!.idCargo);
-    // this.departamentoControl.setValue(empleadoActualizar!.idDepartamento);
-    // this.sucursalControl.setValue(empleadoActualizar!.idSucursal);
-    console.log(this.empleadoForm.value);
+    this.empleadoForm.get('cedulaEmpleado')?.disable();
+    this.empleadoForm.get('fotoEmpleado')?.disable(); 
     this.isEditing = true;
     this.changeDetector.detectChanges();
     this.btnActualizaEmpleado.nativeElement.click();
@@ -316,6 +318,7 @@ export class EmpleadosComponent implements OnInit {
 
   AbrirModal(esEdicion: boolean) {
     this.isEditing = esEdicion;
+    this.previewUrl = null;
     if (!esEdicion) {
       this.CrearEmpleadoForm();
     }
@@ -328,12 +331,14 @@ export class EmpleadosComponent implements OnInit {
     let empleadoCedula = this.empleadoForm.get('cedulaEmpleado')?.value;
     let empleadoEmail = this.empleadoForm.get('emailEmpleado')?.value;
     let empleadoTelefono = this.empleadoForm.get('telefonoEmpleado')?.value;
+    let empleadoFoto = this.empleadoForm.get('fotoEmpleado')?.value;
     if (
       empleadoNombre.trim().length === 0 ||
       empleadoApellido.trim().length === 0 ||
       empleadoCedula.trim().length === 0 ||
       empleadoEmail.trim().length === 0 ||
-      empleadoTelefono.trim().length === 0
+      empleadoTelefono.trim().length === 0 ||
+      empleadoFoto.trim().lenght === 0
     ) {
       this.toastrService.error(
         'Error al guardar el cargo',
@@ -353,14 +358,25 @@ export class EmpleadosComponent implements OnInit {
       this.loadingService.showLoading();
       if (this.empleadoForm.valid) {
         try {
-          const empleadoData: IEmpleadoActivo = this.empleadoForm.value;
+          const empleadoData = this.empleadoForm.getRawValue();
           empleadoData.nombreEmpleado = empleadoData.nombreEmpleado.trim();
           empleadoData.apellidoEmpleado = empleadoData.apellidoEmpleado.trim();
           empleadoData.cedulaEmpleado = empleadoData.cedulaEmpleado.trim();
           empleadoData.emailEmpleado = empleadoData.emailEmpleado.trim();
           empleadoData.telefonoEmpleado = empleadoData.telefonoEmpleado.trim();
+
+          const formData = new FormData();
+          // Agregar datos normales
+          for (const key in empleadoData) {
+            if (empleadoData[key] != null)
+              formData.append(key, empleadoData[key]);
+          }
+
+          if (this.imagenEmpleado) {
+            formData.append('ImagenEmpleado', this.imagenEmpleado);
+          }
           const mensajeInsercion = await this.empleadosService.insertarEmpleado(
-            empleadoData
+            formData
           );
           Swal.fire({
             text: mensajeInsercion,
@@ -420,11 +436,22 @@ export class EmpleadosComponent implements OnInit {
       if (this.empleadoForm.valid) {
         try {
           const empleadoActualizadoData: IEmpleadoActivo =
-            this.empleadoForm.value;
+            this.empleadoForm.getRawValue();
+
+          const formData = new FormData();
+          for (const key in empleadoActualizadoData) {
+            const value = empleadoActualizadoData[key as keyof IEmpleadoActivo];
+            if (value != null) {
+              formData.append(key, value.toString());
+            }
+          }
+          if (this.imagenEmpleado) {
+            formData.append('ImagenEmpleado', this.imagenEmpleado);
+          }
           const mensajeActualizacion =
             await this.empleadosService.actualizarEmpleado(
               empleadoActualizadoData.cedulaEmpleado,
-              empleadoActualizadoData
+              formData
             );
           Swal.fire({
             text: mensajeActualizacion,
@@ -534,6 +561,11 @@ export class EmpleadosComponent implements OnInit {
     }
   }
 
+  soloLetras(event: KeyboardEvent) {
+    const key = event.key;
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(key);
+  }
+
   private esCedulaValida(cedula: string): boolean {
     if (!cedula || cedula.length !== 10) {
       return false;
@@ -568,11 +600,78 @@ export class EmpleadosComponent implements OnInit {
     let esValidadorCedula = this.esCedulaValida(identificacion);
     console.log(esValidadorCedula);
     if (!esValidadorCedula) {
-      this.toastrService.error('Error', 'La cédula es incorrecta');
+      this.toastrService.error('Error en la cédula', 'La cédula no  es valida');
     }
   }
 
   descargarTable() {
+    const columnas = [
+      { key: 'descripcionSucursal', header: 'Sucursal' },
+      { key: 'nombreDepartamento', header: 'Departamento' },
+      { key: 'nombreCargo', header: 'Cargo' },
+      { key: 'cedulaEmpleado', header: 'Cédula' },
+      { key: 'nombreEmpleado', header: 'Nombre' },
+      { key: 'apellidoEmpleado', header: 'Apellido' },
+      { key: 'telefonoEmpleado', header: 'Teléfono' },
+      { key: 'emailEmpleado', header: 'Correo' },
+    ];
+
+    const tabla = this.lstEmpleados.map((emp) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        row[col.header] = emp[col.key as keyof IEmpleadoActivo]; // Usa el header como título en Excel
+      });
+      return row;
+    });
+
+    // 3. Crear hoja Excel con encabezados custom
+    const ws = XLSX.utils.json_to_sheet(tabla);
+
+    // 4. Ajustar ancho automático según contenido
+    const headers = Object.keys(tabla[0]);
+
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(
+        h.length,
+        ...tabla.map((r) => (r[h] ? String(r[h]).length : 0))
+      );
+      return { wch: max + 2 };
+    });
+
+    // 5. Crear libro y descargar
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
+    XLSX.writeFile(wb, 'Empleados.xlsx');
+  }
+
+  enfotoSeleccionada(event: any) {
+    const file: File = event.target.files[0];
+    console.log("SE EJECUTÓ onFileSelected");
+    if (!file) return;
+
+    this.imagenEmpleado = file;
+    // El nombre del archivo con .png
+    let fileName = file.name;
+
+    // Cambiar los espacios por _
+    fileName = fileName.replace(/\s+/g, '_');
     
+    // Quitar los espacios del inicio y final
+    fileName = fileName.trim();
+
+    // Se actualiza el formControl con nombre de la foto
+    this.empleadoForm.get('fotoEmpleado')?.setValue(fileName);
+
+    // Se crea una vista previa de la imagen local
+    // Si no está en el servidor en Editar se mostrará el default Usuario.png 
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrl = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  enFotoError(event: any) {
+    event.target.src = 'assets/images/providers/Usuario.png';
   }
 }

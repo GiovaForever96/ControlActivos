@@ -22,6 +22,10 @@
                                 (click)="AbrirModal(false)">
                                 <i class="fas fa-plus-circle mr-2"></i> Agregar sucursal
                             </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="descargarTable()">
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
                             <button #btnActualizaSucursal type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">
                             </button>
@@ -90,7 +94,8 @@
                                         <input type="text"
                                             [ngClass]="{ 'is-invalid': sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched}"
                                             class="form-control" placeholder="Teléfono de la sucursal"
-                                            formControlName="telefono">
+                                            formControlName="telefono" (keypress)="soloNumeros($event)"
+                                            maxlength="10">
                                         <div class="invalid-feedback"
                                             *ngIf="sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched">
                                             El Teléfono de la sucursal es obligatorio

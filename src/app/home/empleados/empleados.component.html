@@ -22,9 +22,10 @@
                                 (click)="AbrirModal(false)">
                                 <i class="fas fa-plus-circle mr-2"></i> Agregar empleado
                             </button>
-                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal">
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="descargarTable()">
                                 <i class="fas fa-download mr-2"></i> Descargar
-                            </button> 
+                            </button>
                             <button #btnActualizaEmpleado type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">
                             </button>
@@ -49,6 +50,35 @@
                 </div>
                 <form [formGroup]="empleadoForm" (ngSubmit)="OnSubmit()">
                     <div class="modal-body">
+                        <div class="col-lg-12 col-md-6 col-sm-12 form-group">
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-lg-2 col-md-8 col-sm-12">
+                                    <img [src]="previewUrl 
+                                        ? previewUrl 
+                                        : (empleadoForm.get('fotoUrl')?.value 
+                                                ? empleadoForm.get('fotoUrl')?.value
+                                                : 'assets/images/providers/Usuario.png')" class="fotoEmpleado cursor-pointer"
+                                        (click)="fileInput.click()" (error)="enFotoError($event)" [title]="'Seleccione una Imagen'">
+                                    <input type="file" hidden #fileInput (change)="enfotoSeleccionada($event)"
+                                        accept=".png,.jpg,.jpeg" />
+                                </div>
+                                <div class="col-lg-12 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center justify-content-center">
+                                        <div class="col-lg-4 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched}"
+                                                class="form-control" placeholder="URL de la foto del empleado"
+                                                formControlName="fotoEmpleado">
+                                            <div class="invalid-feedback"
+                                                *ngIf="empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched">
+                                                La URL de la foto es obligatoria.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <h6 class="text-dark border-bottom pb-2">Información Empleado</h6>
                         <div class="card-body">
                             <div class="row">
@@ -57,32 +87,15 @@
                                         <label for="cedulaEmpleado"
                                             class="col-lg-3 col-md-4 col-sm-12 col-form-label">Cédula:</label>
                                         <div class="col-lg-9 col-md-8 col-sm-12">
+                                            <!-- To-Do: Revisar que método resulta mejor -->
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('cedulaEmpleado')!.errors && empleadoForm.get('cedulaEmpleado')!.touched}"
                                                 class="form-control" placeholder="Cédula del empleado"
                                                 formControlName="cedulaEmpleado" (blur)="validarCedula()"
-                                                (keypress)="soloNumeros($event)">
+                                                (keypress)="soloNumeros($event)" maxlength="10">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('cedulaEmpleado')!.errors && empleadoForm.get('cedulaEmpleado')!.touched">
                                                 La cédula del empleado es obligatoria.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
-                                    <div class="row align-items-center">
-                                        <label for="fotoEmpleado"
-                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Foto
-                                            del empleado:</label>
-                                        <div class="col-lg-9 col-md-8 col-sm-12">
-                                            <input type="text"
-                                                [ngClass]="{ 'is-invalid': empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched}"
-                                                class="form-control" placeholder="Foto del empleado"
-                                                formControlName="fotoEmpleado">
-                                            <div class="invalid-feedback"
-                                                *ngIf="empleadoForm.get('fotoEmpleado')!.errors && empleadoForm.get('fotoEmpleado')!.touched">
-                                                La ruta de la foto del empleado es obligatoria.
                                             </div>
                                         </div>
                                     </div>
@@ -98,7 +111,7 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched}"
                                                 class="form-control" placeholder="Nombre del empleado"
-                                                formControlName="nombreEmpleado">
+                                                formControlName="nombreEmpleado" (keypress)="soloLetras($event)">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched">
                                                 El nombre del empleado es obligatorio.
@@ -115,7 +128,7 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched}"
                                                 class="form-control" placeholder="Apellido del empleado"
-                                                formControlName="apellidoEmpleado">
+                                                formControlName="apellidoEmpleado" (keypress)="soloLetras($event)">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched">
                                                 El apellido del empleado es obligatorio.
@@ -134,7 +147,8 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('telefonoEmpleado')!.errors && empleadoForm.get('telefonoEmpleado')!.touched}"
                                                 class="form-control" placeholder="Teléfono del empleado"
-                                                formControlName="telefonoEmpleado" (keypress)="soloNumeros($event)">
+                                                formControlName="telefonoEmpleado" (keypress)="soloNumeros($event)"
+                                                maxlength="10">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('telefonoEmpleado')!.errors && empleadoForm.get('telefonoEmpleado')!.touched">
                                                 El teléfono del empleado es obligatorio.
@@ -146,8 +160,7 @@
                                 <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                                     <div class="row align-items-center">
                                         <label for="emailEmpleado"
-                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Correo
-                                            Electrónico:</label>
+                                            class="col-lg-3 col-md-4 col-sm-12 col-form-label">Email:</label>
                                         <div class="col-lg-9 col-md-8 col-sm-12">
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('emailEmpleado')!.errors && empleadoForm.get('emailEmpleado')!.touched}"
@@ -171,8 +184,8 @@
                                 <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                                     <div class="row align-items-center">
                                         <label for="nombreSucursal"
-                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Sucursal:</label>
-                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Sucursal:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
                                             <input type="text" class="form-control" placeholder="Seleccionar"
                                                 [formControl]="sucursalControl" (input)="FilterSucursales()"
                                                 (focus)="visualizarSucursales = true;" (blur)="HideSucursales()"
@@ -195,8 +208,8 @@
                                 <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                                     <div class="row align-items-center">
                                         <label for="nombreDepartamento"
-                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Departamento:</label>
-                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Departamento:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
                                             <input type="text" class="form-control" placeholder="Seleccionar"
                                                 [formControl]="departamentoControl" (input)="FilterDepartamentos()"
                                                 (focus)="visualizarDepartamentos = true;" (blur)="HideDepartamentos()"
@@ -243,7 +256,6 @@
                             </div>
                         </div>
                     </div>
-
 
                     <div class="modal-footer text-end">
                         <button type="submit" class="btn btn-success">

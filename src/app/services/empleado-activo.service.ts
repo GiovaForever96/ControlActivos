@@ -33,12 +33,12 @@ export class EmpleadoActivoService {
     }
   }
 
-  async insertarEmpleado(empleadoData: IEmpleadoActivo): Promise<string> {
+  async insertarEmpleado(data: FormData): Promise<string> {
     const URL_API = this.baseUrl + 'agregarEmpleado';
     try {
       const response = await this.authService.apiClient.post<any>(
         URL_API,
-        empleadoData
+        data
       );
       if (!response.data.esError) {
         return response.data.mensaje;
@@ -59,13 +59,13 @@ export class EmpleadoActivoService {
 
   async actualizarEmpleado(
     cedulaEmpleado: string,
-    empleadoActualizado: IEmpleadoActivo
+    dataActualizado: FormData
   ): Promise<string> {
     const URL_API = this.baseUrl + 'actualizarEmpleado/' + cedulaEmpleado;
     try {
       const response = await this.authService.apiClient.put<any>(
         URL_API,
-        empleadoActualizado
+        dataActualizado
       );
       if (!response.data.esError) {
         return response.data.mensaje;
