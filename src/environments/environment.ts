@@ -1,8 +1,8 @@
 export const environment = {
   production: false,
   idPlatform: 2,
-  projectName: "App Financiero",
-  apiUrl: "http://localhost:5002/api/",
+  projectName: "Core Suárez",
+  apiUrl: "https://cotizador.segurossuarez.com/apiactivos/",
   company: "Seguros Súarez",
   website: "https://segurossuarez.com/",
   mailAddress: "comunicaciones@segurossuarez.com",

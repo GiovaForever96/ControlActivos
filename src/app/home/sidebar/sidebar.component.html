@@ -1,6 +1,6 @@
 <a routerLink="/home/index" class="brand-link" style="color: white;">
     <img src="./assets/dist/img/nuevoLogo.png" alt="Seguros Suárez Logo" class="brand-image img-circle elevation-3">
-    <span class="brand-text font-weight-light color:white">{{appName}}</span>
+    <span class="brand-text font-weight-light color:white" >{{appName}}</span>
 </a>
 
 <div class="sidebar" style="background-image: url('assets/images/fondos/fondo_menu.png');">
@@ -8,7 +8,7 @@
         <ul name="mainParent" class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
             data-accordion="false">
             <!-- Nómina -->
-            <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+            <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['ACT','RH'])">
                 <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-users mr-2" style="color: white;"> </i>
                     <p style="color: white;">Nómina
@@ -16,28 +16,28 @@
                     </p>
                 </a>
                 <ul name="childParent" class="nav nav-treeview">
-                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['ACT','RH'])">
                         <a routerLink="/home/cargos" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon pi pi-briefcase mr-2" style="color: white;"> </i>
                             <p style="color: white;">Cargos</p>
                         </a>
                     </li>
-                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['ACT','RH'])">
                         <a routerLink="/home/departamentos" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon pi pi-sitemap mr-2" style="color: white;"> </i>
                             <p style="color: white;">Departamentos</p>
                         </a>
                     </li>
-                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['ACT','RH'])">
                         <a routerLink="/home/sucursales" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon pi pi-building mr-2" style="color: white;"> </i>
                             <p style="color: white;">Sucursales</p>
                         </a>
                     </li>
-                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['ACT','RH'])">
                         <a routerLink="/home/empleados" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
@@ -123,14 +123,14 @@
                             <p style="color: white;">Gasto Mensual</p>
                         </a>
                     </li>
-                    <li class="nav-item ml-3" >
+                    <li class="nav-item ml-3">
                         <a routerLink="/home/presupuestos/indicadores" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon fa fa-poll-h mr-2" style="color: white;"> </i>
                             <p style="color: white;">Indicadores Financieros</p>
                         </a>
                     </li>
-                    <li class="nav-item ml-3" >
+                    <li class="nav-item ml-3">
                         <a routerLink="/home/presupuestos/dashboard" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon fa fa-chart-pie mr-2" style="color: white;"> </i>
