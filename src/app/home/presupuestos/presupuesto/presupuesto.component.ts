@@ -20,6 +20,7 @@ declare var $: any;
 export class PresupuestoComponent {
 
   @ViewChild('dataTableHistorial', { static: false }) tableHistorial!: ElementRef;
+  @ViewChild('fileInput') fileInput!: ElementRef;
 
   //#region Menu Contextual
   menuItems: MenuItem[] = [];
@@ -368,9 +369,14 @@ export class PresupuestoComponent {
 
   async abrirModal() {
     $('#planModal').modal('show');
+
     $('#planModal').on('shown.bs.modal', async () => {
+      this.lstPlanCuentasPresupuesto = [];
+      this.fileName = '';          // Limpia el texto del label
+      this.fileInput.nativeElement.value = ''; // Limpia el input file real
     });
   }
+
 
   async celdaEditada(plan: any, mes: any, valorNuevo: number) {
     try {
@@ -559,7 +565,7 @@ export class PresupuestoComponent {
         try {
           this.esEdicion = false;
           let idPlan = this.informacionFilaDetalle.idPlan;
-          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
+          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes, this.anioPresupuesto);
           this.detalleForm.reset();
         } catch (error: any) {
           this.toastr.error('Error al cargar los detalles del plan', error.message);
@@ -589,7 +595,7 @@ export class PresupuestoComponent {
         for (const mes of mesesCopiarDetalle) {
           try {
             // Obtener detalle del plan de cuentas
-            this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, mes.id);
+            this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, mes.id, this.anioPresupuesto);
             // Copiar detalles a los meses seleccionados
             for (const informacion of this.lstDetallesPlanCuentaCopia) {
               informacion.mes = mes.id;
@@ -732,7 +738,7 @@ export class PresupuestoComponent {
       let informacionDetalle = this.lstDetallesPlanCuenta[index];
       let lstMesesSeleccionados = this.lstMesesModal.filter(x => x.seleccionado && x.id != 0);
       let detallePlanIdDescripcion = await this.planCuentaService.obtenerDetallePlanCuentaPorIdDescripcion(informacionDetalle.idPlanDetalle,
-        informacionDetalle.descripcionDetalle);
+        informacionDetalle.descripcionDetalle, this.anioPresupuesto);
       //Agregamos la eliminación del mes seleccionado
       this.lstDetallesPlanCuenta.splice(index, 1);
       promesas.push(this.planCuentasService.eliminarDetallePlanCuenta(informacionDetalle.idDetallePlan));
@@ -987,7 +993,7 @@ export class PresupuestoComponent {
         try {
           this.esEdicion = false;
           let idPlan = this.informacionFilaDetalle.idPlan;
-          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes);
+          this.lstDetallesPlanCuenta = await this.planCuentasService.obtenerDetallePlanCuentaPorId(idPlan, idMes, this.anioPresupuesto);
         } catch (error: any) {
           this.toastr.error('Error al cargar los detalles del plan', error.message);
         }

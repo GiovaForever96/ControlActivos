@@ -170,7 +170,6 @@ export class ResultadosComponent {
             this.lstValoresIndicadoresFinancieros.push(valorIndicadorFinanciero);
           });
           let respuestaPeticion = await this.indicadoresService.agregarValorIndicadoresFinancieros(this.lstValoresIndicadoresFinancieros);
-          console.log(respuestaPeticion);
           setTimeout(() => { this.toastr.success("Guardado Exitosamente", respuestaPeticion); }, 1000);
         }
       }

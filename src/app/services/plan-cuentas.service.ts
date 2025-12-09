@@ -147,8 +147,8 @@ export class PlanCuentasService {
     }
   }
 
-  async obtenerDetallePlanCuentaPorId(idPlan: number, idMes: number): Promise<IDetallePlanCuenta[]> {
-    const URL_API = `${this.baseUrlDetalle}obtenerDetallesPorPlan/${idPlan}/${idMes}`;
+  async obtenerDetallePlanCuentaPorId(idPlan: number, idMes: number, anio: number): Promise<IDetallePlanCuenta[]> {
+    const URL_API = `${this.baseUrlDetalle}obtenerDetallesPorPlan/${idPlan}/${idMes}/${anio}`;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
@@ -166,8 +166,8 @@ export class PlanCuentasService {
     }
   }
 
-  async obtenerDetallePlanCuentaPorIdDescripcion(idPlan: number, descripcion: string): Promise<IDetallePlanCuenta[]> {
-    const URL_API = `${this.baseUrlDetalle}obtenerDetallesPorPlanDescripcion/${idPlan}/${descripcion}`;
+  async obtenerDetallePlanCuentaPorIdDescripcion(idPlan: number, descripcion: string, anio: number): Promise<IDetallePlanCuenta[]> {
+    const URL_API = `${this.baseUrlDetalle}obtenerDetallesPorPlanDescripcion/${idPlan}/${descripcion}/${anio}`;
     try {
       const response = await this.authService.apiClient.get<any>(URL_API);
       if (!response.data.esError) {
