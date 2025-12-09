@@ -596,9 +596,7 @@ export class EmpleadosComponent implements OnInit {
 
   validarCedula() {
     let identificacion = this.empleadoForm.get('cedulaEmpleado')?.value;
-    console.log(identificacion);
     let esValidadorCedula = this.esCedulaValida(identificacion);
-    console.log(esValidadorCedula);
     if (!esValidadorCedula) {
       this.toastrService.error('Error en la cédula', 'La cédula no  es valida');
     }
@@ -646,7 +644,6 @@ export class EmpleadosComponent implements OnInit {
 
   enfotoSeleccionada(event: any) {
     const file: File = event.target.files[0];
-    console.log("SE EJECUTÓ onFileSelected");
     if (!file) return;
 
     this.imagenEmpleado = file;
