@@ -70,10 +70,17 @@
                         </a>
                     </li>
                     <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
-                        <a routerLink="/home/custodios" class="nav-link" routerLinkActive="active"
+                        <a routerLink="/home/empleados" class="nav-link" routerLinkActive="active"
                             (click)="SetActive($event)">
                             <i class="nav-icon fas fa-user-alt mr-2" style="color: white;"> </i>
-                            <p style="color: white;">Custodios</p>
+                            <p style="color: white;">Empleados</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/proveedores" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-truck mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Proveedores</p>
                         </a>
                     </li>
                     <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
@@ -81,6 +88,13 @@
                             (click)="SetActive($event)">
                             <i class="nav-icon fas fa-shopping-bag mr-2" style="color: white;"> </i>
                             <p style="color: white;">Bienes</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">
+                        <a routerLink="/home/activos" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+                            <i class="nav-icon fas fa-clipboard-list mr-2" style="color: white;"> </i>
+                            <p style="color: white;">Productos</p>
                         </a>
                     </li>
                     <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'ACT','PRES'])">

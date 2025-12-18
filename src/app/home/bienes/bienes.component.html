@@ -1,0 +1,265 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-clipboard-list mr-2"></i>
+                                Productos
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal(false)">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar producto
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="descargarTable()">
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
+                            <button #btnActualizaProducto type="button" hidden data-toggle="modal"
+                                (click)="AbrirModal(true)">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableProductos class="table table-bordered table-striped" style="width: 100%;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="productoModal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar producto' : 'Agregar producto' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="productoForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="esBienaControl"
+                                            class="col-lg-3 col-md-6 col-sm-12 col-form-label">Tipo:</label>
+                                        <div class="col-lg-9 col-md-6 col-sm-12">
+                                            <select class="form-control"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched}"
+                                                formControlName="esBienaControl" (change)="onChangeTipo()">
+                                                <option [ngValue]="null" disabled>Seleccionar</option>
+                                                <option [ngValue]="true">Bien</option>
+                                                <option [ngValue]="false">Activo</option>
+                                            </select>
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched">
+                                                Debe seleccionar un tipo.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label class="col-lg-4 col-md-6 col-sm-12 col-form-label">Ceco:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="cecoControl" (input)="FilterCecos()"
+                                                (focus)="visualizarCeco = true;" (blur)="HideCecos()"
+                                                [ngClass]="{ 'is-invalid': cecoControl!.errors && cecoControl!.touched }"
+                                                [readOnly]="isEditing">
+                                            <ul *ngIf="visualizarCeco && !isEditing" class="list-group">
+                                                <li class="list-group-item" *ngFor="let ceco of lstCecosFiltrados"
+                                                    (mousedown)="SelectCeco(ceco)">
+                                                    {{ceco.codigoCeco}} - {{ceco.descripcionCeco}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="cecoControl!.errors && cecoControl!.touched">
+                                                Debe seleccionar un ceco.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="codigoProducto"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Código:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('codigoProducto')!.errors && productoForm.get('codigoProducto')!.touched}"
+                                                class="form-control" placeholder="Código del producto"
+                                                formControlName="codigoProducto">
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('codigoProducto')!.errors && productoForm.get('codigoProducto')!.touched">
+                                                El código es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label class="col-lg-2 col-md-6 col-sm-12 col-form-label">Marca:</label>
+                                        <div class="col-lg-10 col-md-6 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="marcaControl" (input)="FilterMarcas()"
+                                                (focus)="visualizarMarca = true;" (blur)="HideMarcas()"
+                                                [ngClass]="{ 'is-invalid': marcaControl!.errors && marcaControl!.touched }">
+                                            <ul *ngIf="visualizarMarca" class="list-group">
+                                                <li class="list-group-item" *ngFor="let marca of lstMarcasFiltradas"
+                                                    (mousedown)="SelectMarca(marca)">
+                                                    {{marca.nombreMarca}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="marcaControl!.errors && marcaControl!.touched">
+                                                Debe seleccionar una marca.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="idModelo"
+                                            class="col-lg-2 col-md-6 col-sm-12 col-form-label">Modelo:</label>
+                                        <div class="col-lg-10 col-md-6 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="modeloControl" (input)="FilterModelos()"
+                                                (focus)="visualizarModelo = true;" (blur)="HideModelos()"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('idModelo')!.errors && productoForm.get('idModelo')!.touched }">
+                                            <ul *ngIf="visualizarModelo" class="list-group">
+                                                <li class="list-group-item" *ngFor="let modelo of lstModelosFiltrados"
+                                                    (mousedown)="SelectModelo(modelo)">
+                                                    {{modelo.nombreModelo}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('idModelo')!.errors && productoForm.get('idModelo')!.touched">
+                                                Debe seleccionar un modelo.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 col-md-12 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="nombreProducto"
+                                            class="col-lg-1 col-md-4 col-sm-12 col-form-label">Nombre:</label>
+                                        <div class="col-lg-11 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('nombreProducto')!.errors && productoForm.get('nombreProducto')!.touched}"
+                                                class="form-control" placeholder="Nombre del producto"
+                                                formControlName="nombreProducto">
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('nombreProducto')!.errors && productoForm.get('nombreProducto')!.touched">
+                                                <div *ngIf="productoForm.get('nombreProducto')!.hasError('maxlength')">
+                                                    La longitud máxima del campo es 100.
+                                                </div>
+                                                <div *ngIf="productoForm.get('nombreProducto')!.hasError('required')">
+                                                    El nombre es obligatorio.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="valorCompraProducto"
+                                            class="col-lg-2 col-md-6 col-sm-12 col-form-label">Valor:</label>
+                                        <div class="col-lg-10 col-md-6 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('valorCompraProducto')!.errors && productoForm.get('valorCompraProducto')!.touched}"
+                                                class="form-control" placeholder="Valor de compra"
+                                                formControlName="valorCompraProducto" (keypress)="soloDecimal($event)">
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('valorCompraProducto')!.errors && productoForm.get('valorCompraProducto')!.touched">
+                                                <div *ngIf="productoForm.get('valorCompraProducto')!.hasError('min')">
+                                                    El valor no puede ser menor a 0.01.
+                                                </div>
+                                                <div
+                                                    *ngIf="productoForm.get('valorCompraProducto')!.hasError('required')">
+                                                    El valor es obligatorio.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="fechaCompraProducto"
+                                            class="col-lg-3 col-md-6 col-sm-12 col-form-label">Fecha Compra:</label>
+                                        <div class="col-lg-9 col-md-6 col-sm-12">
+                                            <input type="date"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('fechaCompraProducto')!.errors && productoForm.get('fechaCompraProducto')!.touched}"
+                                                class="form-control" placeholder="Fecha de compra"
+                                                formControlName="fechaCompraProducto" [max]="fechaMax"
+                                                (blur)="validarFecha($event)">
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('fechaCompraProducto')!.errors && productoForm.get('fechaCompraProducto')!.touched">
+                                                La fecha es obligatoria.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 col-md-12 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="rucProveedor"
+                                            class="col-lg-1 col-md-4 col-sm-12 col-form-label">Proveedor:</label>
+                                        <div class="col-lg-11 col-md-8 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="proveedorControl" (input)="FilterProveedores()"
+                                                (focus)="visualizarProveedor = true;" (blur)="HideProveedores()"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('rucProveedor')!.errors && productoForm.get('rucProveedor')!.touched }">
+                                            <ul *ngIf="visualizarProveedor" class="list-group">
+                                                <li class="list-group-item"
+                                                    *ngFor="let proveedor of lstProveedoresFiltrados"
+                                                    (mousedown)="SelectProveedor(proveedor)">
+                                                    {{proveedor.razonSocial}} - {{proveedor.rucProveedor}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('rucProveedor')!.errors && productoForm.get('rucProveedor')!.touched">
+                                                Debe seleccionar un proveedor.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

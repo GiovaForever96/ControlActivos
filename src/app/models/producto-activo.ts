@@ -16,6 +16,7 @@ export interface IProductoActivo {
     codigoAuxiliar: number,
     modelo?: IModeloActivo,
     ceco?: ICecoActivo
+    rucProveedor?: string
 }
 
 export interface IProductoCustodioActivo {

@@ -1,0 +1,211 @@
+<div class="content-wrapper"
+    style="background-image: url('assets/images/fondos/plataforma_fondo2.png');background-repeat: no-repeat;height: 100%;background-size: cover;">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title" style="padding-top: 5px;">
+                                <i class="fas fa-truck mr-2"></i>
+                                Proveedores
+                            </h3>
+                            <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
+                                (click)="AbrirModal(false)">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar proveedor
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="descargarTable()">
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
+                            <button #btnActualizaProveedor type="button" hidden data-toggle="modal"
+                                (click)="AbrirModal(true)">
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table #dataTableProveedores class="table table-bordered table-striped"
+                                style="width: 100%;">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="modal fade" id="proveedorModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{{ isEditing ? 'Actualizar proveedor' : 'Agregar proveedor' }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form [formGroup]="proveedorForm" (ngSubmit)="OnSubmit()">
+                    <div class="modal-body">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="rucProveedor"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">RUC:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('rucProveedor')!.errors && proveedorForm.get('rucProveedor')!.touched}"
+                                                class="form-control" placeholder="RUC del Proveedor"
+                                                formControlName="rucProveedor" (keyup.enter)="onConsultarRuc()"
+                                                (keydown.Tab)="onConsultarRuc()" (keypress)="soloNumeros($event)"
+                                                maxlength="13" (input)="enRucInput()">
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('rucProveedor')!.errors && proveedorForm.get('rucProveedor')!.touched">
+                                                El RUC es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12 col-md-12 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="razonSocial"
+                                            class="col-lg-2 col-md-4 col-sm-12 col-form-label">Razon:</label>
+                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('razonSocial')!.errors && proveedorForm.get('razonSocial')!.touched}"
+                                                class="form-control" placeholder="Razon Social"
+                                                formControlName="razonSocial">
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('razonSocial')!.errors && proveedorForm.get('razonSocial')!.touched">
+                                                <div
+                                                    *ngIf="proveedorForm.get('razonSocial')!.hasError('maxlength')">
+                                                    La longitud máxima del campo es 255.
+                                                </div>
+                                                <div
+                                                    *ngIf="proveedorForm.get('razonSocial')!.hasError('required')">
+                                                    La razon social es obligatoria.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="idProvincia"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Provincia:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="provinciaControl" (input)="FilterProvincias()"
+                                                (focus)="visualizarProvincia = true;" (blur)="HideProvincia()"
+                                                (blur)="onProvinciaChange(proveedorForm.get('idProvincia')?.value)"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('idProvincia')!.errors && proveedorForm.get('idProvincia')!.touched }">
+                                            <ul *ngIf="visualizarProvincia" class="list-group">
+                                                <li class="list-group-item"
+                                                    *ngFor="let provincia of lstProvinciasFiltrados"
+                                                    (mousedown)="SelectProvincia(provincia)">
+                                                    {{provincia.nombre}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('idProvincia')!.errors && proveedorForm.get('idProvincia')!.touched">
+                                                Debe seleccionar la Provincia.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="idCanton"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Cantón:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text" class="form-control" placeholder="Seleccionar"
+                                                [formControl]="cantonControl" (input)="FilterCantones()"
+                                                (focus)="visualizarCanton = true;" (blur)="HideCantones()"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('idCanton')!.errors && proveedorForm.get('idCanton')!.touched }">
+                                            <ul *ngIf="visualizarCanton" class="list-group">
+                                                <li class="list-group-item" *ngFor="let canton of lstCantonesFiltrados"
+                                                    (mousedown)="SelectCantones(canton)">
+                                                    {{canton.NOMBRE_CANTON}}
+                                                </li>
+                                            </ul>
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('idCanton')!.errors && proveedorForm.get('idCanton')!.touched">
+                                                Debe seleccionar el Cantón.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="direccionProveedor"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Dirección:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('direccionProveedor')!.errors && proveedorForm.get('direccionProveedor')!.touched}"
+                                                class="form-control" placeholder="Dirección del Proveedor"
+                                                formControlName="direccionProveedor">
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('direccionProveedor')!.errors && proveedorForm.get('direccionProveedor')!.touched">
+                                                <div
+                                                    *ngIf="proveedorForm.get('direccionProveedor')!.hasError('maxlength')">
+                                                    La longitud máxima del campo es 255.
+                                                </div>
+                                                <div
+                                                    *ngIf="proveedorForm.get('direccionProveedor')!.hasError('required')">
+                                                    La dirección obligatorio.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <label for="telefonoProveedor"
+                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Teléfono:</label>
+                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': proveedorForm.get('telefonoProveedor')!.errors && proveedorForm.get('telefonoProveedor')!.touched}"
+                                                class="form-control" placeholder="Teléfono del proveedor"
+                                                formControlName="telefonoProveedor" (keypress)="soloNumeros($event)"
+                                                maxlength="10">
+                                            <div class="invalid-feedback"
+                                                *ngIf="proveedorForm.get('telefonoProveedor')!.errors && proveedorForm.get('telefonoProveedor')!.touched">
+                                                <div
+                                                    *ngIf="proveedorForm.get('telefonoProveedor')!.hasError('required')">
+                                                    El Teléfono es obligatorio.
+                                                </div>
+                                                <div
+                                                    *ngIf="proveedorForm.get('telefonoProveedor')?.hasError('minlength')">
+                                                    Debe tener un mínimo de 9 dígitos
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>
+                            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

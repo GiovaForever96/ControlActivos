@@ -17,6 +17,9 @@ import { DepartamentosComponent } from './departamentos/departamentos.component'
 import { CargosComponent } from './cargos/cargos.component';
 import { SucursalesComponent } from './sucursales/sucursales.component';
 import { EmpleadosComponent } from './empleados/empleados.component';
+import { ProveedoresComponent } from './proveedores/proveedores.component';
+import { BienesComponent } from './bienes/bienes.component';
+
 
 
 @NgModule({
@@ -32,7 +35,9 @@ import { EmpleadosComponent } from './empleados/empleados.component';
       DepartamentosComponent,
       CargosComponent,
       SucursalesComponent,
-      EmpleadosComponent
+      EmpleadosComponent,
+      ProveedoresComponent,
+      BienesComponent
    ],
    imports: [
       CommonModule,
@@ -40,7 +45,7 @@ import { EmpleadosComponent } from './empleados/empleados.component';
       RouterModule,
       ReactiveFormsModule,
       HomeRoutingModule,
-      FormsModule
+      FormsModule,
    ],
    providers: [
       AuthService

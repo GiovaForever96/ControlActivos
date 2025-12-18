@@ -57,8 +57,9 @@
                                         ? previewUrl 
                                         : (empleadoForm.get('fotoUrl')?.value 
                                                 ? empleadoForm.get('fotoUrl')?.value
-                                                : 'assets/images/providers/Usuario.png')" class="fotoEmpleado cursor-pointer"
-                                        (click)="fileInput.click()" (error)="enFotoError($event)" [title]="'Seleccione una Imagen'">
+                                                : 'assets/images/providers/Usuario.png')"
+                                        class="fotoEmpleado cursor-pointer" (click)="fileInput.click()"
+                                        (error)="enFotoError($event)" [title]="'Seleccione una Imagen'">
                                     <input type="file" hidden #fileInput (change)="enfotoSeleccionada($event)"
                                         accept=".png,.jpg,.jpeg" />
                                 </div>
@@ -87,7 +88,6 @@
                                         <label for="cedulaEmpleado"
                                             class="col-lg-3 col-md-4 col-sm-12 col-form-label">Cédula:</label>
                                         <div class="col-lg-9 col-md-8 col-sm-12">
-                                            <!-- To-Do: Revisar que método resulta mejor -->
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('cedulaEmpleado')!.errors && empleadoForm.get('cedulaEmpleado')!.touched}"
                                                 class="form-control" placeholder="Cédula del empleado"
@@ -111,10 +111,13 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched}"
                                                 class="form-control" placeholder="Nombre del empleado"
-                                                formControlName="nombreEmpleado" (keypress)="soloLetras($event)">
+                                                formControlName="nombreEmpleado" (keypress)="soloLetras($event)"
+                                                maxlength="30">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('nombreEmpleado')!.errors && empleadoForm.get('nombreEmpleado')!.touched">
-                                                El nombre del empleado es obligatorio.
+                                                <div *ngIf="empleadoForm.get('nombreEmpleado')!.hasError('required')">
+                                                    El nombre es obligatorio.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -128,10 +131,13 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched}"
                                                 class="form-control" placeholder="Apellido del empleado"
-                                                formControlName="apellidoEmpleado" (keypress)="soloLetras($event)">
+                                                formControlName="apellidoEmpleado" (keypress)="soloLetras($event)"
+                                                maxlength="30">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('apellidoEmpleado')!.errors && empleadoForm.get('apellidoEmpleado')!.touched">
-                                                El apellido del empleado es obligatorio.
+                                                <div *ngIf="empleadoForm.get('apellidoEmpleado')!.hasError('required')">
+                                                    El apellido es obligatorio.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -151,7 +157,13 @@
                                                 maxlength="10">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('telefonoEmpleado')!.errors && empleadoForm.get('telefonoEmpleado')!.touched">
-                                                El teléfono del empleado es obligatorio.
+                                                <div *ngIf="empleadoForm.get('telefonoEmpleado')!.hasError('required')">
+                                                    El Teléfono es obligatorio.
+                                                </div>
+                                                <div
+                                                    *ngIf="empleadoForm.get('telefonoEmpleado')?.hasError('minlength')">
+                                                    Debe tener un mínimo de 9 dígitos
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -165,10 +177,17 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': empleadoForm.get('emailEmpleado')!.errors && empleadoForm.get('emailEmpleado')!.touched}"
                                                 class="form-control" placeholder="Email del empleado"
-                                                formControlName="emailEmpleado">
+                                                formControlName="emailEmpleado" 
+                                                maxlength="60">
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('emailEmpleado')!.errors && empleadoForm.get('emailEmpleado')!.touched">
-                                                La estructura del correo electrónico no está bien.
+                                                <div *ngIf="empleadoForm.get('emailEmpleado')!.hasError('required')">
+                                                    El correo electrónico es obligatorio.
+                                                </div>
+                                                <div
+                                                    *ngIf="empleadoForm.get('emailEmpleado')!.hasError('email') && !empleadoForm.get('emailEmpleado')!.hasError('required')">
+                                                    El formato del correo electrónico no es válido.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -199,7 +218,7 @@
                                             </ul>
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('idSucursal')!.errors && empleadoForm.get('idSucursal')!.touched">
-                                                Debe seleccionar la sucursal a la que pertenece el empleado.
+                                                Debe seleccionar la sucursal.
                                             </div>
                                         </div>
                                     </div>
@@ -223,7 +242,7 @@
                                             </ul>
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('idDepartamento')!.errors && empleadoForm.get('idDepartamento')!.touched">
-                                                Debe seleccionar el departamento del empleado.
+                                                Debe seleccionar el departamento.
                                             </div>
                                         </div>
                                     </div>
@@ -248,7 +267,7 @@
                                             </ul>
                                             <div class="invalid-feedback"
                                                 *ngIf="empleadoForm.get('idCargo')!.errors && empleadoForm.get('idCargo')!.touched">
-                                                Debe seleccionar el cargo del empleado.
+                                                Debe seleccionar el cargo.
                                             </div>
                                         </div>
                                     </div>

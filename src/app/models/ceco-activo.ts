@@ -1,5 +1,5 @@
 export interface ICecoActivo {
-    codigoCeco: number,
+    codigoCeco: string,
     descripcionCeco: string,
     estaActivo: boolean
 }

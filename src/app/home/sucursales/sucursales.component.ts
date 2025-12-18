@@ -1,11 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnInit,
-  Renderer2,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
 import { ISucursalActivo } from 'src/app/models/sucursal-activo';
 import { LoadingService } from 'src/app/services/loading.service';
@@ -45,7 +38,7 @@ export class SucursalesComponent implements OnInit {
     private el: ElementRef,
     private renderer: Renderer2,
     private toastrService: ToastrService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     (window as any).EliminarSucursal = this.EliminarSucursal.bind(this);
@@ -59,10 +52,7 @@ export class SucursalesComponent implements OnInit {
   CrearSucursalForm() {
     this.sucursalForm = this.fb.group({
       idSucursal: [0, [Validators.required]],
-      descripcionSucursal: [
-        '',
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      descripcionSucursal: ['', [Validators.required, Validators.maxLength(300)]],
       estaActivo: [true, [Validators.required]],
       esOficina: [false, [Validators.required]],
       direccion: ['', [Validators.required, Validators.maxLength(300)]],
@@ -119,15 +109,9 @@ export class SucursalesComponent implements OnInit {
       this.dataTable.DataTable(this.dtOptions);
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al obtener las sucursales',
-          error.message
-        );
+        this.toastrService.error('Error al obtener las sucursales', error.message);
       } else {
-        this.toastrService.error(
-          'Error al obtener las sucursales',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al obtener las sucursales', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -140,9 +124,8 @@ export class SucursalesComponent implements OnInit {
         (x) => x.idSucursal == idSucursal
       );
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar la sucursal ${
-          sucursalSeleccionada!.descripcionSucursal
-        }?`,
+        title: `¿Estás seguro de eliminar la sucursal ${sucursalSeleccionada!.descripcionSucursal
+          }?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
         showCancelButton: true,
@@ -170,29 +153,17 @@ export class SucursalesComponent implements OnInit {
             window.location.reload();
           });
         } catch (error) {
-          this.toastrService.error(
-            'Error al eliminar el la sucursal del activo',
-            'Solicitar soporte al departamento de TI.'
-          );
+          this.toastrService.error('Error al eliminar el la sucursal', 'Solicitar soporte al departamento de TI.');
           Swal.close();
         }
       } else {
-        this.toastrService.info(
-          'Operación cancelada',
-          'El usuario cancelo la acción de eliminar la sucursal'
-        );
+        this.toastrService.info('Operación cancelada', 'El usuario cancelo la acción de eliminar la sucursal');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al eliminar la sucursal del activo',
-          error.message
-        );
+        this.toastrService.error('Error al eliminar la sucursal', error.message);
       } else {
-        this.toastrService.error(
-          'Error al eliminar la sucursal del activo',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al eliminar la sucursal', 'Solicitar soporte al departamento de TI.');
       }
     }
   }
@@ -203,24 +174,12 @@ export class SucursalesComponent implements OnInit {
     );
     this.sucursalForm = this.fb.group({
       idSucursal: [sucursalActualizar!.idSucursal, [Validators.required]],
-      descripcionSucursal: [
-        sucursalActualizar!.descripcionSucursal,
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      descripcionSucursal: [sucursalActualizar!.descripcionSucursal, [Validators.required, Validators.maxLength(300)]],
       estaActivo: [sucursalActualizar!.estaActivo, [Validators.required]],
       esOficina: [sucursalActualizar!.esOficina, [Validators.required]],
-      direccion: [
-        sucursalActualizar!.direccion,
-        [Validators.required, Validators.maxLength(300)],
-      ],
-      telefono: [
-        sucursalActualizar!.telefono,
-        [Validators.required, Validators.maxLength(10)],
-      ],
-      urlUbicacion: [
-        sucursalActualizar!.urlUbicacion,
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      direccion: [sucursalActualizar!.direccion, [Validators.required, Validators.maxLength(300)]],
+      telefono: [sucursalActualizar!.telefono, [Validators.required, Validators.maxLength(10)]],
+      urlUbicacion: [sucursalActualizar!.urlUbicacion, [Validators.required, Validators.maxLength(300)]],
     });
     this.changeDetector.detectChanges();
     this.btnActualizaSucursal.nativeElement.click();
@@ -256,10 +215,8 @@ export class SucursalesComponent implements OnInit {
       sucursaltelefono.trim().length === 0 ||
       coordenadas.trim().length === 0
     ) {
-      this.toastrService.error(
-        'Error al guardar la sucursal',
-        'Los campos por guardar no pueden estar vacíos o contener solo espacios.'
-      );
+      this.toastrService.error('Error al guardar la sucursal',
+        'Los campos por guardar no pueden estar vacíos o contener solo espacios.');
       return;
     }
     if (this.isEditing) {
@@ -288,32 +245,20 @@ export class SucursalesComponent implements OnInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al agregar la sucursal',
-              error.message
-            );
+            this.toastrService.error('Error al agregar la sucursal', error.message);
           } else {
-            this.toastrService.error(
-              'Error al agregar la sucursal',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al agregar la sucursal', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.sucursalForm);
-        this.toastrService.error(
-          'Error al agregar la sucursal',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al agregar la sucursal', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error('Error al agregar la sucursal', error.message);
       } else {
-        this.toastrService.error(
-          'Error al agregar la sucursal',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al agregar la sucursal', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -340,35 +285,20 @@ export class SucursalesComponent implements OnInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al actualizar la sucursal',
-              error.message
-            );
+            this.toastrService.error('Error al actualizar la sucursal', error.message);
           } else {
-            this.toastrService.error(
-              'Error al actualizar la sucursal',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al actualizar la sucursal', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.sucursalForm);
-        this.toastrService.error(
-          'Error al actualizar la sucursal',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al actualizar la sucursal', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al actualizar la sucursal',
-          error.message
-        );
+        this.toastrService.error('Error al actualizar la sucursal', error.message);
       } else {
-        this.toastrService.error(
-          'Error al actualizar la sucursal',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al actualizar la sucursal', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();

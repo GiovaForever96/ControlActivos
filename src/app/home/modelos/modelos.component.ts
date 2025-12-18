@@ -67,7 +67,8 @@ export class ModelosComponent {
           ...this.GetSpanishLanguage()
         },
         columns: [
-          { title: 'Id.', 
+          {
+            title: 'Id.',
             data: 'idModelo',
             width: '50px',
           },
@@ -167,10 +168,7 @@ export class ModelosComponent {
   OnSubmit() {
     let modelo = this.modeloForm.get('nombreModelo')?.value;
     if (modelo.trim().length === 0) {
-      this.toastrService.error(
-        'Error al guardar el modelo',
-        'El nombre del modelo no puede estar vacío o contener solo espacios.'
-      );
+      this.toastrService.error('Error al guardar el modelo', 'El nombre del modelo no puede estar vacío o contener solo espacios.');
       return;
     }
     if (this.isEditing) {
