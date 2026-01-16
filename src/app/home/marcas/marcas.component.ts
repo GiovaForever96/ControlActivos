@@ -15,6 +15,7 @@ import * as SpanishLanguage from 'src/assets/Spanish.json';
 import { HomeComponent } from '../home.component';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
 declare var $: any;
 
 @Component({
@@ -43,7 +44,7 @@ export class MarcasComponent implements OnInit {
     private el: ElementRef,
     private renderer: Renderer2,
     private toastrService: ToastrService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     (window as any).EliminarMarca = this.EliminarMarca.bind(this);
@@ -74,9 +75,10 @@ export class MarcasComponent implements OnInit {
           ...this.GetSpanishLanguage(),
         },
         columns: [
-          { title: 'Id.', 
+          {
+            title: 'Id.',
             data: 'idMarca',
-            width: '50px', 
+            width: '50px',
           },
           { title: 'Marca', data: 'nombreMarca' },
           {
@@ -119,9 +121,8 @@ export class MarcasComponent implements OnInit {
         (x) => x.idMarca == idMarca
       );
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar la marca ${
-          marcaSeleccionada!.nombreMarca
-        }?`,
+        title: `¿Estás seguro de eliminar la marca ${marcaSeleccionada!.nombreMarca
+          }?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
         showCancelButton: true,
@@ -320,5 +321,31 @@ export class MarcasComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  descargarTable() {
+    const columnas = [
+      { key: 'idMarca', header: 'ID Marca' },
+      { key: 'nombreMarca', header: 'Marca' },
+    ];
+    const marcas = this.lstMarcas.map((mar) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        row[col.header] = mar[col.key as keyof IMarcaActivo];
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(marcas);
+    const headers = Object.keys(marcas[0]);
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(
+        h.length,
+        ...marcas.map((r) => (r[h] ? String(r[h]).length : 0))
+      );
+      return { wch: max + 2 };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Marcas');
+    XLSX.writeFile(wb, 'Marcas.xlsx');
   }
 }

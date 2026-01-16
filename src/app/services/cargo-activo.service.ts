@@ -8,7 +8,7 @@ import { AuthService } from './auth-interceptor.service';
   providedIn: 'root',
 })
 export class CargoActivoService {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
   baseUrl = environment.apiUrl + 'CargoActivo/';
 
   async obtenerCargos(): Promise<ICargoActivo[]> {
@@ -22,9 +22,7 @@ export class CargoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -35,10 +33,7 @@ export class CargoActivoService {
   async insertarCargo(cargoData: ICargoActivo): Promise<string> {
     const URL_API = this.baseUrl + 'agregarCargo';
     try {
-      const response = await this.authService.apiClient.post<any>(
-        URL_API,
-        cargoData
-      );
+      const response = await this.authService.apiClient.post<any>(URL_API, cargoData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -46,9 +41,7 @@ export class CargoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -56,16 +49,10 @@ export class CargoActivoService {
     }
   }
 
-  async actualizarCargo(
-    idCargo: number,
-    cargoActualizado: ICargoActivo
-  ): Promise<string> {
+  async actualizarCargo(idCargo: number, cargoActualizado: ICargoActivo): Promise<string> {
     const URL_API = `${this.baseUrl}actualizarCargo/${idCargo}`;
     try {
-      const response = await this.authService.apiClient.put<any>(
-        URL_API,
-        cargoActualizado
-      );
+      const response = await this.authService.apiClient.put<any>(URL_API, cargoActualizado);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -73,9 +60,7 @@ export class CargoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -94,9 +79,7 @@ export class CargoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);

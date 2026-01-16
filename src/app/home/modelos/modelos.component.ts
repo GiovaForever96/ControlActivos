@@ -10,6 +10,7 @@ import * as SpanishLanguage from 'src/assets/Spanish.json';
 import Swal from 'sweetalert2';
 import { MarcaActivoService } from 'src/app/services/marca-activo.service';
 import { IMarcaActivo } from 'src/app/models/marca-activo';
+import * as XLSX from 'xlsx';
 declare var $: any;
 
 @Component({
@@ -293,6 +294,31 @@ export class ModelosComponent {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
+  }
+
+  descargarTable() {
+    const columnas = [
+      { key: 'idModelo', header: 'ID Modelo' },
+      { key: 'marca.nombreMarca', header: 'Marca' },
+      { key: 'nombreModelo', header: ' Modelo' },
+    ];
+    const modelos = this.lstModelos.map((mod) => {
+      const row: Record<string, any> = {};
+      columnas.forEach((col) => {
+        const valor = col.key.includes('.')? col.key.split('.').reduce((obj: any, key) => obj?.[key], mod as any): (mod as any)[col.key];
+        row[col.header] = valor ?? '';
+      });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(modelos);
+    const headers = Object.keys(modelos[0]);
+    ws['!cols'] = headers.map((h) => {
+      const max = Math.max(h.length, ...modelos.map((r) => (r[h] ? String(r[h]).length : 0)));
+      return { wch: max + 2 };
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Modelos');
+    XLSX.writeFile(wb, 'Modelos.xlsx');
   }
 
 }

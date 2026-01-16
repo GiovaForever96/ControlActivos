@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IProductoActivo, IProductoCustodioActivo } from 'src/app/models/producto-activo';
+import { IProductoActivo } from 'src/app/models/producto-activo';
 import { LoadingService } from 'src/app/services/loading.service';
 import { ProductoActivoService } from 'src/app/services/producto-activo.service';
 import { ToastrService } from 'src/app/services/toastr.service';
@@ -27,6 +27,7 @@ export class BienesComponent implements OnInit {
 
   @ViewChild('dataTableProductos', { static: false }) tableProductos!: ElementRef;
   @ViewChild('btnActualizaProducto', { static: true }) btnActualizaProducto!: ElementRef;
+  @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
 
   isEditing: boolean = false;
   lstProductos: IProductoActivo[] = [];
@@ -51,6 +52,11 @@ export class BienesComponent implements OnInit {
   visualizarCeco = false;
   fechaMax: string = new Date().toISOString().split('T')[0];
   fechaInvalida = false;
+  previewUrl: string | ArrayBuffer | null = null;
+  imagenProducto: File | null = null;
+  cameras: MediaDeviceInfo[] = [];
+  selectedDevice: MediaDeviceInfo | null = null;
+  seleccionaFoto: boolean = false;
 
   constructor(
     private loadingService: LoadingService,
@@ -90,7 +96,9 @@ export class BienesComponent implements OnInit {
       estaActivo: [true, [Validators.required]],
       idModelo: ['', [Validators.required]],
       codigoCeco: ['', [Validators.required]],
-      rucProveedor: ['', [Validators.required]]
+      rucProveedor: ['', [Validators.required]],
+      fotoProducto: [{ value: '', disabled: true }],
+      fotoUrl: ['', [Validators.required]]
     });
   }
 
@@ -238,7 +246,9 @@ export class BienesComponent implements OnInit {
       estaActivo: [productoActualizar!.estaActivo, [Validators.required]],
       idModelo: [productoActualizar!.idModelo, [Validators.required]],
       codigoCeco: [productoActualizar!.codigoCeco, [Validators.required]],
-      rucProveedor: [productoActualizar!.rucProveedor, [Validators.required]]
+      rucProveedor: [productoActualizar!.rucProveedor, [Validators.required]],
+      fotoProducto: [productoActualizar!.fotoProducto, [Validators.required, Validators.maxLength(200)],],
+      fotoUrl: [productoActualizar!.fotoUrl]
     });
 
     let informacionProveedor = this.lstProveedores.find((x) => x.rucProveedor == productoActualizar?.rucProveedor);
@@ -249,6 +259,7 @@ export class BienesComponent implements OnInit {
     this.SelectModelo(informacionModelo!);
     this.productoForm.get('codigoProducto')?.disable();
     this.productoForm.get('esBienaControl')?.disable();
+    this.productoForm.get('fotoProducto')?.disable();
     this.isEditing = true;
     let informacionCeco = this.lstCecos.find((x) => x.codigoCeco == productoActualizar?.codigoCeco);
     this.SelectCeco(informacionCeco!);
@@ -261,8 +272,10 @@ export class BienesComponent implements OnInit {
   }
 
   AbrirModal(esEdicion: boolean) {
+    this.listCameras();
     this.lstModelosFiltrados = [];
     this.isEditing = esEdicion;
+    this.previewUrl = null;
     if (!esEdicion) {
       this.CrearProductoForm();
     }
@@ -272,6 +285,11 @@ export class BienesComponent implements OnInit {
   OnSubmit(): void {
     this.marcaControl.markAsTouched();
     this.cecoControl.markAsTouched();
+    const foto = this.productoForm.get('fotoProducto')?.value;
+    if (!foto) {
+      this.toastrService.error('Error en la foto', 'Debe seleccionar una foto');
+      return;
+    }
     const valor = this.productoForm.get('valorCompraProducto')?.value;
     if (valor < 0.01) {
       this.appComponent.validateAllFormFields(this.productoForm);
@@ -284,7 +302,7 @@ export class BienesComponent implements OnInit {
       return;
     }
     const nombreProducto = this.productoForm.get('nombreProducto')?.value.trim()
-    if (!nombreProducto || nombreProducto.length < 1 ){
+    if (!nombreProducto || nombreProducto.length < 1) {
       this.toastrService.error('Error en el nombre', 'No puede contener solo espacios.');
       return;
     }
@@ -300,9 +318,17 @@ export class BienesComponent implements OnInit {
       this.loadingService.showLoading();
       if (this.productoForm.valid) {
         try {
-          const productoData: IProductoActivo = this.productoForm.getRawValue();
+          const productoData = this.productoForm.getRawValue();
           productoData.nombreProducto = productoData.nombreProducto.trim().toUpperCase();
-          const mensajeInsercion = await this.productosService.insertarProducto(productoData);
+          const formData = new FormData();
+          for (const key in productoData) {
+            if (productoData[key] != null)
+              formData.append(key, productoData[key]);
+          }
+          if (this.imagenProducto) {
+            formData.append('ImagenProducto', this.imagenProducto);
+          }
+          const mensajeInsercion = await this.productosService.insertarProducto(formData);
           Swal.fire({ text: mensajeInsercion, icon: 'success', }).then(() => { window.location.reload(); });
         } catch (error) {
           if (error instanceof Error) {
@@ -342,8 +368,17 @@ export class BienesComponent implements OnInit {
         try {
           const productoActualizadoData: IProductoActivo = this.productoForm.getRawValue();
           productoActualizadoData.nombreProducto = productoActualizadoData.nombreProducto.trim().toUpperCase();
-          const mensajeActualizacion = await this.productosService.actualizarProducto(
-            productoActualizadoData.idProducto, productoActualizadoData);
+          const formData = new FormData();
+          for (const key in productoActualizadoData) {
+            const value = productoActualizadoData[key as keyof IProductoActivo];
+            if (value != null) {
+              formData.append(key, value.toString());
+            }
+          }
+          if (this.imagenProducto) {
+            formData.append('ImagenProducto', this.imagenProducto);
+          }
+          const mensajeActualizacion = await this.productosService.actualizarProducto(productoActualizadoData.idProducto, formData);
           Swal.fire({ text: mensajeActualizacion, icon: 'success', }).then(() => { window.location.reload(); });
         } catch (error) {
           if (error instanceof Error) {
@@ -508,15 +543,15 @@ export class BienesComponent implements OnInit {
 
   descargarTable() {
     const columnas = [
-      { key: 'idProducto', header: 'Id' },
-      { key: 'codigoProducto', header: 'Código' },
+      { key: 'codigoProducto', header: 'Código Producto' },
       { key: 'nombreProducto', header: 'Nombre' },
       { key: 'fechaCompraProducto', header: 'Fecha de Compra' },
       { key: 'valorCompraProducto', header: 'Valor de Compra' },
       { key: 'esBienaControl', header: 'Es Bien' },
       { key: 'nombreMarca', header: 'Marca' },
       { key: 'nombreModelo', header: 'Modelo' },
-      { key: 'descripcionCeco', header: 'Ceco' },
+      { key: 'descripcionCeco', header: 'Descripción Ceco' },
+      { key: 'codigoCeco', header: 'Código Ceco' },
       { key: 'razonSocial', header: 'Proveedor' },
     ];
 
@@ -546,4 +581,111 @@ export class BienesComponent implements OnInit {
     XLSX.utils.book_append_sheet(wb, ws, 'Productos');
     XLSX.writeFile(wb, 'Productos.xlsx');
   }
+
+  enfotoSeleccionada(event: any) {
+    const file: File = event.target.files[0];
+    if (!file) return;
+    this.imagenProducto = file;
+    let fileName = file.name;
+    // Cambiar los espacios por _
+    fileName = fileName.replace(/\s+/g, '_');
+    fileName = fileName.trim();
+    // Actualizar el formControl con nombre de la foto
+    this.productoForm.get('fotoProducto')?.setValue(fileName);
+    this.productoForm.get('fotoUrl')?.setValue(fileName);
+    // Vista previa de la imagen local y si no está en el servidor en Editar se mostrará el default Usuario.png 
+    const reader = new FileReader();
+    reader.onload = () => { this.previewUrl = reader.result; };
+    reader.readAsDataURL(file);
+    $('#fotoModal').modal('hide');
+  }
+
+  enFotoError(event: any) {
+    event.target.src = 'assets/images/providers/Producto.png';
+  }
+
+  ModalFoto() {
+    $('#fotoModal').modal('show');
+  }
+
+  tomarFoto() {
+    const video = document.querySelector('video');
+    if (video) {
+      // Apagar la cámara 
+      const stream = video.srcObject as MediaStream;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      // Con canvas tomar la foto
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const fotoBase64 = canvas.toDataURL('image/jpeg');
+
+        // 3. Nombre para el archivo
+        const nombreArchivo = `Producto_${new Date().getTime()}.jpg`;
+
+        this.productoForm.get('fotoProducto')?.setValue(nombreArchivo);
+        this.productoForm.get('fotoUrl')?.setValue(fotoBase64);
+        this.previewUrl = fotoBase64;
+
+        // Convertir a File para enviar al Back
+        this.imagenProducto = this.convertiraFile(fotoBase64, nombreArchivo);
+
+        this.seleccionaFoto = false;
+        $('#fotoModal').modal('hide');
+      }
+    }
+  }
+
+  // Método para convertir de base64 a File para el BackEnd
+  convertiraFile(base64: string, nombre: string): File {
+    const byteString = atob(base64.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new File([ab], nombre, { type: 'image/jpeg' });
+  }
+
+  onCamerasFound(devices: MediaDeviceInfo[]): void {
+    // Filtrar las cámaras por tipo y seleccionar la trasera
+    const rearCamera = devices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
+    if (rearCamera) {
+      this.selectedDevice = rearCamera;
+    } else if (devices.length > 0) {
+      // Como fallback, seleccionar la primera cámara disponible
+      this.selectedDevice = devices[0];
+    }
+  }
+
+  listCameras(): void {
+    navigator.mediaDevices.enumerateDevices().then(devices => {
+      this.cameras = devices.filter(device => device.kind === 'videoinput');
+      if (this.cameras.length > 0) {
+        // Selecciona la primera cámara disponible por defecto
+        this.selectedDevice = this.cameras[0];
+      }
+    }).catch(err => {
+      console.error('Error al enumerar dispositivos:', err);
+    });
+  }
+
+  onCameraSelected(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const deviceId = selectElement.value;
+    this.selectedDevice = this.cameras.find(device => device.deviceId === deviceId) || null;
+  }
+
+  onCamerasNotFound(): void {
+    this.toastrService.error('Inicializar cámara', 'No se encontraron cámaras');
+  }
+
 }

@@ -51,53 +51,72 @@
                 <form [formGroup]="productoForm" (ngSubmit)="OnSubmit()">
                     <div class="modal-body">
                         <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 col-md-6 col-sm-12">
+                                    <div class="mb-3">
+                                        <div class="row align-items-center">
+                                            <label for="esBienaControl"
+                                                class="col-lg-2 col-md-6 col-sm-12 col-form-label">Tipo:</label>
+                                            <div class="col-lg-10 col-md-6 col-sm-12">
+                                                <select class="form-control"
+                                                    [ngClass]="{ 'is-invalid': productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched}"
+                                                    formControlName="esBienaControl" (change)="onChangeTipo()">
+                                                    <option [ngValue]="null" disabled>Seleccionar</option>
+                                                    <option [ngValue]="true">Bien</option>
+                                                    <option [ngValue]="false">Activo</option>
+                                                </select>
+                                                <div class="invalid-feedback"
+                                                    *ngIf="productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched">
+                                                    Debe seleccionar un tipo.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="row align-items-center">
+                                            <label class="col-lg-2 col-md-6 col-sm-12 col-form-label">Ceco:</label>
+                                            <div class="col-lg-10 col-md-6 col-sm-12">
+                                                <input type="text" class="form-control" placeholder="Seleccionar"
+                                                    [formControl]="cecoControl" (input)="FilterCecos()"
+                                                    (focus)="visualizarCeco = true;" (blur)="HideCecos()"
+                                                    [ngClass]="{ 'is-invalid': cecoControl!.errors && cecoControl!.touched }"
+                                                    [readOnly]="isEditing">
+                                                <ul *ngIf="visualizarCeco && !isEditing" class="list-group">
+                                                    <li class="list-group-item" *ngFor="let ceco of lstCecosFiltrados"
+                                                        (mousedown)="SelectCeco(ceco)">
+                                                        {{ceco.codigoCeco}} - {{ceco.descripcionCeco}}
+                                                    </li>
+                                                </ul>
+                                                <div class="invalid-feedback"
+                                                    *ngIf="cecoControl!.errors && cecoControl!.touched">
+                                                    Debe seleccionar un ceco.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-12 text-center">
+                                    <div class="row justify-content-center">
+                                        <div class="col-lg-6"></div>
+                                        <div class="col-lg-6 col-md-8 col-sm-12">
+                                            <img [src]="previewUrl || productoForm.get('fotoUrl')?.value || 'assets/images/providers/Producto.png'"
+                                                class="fotoProducto cursor-pointer" (click)="ModalFoto()"
+                                                (error)="enFotoError($event)" [title]="'Seleccione una Imagen'">
+                                            <input type="file" hidden #fileInput (change)="enfotoSeleccionada($event)"
+                                                accept=".png,.jpg,.jpeg" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
-                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
-                                    <div class="row align-items-center">
-                                        <label for="esBienaControl"
-                                            class="col-lg-3 col-md-6 col-sm-12 col-form-label">Tipo:</label>
-                                        <div class="col-lg-9 col-md-6 col-sm-12">
-                                            <select class="form-control"
-                                                [ngClass]="{ 'is-invalid': productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched}"
-                                                formControlName="esBienaControl" (change)="onChangeTipo()">
-                                                <option [ngValue]="null" disabled>Seleccionar</option>
-                                                <option [ngValue]="true">Bien</option>
-                                                <option [ngValue]="false">Activo</option>
-                                            </select>
-                                            <div class="invalid-feedback"
-                                                *ngIf="productoForm.get('esBienaControl')!.errors && productoForm.get('esBienaControl')!.touched">
-                                                Debe seleccionar un tipo.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
-                                    <div class="row align-items-center">
-                                        <label class="col-lg-4 col-md-6 col-sm-12 col-form-label">Ceco:</label>
-                                        <div class="col-lg-8 col-md-6 col-sm-12">
-                                            <input type="text" class="form-control" placeholder="Seleccionar"
-                                                [formControl]="cecoControl" (input)="FilterCecos()"
-                                                (focus)="visualizarCeco = true;" (blur)="HideCecos()"
-                                                [ngClass]="{ 'is-invalid': cecoControl!.errors && cecoControl!.touched }"
-                                                [readOnly]="isEditing">
-                                            <ul *ngIf="visualizarCeco && !isEditing" class="list-group">
-                                                <li class="list-group-item" *ngFor="let ceco of lstCecosFiltrados"
-                                                    (mousedown)="SelectCeco(ceco)">
-                                                    {{ceco.codigoCeco}} - {{ceco.descripcionCeco}}
-                                                </li>
-                                            </ul>
-                                            <div class="invalid-feedback"
-                                                *ngIf="cecoControl!.errors && cecoControl!.touched">
-                                                Debe seleccionar un ceco.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                                <div class="col-lg-6 col-md-6 col-sm-12 form-group">
                                     <div class="row align-items-center">
                                         <label for="codigoProducto"
-                                            class="col-lg-4 col-md-6 col-sm-12 col-form-label">Código:</label>
-                                        <div class="col-lg-8 col-md-6 col-sm-12">
+                                            class="col-lg-2 col-md-6 col-sm-12 col-form-label">Código:</label>
+                                        <div class="col-lg-10 col-md-6 col-sm-12">
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': productoForm.get('codigoProducto')!.errors && productoForm.get('codigoProducto')!.touched}"
                                                 class="form-control" placeholder="Código del producto"
@@ -105,6 +124,29 @@
                                             <div class="invalid-feedback"
                                                 *ngIf="productoForm.get('codigoProducto')!.errors && productoForm.get('codigoProducto')!.touched">
                                                 El código es obligatorio.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <div class="col-lg-2"></div>
+                                        <div class="col-lg-10 col-md-8 col-sm-12">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6 col-sm-12 form-group">
+                                    <div class="row align-items-center">
+                                        <div class="col-lg-1"></div>
+                                        <div class="col-lg-8 col-md-8 col-sm-12">
+                                            <input type="text"
+                                                [ngClass]="{ 'is-invalid': productoForm.get('fotoProducto')!.errors && productoForm.get('fotoProducto')!.touched}"
+                                                class="form-control" placeholder="URL de la foto"
+                                                formControlName="fotoProducto">
+                                            <div class="invalid-feedback"
+                                                *ngIf="productoForm.get('fotoProducto')!.errors && productoForm.get('fotoProducto')!.touched">
+                                                La URL de la foto es obligatoria.
                                             </div>
                                         </div>
                                     </div>
@@ -249,7 +291,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                     <div class="modal-footer text-end">
@@ -259,6 +300,47 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="fotoModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div class="row align-items-center" *ngIf="!seleccionaFoto">
+                            <button type="button" class="btn btn-primary btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="fileInput.click()">
+                                <i class="fas fa-upload mr-2"></i> Cargar Foto
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="seleccionaFoto=!seleccionaFoto">
+                                <i class="fas fa-camera mr-2"></i> Tomar Foto
+                            </button>
+                        </div>
+                        <div *ngIf="seleccionaFoto">
+                            <select id="cameraSelect" (change)="onCameraSelected($event)">
+                                <option *ngFor="let device of cameras" [value]="device.deviceId">
+                                    {{ device.label || 'Cámara sin nombre' }}
+                                </option>
+                            </select>
+                            <zxing-scanner (camerasFound)="onCamerasFound($event)"
+                                (camerasNotFound)="onCamerasNotFound()" [device]="selectedDevice!">
+                            </zxing-scanner>
+                            <div class="row align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm float-right mr-2"
+                                    data-toggle="modal" (click)="tomarFoto()">
+                                    <i class="fas fa-camera mr-2"></i> Tomar foto
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm float-right mr-2"
+                                    data-toggle="modal" (click)="seleccionaFoto=!seleccionaFoto">
+                                    <i class="fas fa-arrow-left mr-2"></i> Regresar
+                                </button>
+                            </div>
+                            <canvas #canvasElement style="display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

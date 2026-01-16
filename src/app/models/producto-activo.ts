@@ -1,6 +1,8 @@
 import { ICecoActivo } from "./ceco-activo";
 import { ICustodioActivo } from "./custodio-activo";
+import { IEmpleadoActivo } from "./empleado-activo";
 import { IModeloActivo } from "./modelo-activo";
+import { ITipoActaActivo } from "./tipo-acta-activo";
 
 export interface IProductoActivo {
     idProducto: number,
@@ -11,12 +13,17 @@ export interface IProductoActivo {
     esBienaControl: boolean,
     estaActivo: boolean,
     motivoBaja: string,
+    idMarca: number,
     idModelo: number,
     codigoCeco: string,
     codigoAuxiliar: number,
     modelo?: IModeloActivo,
     ceco?: ICecoActivo
-    rucProveedor?: string
+    rucProveedor?: string,
+    fotoProducto: string,
+    fotoUrl: string,
+    nombreModelo?: string
+    nombreMarca?: string
 }
 
 export interface IProductoCustodioActivo {
@@ -51,4 +58,50 @@ export interface IRegistro {
 export interface IInformacionQR {
     urlInformacion: string,
     codigoProducto: string
+}
+
+export interface IProductoEmpleadoActivo {
+    idProductoEmpleado: number,
+    fechaGeneracion: Date,
+    cedulaEmpleado: string
+    idProducto: number,
+    idTipoActa: number,
+    idEmpleadoEntrega: string,
+    idEmpleadoRecibe: string,
+    observacion: string,
+    estaActivo: boolean,
+    empleado?: IEmpleadoActivo,
+    producto?: IProductoActivo,
+}
+
+export interface IMaestroActa {
+    idMaestroActa: number,
+    fechaGeneracion: Date,
+    idTipoActa: number,
+    empleadoEntrega: string,
+    empleadoRecibe: string,
+    estaActivo: boolean,
+    observacion: string,
+    tipoActa?: ITipoActaActivo,
+    empleado?: IEmpleadoActivo,
+}
+
+export interface IDetalleActa {
+    idDetalleActa: number,
+    idMaestroActa: number,
+    idProducto: number,
+    estaActivo: boolean,
+    producto?: IProductoActivo,
+    maestroActa?: IMaestroActa
+}
+
+export interface IProductoEmpleadoResponse {
+    idProductoEmpleado: number,
+    cedulaEmpleado: string
+    idProducto: number,
+    codigoProducto: string,
+    nombreProducto: string,
+    nombreModelo?: string
+    nombreMarca?: string
+    estaActivo: boolean,
 }

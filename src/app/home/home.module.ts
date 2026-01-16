@@ -19,6 +19,7 @@ import { SucursalesComponent } from './sucursales/sucursales.component';
 import { EmpleadosComponent } from './empleados/empleados.component';
 import { ProveedoresComponent } from './proveedores/proveedores.component';
 import { BienesComponent } from './bienes/bienes.component';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 
 
@@ -46,6 +47,7 @@ import { BienesComponent } from './bienes/bienes.component';
       ReactiveFormsModule,
       HomeRoutingModule,
       FormsModule,
+      ZXingScannerModule 
    ],
    providers: [
       AuthService

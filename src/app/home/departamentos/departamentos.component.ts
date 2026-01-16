@@ -45,7 +45,7 @@ export class DepartamentosComponent implements OnInit {
     private el: ElementRef,
     private renderer: Renderer2,
     private toastrService: ToastrService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     (window as any).EliminarDepartamento = this.EliminarDepartamento.bind(this);
@@ -59,10 +59,7 @@ export class DepartamentosComponent implements OnInit {
   CrearDepartamentoForm() {
     this.departamentoForm = this.fb.group({
       idDepartamento: [0, [Validators.required]],
-      nombreDepartamento: [
-        '',
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      nombreDepartamento: ['', [Validators.required, Validators.maxLength(300)]],
       estaActivo: [true, [Validators.required]],
     });
   }
@@ -108,15 +105,9 @@ export class DepartamentosComponent implements OnInit {
       this.dataTable.DataTable(this.dtOptions);
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al obtener los departamentos',
-          error.message
-        );
+        this.toastrService.error('Error al obtener los departamentos', error.message);
       } else {
-        this.toastrService.error(
-          'Error al obtener los departamentos',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al obtener los departamentos', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -125,13 +116,9 @@ export class DepartamentosComponent implements OnInit {
 
   async EliminarDepartamento(idDepartamento: number) {
     try {
-      const departamentoSeleccionado = this.lstDepartamentos.find(
-        (x) => x.idDepartamento == idDepartamento
-      );
+      const departamentoSeleccionado = this.lstDepartamentos.find((x) => x.idDepartamento == idDepartamento);
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar el departamento ${
-          departamentoSeleccionado!.nombreDepartamento
-        }?`,
+        title: `¿Estás seguro de eliminar el departamento ${departamentoSeleccionado!.nombreDepartamento}?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
         showCancelButton: true,
@@ -145,15 +132,10 @@ export class DepartamentosComponent implements OnInit {
           title: 'Eliminando departamento...',
           text: 'Por favor espere.',
           allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
+          didOpen: () => { Swal.showLoading(); },
         });
         try {
-          const mensajeEliminacion =
-            await this.departamentosService.eliminarDepartamento(
-              idDepartamento
-            );
+          const mensajeEliminacion = await this.departamentosService.eliminarDepartamento(idDepartamento);
           Swal.fire({
             text: `${mensajeEliminacion}`,
             icon: 'success',
@@ -161,46 +143,26 @@ export class DepartamentosComponent implements OnInit {
             window.location.reload();
           });
         } catch (error) {
-          this.toastrService.error(
-            'Error al eliminar el departamento del activo',
-            'Solicitar soporte al departamento de TI.'
-          );
+          this.toastrService.error('Error al eliminar el departamento del activo', 'Solicitar soporte al departamento de TI.');
           Swal.close();
         }
       } else {
-        this.toastrService.info(
-          'Operación cancelada',
-          'El usuario cancelo la acción de eliminar el departamento'
-        );
+        this.toastrService.info('Operación cancelada', 'El usuario cancelo la acción de eliminar el departamento');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al eliminar el departamento del activo',
-          error.message
-        );
+        this.toastrService.error('Error al eliminar el departamento del activo', error.message);
       } else {
-        this.toastrService.error(
-          'Error al eliminar el departamento del activo',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al eliminar el departamento del activo', 'Solicitar soporte al departamento de TI.');
       }
     }
   }
 
   EditarDepartamento(idDepartamento: number) {
-    const departamentoActualizar = this.lstDepartamentos.find(
-      (x) => x.idDepartamento == idDepartamento
-    );
+    const departamentoActualizar = this.lstDepartamentos.find((x) => x.idDepartamento == idDepartamento);
     this.departamentoForm = this.fb.group({
-      idDepartamento: [
-        departamentoActualizar!.idDepartamento,
-        [Validators.required],
-      ],
-      nombreDepartamento: [
-        departamentoActualizar!.nombreDepartamento,
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      idDepartamento: [departamentoActualizar!.idDepartamento, [Validators.required]],
+      nombreDepartamento: [departamentoActualizar!.nombreDepartamento, [Validators.required, Validators.maxLength(300)]],
       estaActivo: [departamentoActualizar!.estaActivo, [Validators.required]],
     });
     this.changeDetector.detectChanges();
@@ -222,10 +184,7 @@ export class DepartamentosComponent implements OnInit {
   OnSubmit(): void {
     let departamento = this.departamentoForm.get('nombreDepartamento')?.value;
     if (departamento.trim().length === 0) {
-      this.toastrService.error(
-        'Error al guardar el departamento',
-        'El nombre del departamento no puede estar vacío o contener solo espacios.'
-      );
+      this.toastrService.error('Error al guardar el departamento', 'El nombre del departamento no puede estar vacío o contener solo espacios.');
       return;
     }
     if (this.isEditing) {
@@ -240,51 +199,26 @@ export class DepartamentosComponent implements OnInit {
       this.loadingService.showLoading();
       if (this.departamentoForm.valid) {
         try {
-          const departamentoData: IDepartamentoActivo =
-            this.departamentoForm.value;
-          departamentoData.nombreDepartamento =
-            departamentoData.nombreDepartamento.trim();
-          const mensajeInsercion =
-            await this.departamentosService.insertarDepartamento(
-              departamentoData
-            );
-          Swal.fire({
-            text: mensajeInsercion,
-            icon: 'success',
-          }).then(() => {
-            window.location.reload();
-          });
+          const departamentoData: IDepartamentoActivo = this.departamentoForm.value;
+          departamentoData.nombreDepartamento = departamentoData.nombreDepartamento.trim();
+          const mensajeInsercion = await this.departamentosService.insertarDepartamento(departamentoData);
+          Swal.fire({ text: mensajeInsercion, icon: 'success' }).then(() => { window.location.reload(); });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al agregar el departamento',
-              error.message
-            );
+            this.toastrService.error('Error al agregar el departamento', error.message);
           } else {
-            this.toastrService.error(
-              'Error al agregar el departamento',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al agregar el departamento', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.departamentoForm);
-        this.toastrService.error(
-          'Error al agregar el departamento',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al agregar el departamento', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al agregar el departamento',
-          error.message
-        );
+        this.toastrService.error('Error al agregar el departamento', error.message);
       } else {
-        this.toastrService.error(
-          'Error al agregar el departamento',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al agregar el departamento', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -296,13 +230,9 @@ export class DepartamentosComponent implements OnInit {
       this.loadingService.showLoading();
       if (this.departamentoForm.valid) {
         try {
-          const departamentoActualizadoData: IDepartamentoActivo =
-            this.departamentoForm.value;
-          const mensajeActualizacion =
-            await this.departamentosService.actualizarDepartamento(
-              departamentoActualizadoData.idDepartamento,
-              departamentoActualizadoData
-            );
+          const departamentoActualizadoData: IDepartamentoActivo = this.departamentoForm.value;
+          const mensajeActualizacion = await this.departamentosService.actualizarDepartamento(departamentoActualizadoData.idDepartamento, 
+            departamentoActualizadoData);
           Swal.fire({
             text: mensajeActualizacion,
             icon: 'success',
@@ -311,35 +241,20 @@ export class DepartamentosComponent implements OnInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al actualizar el departamento',
-              error.message
-            );
+            this.toastrService.error('Error al actualizar el departamento', error.message);
           } else {
-            this.toastrService.error(
-              'Error al actualizar el departamento',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al actualizar el departamento', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.departamentoForm);
-        this.toastrService.error(
-          'Error al actualizar el departamento',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al actualizar el departamento', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al actualizar el departamento',
-          error.message
-        );
+        this.toastrService.error('Error al actualizar el departamento', error.message);
       } else {
-        this.toastrService.error(
-          'Error al actualizar el departamento',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al actualizar el departamento', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();

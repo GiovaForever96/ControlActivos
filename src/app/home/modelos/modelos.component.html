@@ -22,6 +22,10 @@
                                 (click)="AbrirModal(false)">
                                 <i class="fas fa-plus-circle mr-2"></i> Agregar modelo
                             </button>
+                            <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
+                                (click)="descargarTable()">
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
                             <button #btnActualizaModelo type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">
                             </button>

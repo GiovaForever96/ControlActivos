@@ -45,7 +45,7 @@ export class CargosComponent implements OnInit {
     private el: ElementRef,
     private renderer: Renderer2,
     private toastrService: ToastrService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     (window as any).EliminarCargo = this.EliminarCargo.bind(this);
@@ -106,9 +106,7 @@ export class CargosComponent implements OnInit {
       if (error instanceof Error) {
         this.toastrService.error('Error al obtener los cargos', error.message);
       } else {
-        this.toastrService.error(
-          'Error al obtener los cargos',
-          'Solicitar soporte al departamento de TI.'
+        this.toastrService.error('Error al obtener los cargos', 'Solicitar soporte al departamento de TI.'
         );
       }
     } finally {
@@ -118,13 +116,9 @@ export class CargosComponent implements OnInit {
 
   async EliminarCargo(idCargo: number) {
     try {
-      const cargoSeleccionado = this.lstCargos.find(
-        (x) => x.idCargo == idCargo
-      );
+      const cargoSeleccionado = this.lstCargos.find((x) => x.idCargo == idCargo);
       const result = await Swal.fire({
-        title: `¿Estás seguro de eliminar el cargo ${
-          cargoSeleccionado!.nombreCargo
-        }?`,
+        title: `¿Estás seguro de eliminar el cargo ${cargoSeleccionado!.nombreCargo}?`,
         text: 'Esta acción no se podrá revertir.',
         icon: 'warning',
         showCancelButton: true,
@@ -143,9 +137,7 @@ export class CargosComponent implements OnInit {
           },
         });
         try {
-          const mensajeEliminacion = await this.cargosService.eliminarCargo(
-            idCargo
-          );
+          const mensajeEliminacion = await this.cargosService.eliminarCargo(idCargo);
           Swal.fire({
             text: `${mensajeEliminacion}`,
             icon: 'success',
@@ -153,29 +145,17 @@ export class CargosComponent implements OnInit {
             window.location.reload();
           });
         } catch (error) {
-          this.toastrService.error(
-            'Error al eliminar el cargo del activo',
-            'Solicitar soporte al departamento de TI.'
-          );
+          this.toastrService.error('Error al eliminar el cargo del activo', 'Solicitar soporte al departamento de TI.');
           Swal.close();
         }
       } else {
-        this.toastrService.info(
-          'Operación cancelada',
-          'El usuario cancelo la acción de eliminar el cargo'
-        );
+        this.toastrService.info('Operación cancelada', 'El usuario cancelo la acción de eliminar el cargo');
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.toastrService.error(
-          'Error al eliminar el cargo del activo',
-          error.message
-        );
+        this.toastrService.error('Error al eliminar el cargo del activo', error.message);
       } else {
-        this.toastrService.error(
-          'Error al eliminar el cargo del activo',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al eliminar el cargo del activo', 'Solicitar soporte al departamento de TI.');
       }
     }
   }
@@ -184,10 +164,7 @@ export class CargosComponent implements OnInit {
     const cargoActualizar = this.lstCargos.find((x) => x.idCargo == idCargo);
     this.cargoForm = this.fb.group({
       idCargo: [cargoActualizar!.idCargo, [Validators.required]],
-      nombreCargo: [
-        cargoActualizar!.nombreCargo,
-        [Validators.required, Validators.maxLength(300)],
-      ],
+      nombreCargo: [cargoActualizar!.nombreCargo, [Validators.required, Validators.maxLength(300)]],
       estaActivo: [cargoActualizar!.estaActivo, [Validators.required]],
     });
     this.changeDetector.detectChanges();
@@ -209,10 +186,7 @@ export class CargosComponent implements OnInit {
   OnSubmit(): void {
     let cargo = this.cargoForm.get('nombreCargo')?.value;
     if (cargo.trim().length === 0) {
-      this.toastrService.error(
-        'Error al guardar el cargo',
-        'El nombre del cargo no puede estar vacío o contener solo espacios.'
-      );
+      this.toastrService.error('Error al guardar el cargo', 'El nombre del cargo no puede estar vacío o contener solo espacios.');
       return;
     }
     if (this.isEditing) {
@@ -229,9 +203,7 @@ export class CargosComponent implements OnInit {
         try {
           const cargoData: ICargoActivo = this.cargoForm.value;
           cargoData.nombreCargo = cargoData.nombreCargo.trim();
-          const mensajeInsercion = await this.cargosService.insertarCargo(
-            cargoData
-          );
+          const mensajeInsercion = await this.cargosService.insertarCargo(cargoData);
           Swal.fire({
             text: mensajeInsercion,
             icon: 'success',
@@ -240,32 +212,20 @@ export class CargosComponent implements OnInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al agregar el cargo',
-              error.message
-            );
+            this.toastrService.error('Error al agregar el cargo', error.message);
           } else {
-            this.toastrService.error(
-              'Error al agregar el cargo',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al agregar el cargo', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.cargoForm);
-        this.toastrService.error(
-          'Error al agregar el cargo',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al agregar el cargo', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error('Error al agregar el cargo', error.message);
       } else {
-        this.toastrService.error(
-          'Error al agregar el cargo',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al agregar el cargo', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();
@@ -278,10 +238,7 @@ export class CargosComponent implements OnInit {
       if (this.cargoForm.valid) {
         try {
           const cargoActualizadoData: ICargoActivo = this.cargoForm.value;
-          const mensajeActualizacion = await this.cargosService.actualizarCargo(
-            cargoActualizadoData.idCargo,
-            cargoActualizadoData
-          );
+          const mensajeActualizacion = await this.cargosService.actualizarCargo(cargoActualizadoData.idCargo, cargoActualizadoData);
           Swal.fire({
             text: mensajeActualizacion,
             icon: 'success',
@@ -290,32 +247,20 @@ export class CargosComponent implements OnInit {
           });
         } catch (error) {
           if (error instanceof Error) {
-            this.toastrService.error(
-              'Error al actualizar el cargo',
-              error.message
-            );
+            this.toastrService.error('Error al actualizar el cargo', error.message);
           } else {
-            this.toastrService.error(
-              'Error al actualizar el cargo',
-              'Solicitar soporte al departamento de TI.'
-            );
+            this.toastrService.error('Error al actualizar el cargo', 'Solicitar soporte al departamento de TI.');
           }
         }
       } else {
         this.appComponent.validateAllFormFields(this.cargoForm);
-        this.toastrService.error(
-          'Error al actualizar el cargo',
-          'No se llenaron todos los campos necesarios.'
-        );
+        this.toastrService.error('Error al actualizar el cargo', 'No se llenaron todos los campos necesarios.');
       }
     } catch (error) {
       if (error instanceof Error) {
         this.toastrService.error('Error al actualizar el cargo', error.message);
       } else {
-        this.toastrService.error(
-          'Error al actualizar el cargo',
-          'Solicitar soporte al departamento de TI.'
-        );
+        this.toastrService.error('Error al actualizar el cargo', 'Solicitar soporte al departamento de TI.');
       }
     } finally {
       this.loadingService.hideLoading();

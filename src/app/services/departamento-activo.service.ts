@@ -8,7 +8,7 @@ import { AuthService } from './auth-interceptor.service';
   providedIn: 'root',
 })
 export class DepartamentoActivoService {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
   baseUrl = environment.apiUrl + 'DepartamentoActivo/';
 
   async obtenerDepartamentos(): Promise<IDepartamentoActivo[]> {
@@ -22,9 +22,7 @@ export class DepartamentoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -37,10 +35,7 @@ export class DepartamentoActivoService {
   ): Promise<string> {
     const URL_API = this.baseUrl + 'agregarDepartamento';
     try {
-      const response = await this.authService.apiClient.post<any>(
-        URL_API,
-        departamentoData
-      );
+      const response = await this.authService.apiClient.post<any>(URL_API, departamentoData);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -48,9 +43,7 @@ export class DepartamentoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -58,16 +51,10 @@ export class DepartamentoActivoService {
     }
   }
 
-  async actualizarDepartamento(
-    idDepartamento: number,
-    departamentoActualizado: IDepartamentoActivo
-  ): Promise<string> {
+  async actualizarDepartamento(idDepartamento: number, departamentoActualizado: IDepartamentoActivo): Promise<string> {
     const URL_API = `${this.baseUrl}actualizarDepartamento/${idDepartamento}`;
     try {
-      const response = await this.authService.apiClient.put<any>(
-        URL_API,
-        departamentoActualizado
-      );
+      const response = await this.authService.apiClient.put<any>(URL_API, departamentoActualizado);
       if (!response.data.esError) {
         return response.data.mensaje;
       } else {
@@ -75,9 +62,7 @@ export class DepartamentoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);
@@ -96,9 +81,7 @@ export class DepartamentoActivoService {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.mensaje ||
-          'Ha ocurrido un error en el servidor.\nContactese con TI.';
+        const serverMessage = error.response?.data?.mensaje || 'Ha ocurrido un error en el servidor.\nContactese con TI.';
         throw new Error(`${serverMessage}`);
       } else {
         throw new Error(`${error ?? 'Error desconocido.\nContactese con TI.'}`);

@@ -13,8 +13,16 @@ import { IDepartamentoActivo } from 'src/app/models/departamento-activo';
 import { DepartamentoActivoService } from 'src/app/services/departamento-activo.service';
 import { ISucursalActivo } from 'src/app/models/sucursal-activo';
 import { SucursalActivoService } from 'src/app/services/sucursal-activo.service';
+import { IProductoActivo, IProductoEmpleadoActivo, IProductoEmpleadoResponse } from 'src/app/models/producto-activo';
+import { ProductoActivoService } from 'src/app/services/producto-activo.service';
+import { IModeloActivo } from 'src/app/models/modelo-activo';
+import { ModeloActivoService } from 'src/app/services/modelo-activo.service';
+import { MarcaActivoService } from 'src/app/services/marca-activo.service';
+import { IMarcaActivo } from 'src/app/models/marca-activo';
 import * as XLSX from 'xlsx';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { ITipoActaActivo } from 'src/app/models/tipo-acta-activo';
+import { TipoActaActivoService } from 'src/app/services/tipo-acta-activo.service';
 declare var $: any;
 
 @Component({
@@ -36,15 +44,41 @@ export class EmpleadosComponent implements OnInit {
   lstDepartamentosFiltrados: IDepartamentoActivo[] = [];
   lstSucursales: ISucursalActivo[] = [];
   lstSucursalesFiltrados: ISucursalActivo[] = [];
+  lstProductos: IProductoActivo[] = [];
+  lstProductosFiltrados: IProductoActivo[] = [];
+  lstModelos: IModeloActivo[] = [];
+  lstModelosFiltrados: IModeloActivo[] = [];
+  lstMarcas: IMarcaActivo[] = [];
+  lstMarcasFiltradas: IMarcaActivo[] = [];
+  lstProductosEmpleado: IProductoEmpleadoActivo[] = [];
+  lstProductosAsignados: IProductoEmpleadoResponse[] = [];
+  lstRolesUsuario: string[] = [];
+  lstEmpleadoEntregaFiltrado: IEmpleadoActivo[] = [];
+  lstEmpleadoRecibeFiltrado: IEmpleadoActivo[] = [];
+  lstTipoActas: ITipoActaActivo[] = [];
+  lstTipoActaFiltradas: ITipoActaActivo[] = [];
   dtOptions: any;
   dataTable: any;
   empleadoForm!: FormGroup;
+  productoEmpleadoForm!: FormGroup;
   cargoControl: FormControl = new FormControl('', Validators.required);
   departamentoControl: FormControl = new FormControl('', Validators.required);
   sucursalControl: FormControl = new FormControl('', Validators.required);
+  productoControl: FormControl = new FormControl('', Validators.required);
+  modeloControl: FormControl = new FormControl('', Validators.required);
+  marcaControl: FormControl = new FormControl('', Validators.required);
+  empleadoEntregaControl: FormControl = new FormControl('', Validators.required);
+  empleadoRecibeControl: FormControl = new FormControl('', Validators.required);
+  tipoActaControl: FormControl = new FormControl('', Validators.required);
   visualizarCargos = false;
   visualizarDepartamentos = false;
   visualizarSucursales = false;
+  visualizarProductos = false;
+  visualizarModelos = false;
+  visualizarMarcas = false;
+  visualizarEmpleadosEntrega = false;
+  visualizarEmpleadosRecibe = false;
+  visualizarTiposActa = false;
   previewUrl: string | ArrayBuffer | null = null;
   imagenEmpleado: File | null = null;
 
@@ -56,6 +90,10 @@ export class EmpleadosComponent implements OnInit {
     private cargosService: CargoActivoService,
     private departamentosService: DepartamentoActivoService,
     private sucursalesService: SucursalActivoService,
+    private productosService: ProductoActivoService,
+    private modelosService: ModeloActivoService,
+    private marcasService: MarcaActivoService,
+    private tiposActaService: TipoActaActivoService,
     private fb: FormBuilder,
     private changeDetector: ChangeDetectorRef,
     private el: ElementRef,
@@ -66,10 +104,14 @@ export class EmpleadosComponent implements OnInit {
   ngOnInit(): void {
     (window as any).EliminarEmpleado = this.EliminarEmpleado.bind(this);
     (window as any).EditarEmpleado = this.EditarEmpleado.bind(this);
+    (window as any).AsignarProductoModal = this.AsignarProductoModal.bind(this);
     this.CargarListadoEmpleados();
     this.CrearEmpleadoForm();
+    this.AsignarProductoForm({} as IEmpleadoActivo);
     const body = this.el.nativeElement.ownerDocument.body;
     this.renderer.setStyle(body, 'overflow', '');
+    var rolesString = localStorage.getItem("roles") ?? "";
+    this.lstRolesUsuario = rolesString.split(',') ?? [];
   }
 
   CrearEmpleadoForm() {
@@ -109,6 +151,11 @@ export class EmpleadosComponent implements OnInit {
       if (this.lstSucursales.length > 0) {
         this.lstSucursalesFiltrados = this.lstSucursales;
       }
+      if (this.lstEmpleados.length > 0) {
+        this.lstEmpleadoEntregaFiltrado = [...this.lstEmpleados];
+        this.lstEmpleadoRecibeFiltrado = [...this.lstEmpleados];
+      }
+
       this.dtOptions = {
         data: this.lstEmpleados,
         info: false,
@@ -137,10 +184,12 @@ export class EmpleadosComponent implements OnInit {
             targets: -1,
             orderable: false,
             searchable: false,
-            render: function (data: any, type: any, full: any, meta: any) {
-              return `
-                <button class="btn btn-sm btn-primary" onclick="EditarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="EliminarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-trash-alt"></i></button>`;
+            render: (data: any, type: any, full: any, meta: any) => {
+              const esRH = this.VerificarRolUsuario(['RH']);
+              const botonEditar = esRH ? `<button class="btn btn-sm btn-primary" onclick="EditarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-edit"></i></button>` : '';
+              const botonEliminar = esRH ? `<button class="btn btn-sm btn-danger" onclick="EliminarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-trash-alt"></i></button>` : '';
+              const botonAsignar = `<button class="btn btn-sm btn-secondary" onclick="AsignarProductoModal('${full.cedulaEmpleado}')"><i class="fas fa-clipboard-list"></i></button>`;
+              return `${botonEditar} ${botonEliminar} ${botonAsignar}`;
             },
             className: 'text-center btn-acciones-column',
             width: '100px',
@@ -182,18 +231,11 @@ export class EmpleadosComponent implements OnInit {
           title: 'Eliminando empleado...',
           text: 'Por favor espere.',
           allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
+          didOpen: () => { Swal.showLoading(); },
         });
         try {
           const mensajeEliminacion = await this.empleadosService.eliminarEmpleado(cedulaEmpleado);
-          Swal.fire({
-            text: `${mensajeEliminacion}`,
-            icon: 'success',
-          }).then(() => {
-            window.location.reload();
-          });
+          Swal.fire({ text: `${mensajeEliminacion}`, icon: 'success' }).then(() => { window.location.reload(); });
         } catch (error) {
           this.toastrService.error('Error al eliminar empleado', 'Solicitar soporte al departamento de TI.');
           Swal.close();
@@ -285,12 +327,7 @@ export class EmpleadosComponent implements OnInit {
             formData.append('ImagenEmpleado', this.imagenEmpleado);
           }
           const mensajeInsercion = await this.empleadosService.insertarEmpleado(formData);
-          Swal.fire({
-            text: mensajeInsercion,
-            icon: 'success',
-          }).then(() => {
-            window.location.reload();
-          });
+          Swal.fire({ text: mensajeInsercion, icon: 'success', }).then(() => { window.location.reload(); });
         } catch (error) {
           if (error instanceof Error) {
             this.toastrService.error('Error al agregar el empleado', error.message);
@@ -331,15 +368,12 @@ export class EmpleadosComponent implements OnInit {
       if (this.cargoControl.value == '') {
         this.empleadoForm.patchValue({ idCargo: '' });
       }
-
       if (this.departamentoControl.value == '') {
         this.empleadoForm.patchValue({ idDepartamento: '' });
       }
-
       if (this.sucursalControl.value == '') {
         this.empleadoForm.patchValue({ idSucursal: '' });
       }
-
       if (this.empleadoForm.valid) {
         try {
           const empleadoActualizadoData: IEmpleadoActivo = this.empleadoForm.getRawValue();
@@ -396,23 +430,50 @@ export class EmpleadosComponent implements OnInit {
 
   FilterCargos(): void {
     const filterValue = this.cargoControl.value.toLowerCase();
-    this.lstCargosFiltrados = this.lstCargos
-      .filter((cargo) => cargo.nombreCargo.toLowerCase().includes(filterValue))
-      .slice(0, 4);
+    this.lstCargosFiltrados = this.lstCargos.filter((cargo) => cargo.nombreCargo.toLowerCase().includes(filterValue)).slice(0, 4);
   }
 
   FilterDepartamentos(): void {
     const filterValue = this.departamentoControl.value.toLowerCase();
-    this.lstDepartamentosFiltrados = this.lstDepartamentos
-      .filter((departamento) => departamento.nombreDepartamento.toLowerCase().includes(filterValue))
-      .slice(0, 4);
+    this.lstDepartamentosFiltrados = this.lstDepartamentos.filter((departamento) => departamento.nombreDepartamento.toLowerCase().includes(filterValue)).slice(0, 4);
   }
 
   FilterSucursales(): void {
     const filterValue = this.sucursalControl.value.toLowerCase();
-    this.lstSucursalesFiltrados = this.lstSucursales
-      .filter((sucursal) => sucursal.descripcionSucursal.toLowerCase().includes(filterValue))
-      .slice(0, 4);
+    this.lstSucursalesFiltrados = this.lstSucursales.filter((sucursal) => sucursal.descripcionSucursal.toLowerCase().includes(filterValue)).slice(0, 4);
+  }
+
+  FilterProductos(): void {
+    const filterValue = this.productoControl.value!.toLowerCase();
+    this.lstProductosFiltrados = this.lstProductos.filter(producto => producto.nombreProducto.toLowerCase().includes(filterValue) || producto.codigoProducto.includes(filterValue));
+  }
+
+  FilterModelos(): void {
+    const filterValue = this.modeloControl.value.toLowerCase();
+    this.lstModelosFiltrados = this.lstModelos.filter((modelo) => modelo.nombreModelo.toLowerCase().includes(filterValue)).slice(0, 4);
+  }
+
+  FilterMarcas(): void {
+    const filterValue = this.marcaControl.value!.toLowerCase();
+    this.lstMarcasFiltradas = this.lstMarcas.filter(marca => marca.nombreMarca.toLowerCase().includes(filterValue));
+  }
+
+  FilterEmpleados(campo: 'entrega' | 'recibe'): void {
+    const controlEmpleado = campo === 'entrega' ? this.empleadoEntregaControl : this.empleadoRecibeControl;
+    const filterValue = controlEmpleado.value?.toLowerCase() || '';
+    const resultados = this.lstEmpleados.filter(empleado => empleado.nombreEmpleado.toLowerCase().includes(filterValue) || empleado.apellidoEmpleado.toLowerCase().includes(filterValue)).slice(0, 4);
+    if (campo === 'entrega') {
+      this.lstEmpleadoEntregaFiltrado = resultados;
+      this.visualizarEmpleadosEntrega = true;
+    } else {
+      this.lstEmpleadoRecibeFiltrado = resultados;
+      this.visualizarEmpleadosRecibe = true;
+    }
+  }
+
+  FilterTipoActas(): void {
+    const filterValue = this.tipoActaControl.value!.toLowerCase();
+    this.lstTipoActaFiltradas = this.lstTipoActas.filter(tipoActa => tipoActa.nombreTipoActa.toLowerCase().includes(filterValue));
   }
 
   SelectCargo(cargo: ICargoActivo): void {
@@ -433,15 +494,84 @@ export class EmpleadosComponent implements OnInit {
     this.visualizarSucursales = false;
   }
 
+  SelectProducto(producto: IProductoActivo): void {
+    this.productoControl.setValue(`${producto.codigoProducto}-${producto.nombreProducto}`);
+    this.productoEmpleadoForm.get('idProducto')?.setValue(producto.idProducto);
+    this.visualizarProductos = false;
+  }
+
+  SelectModelo(modelo: IModeloActivo): void {
+    this.modeloControl.setValue(modelo.nombreModelo);
+    this.productoEmpleadoForm.get('idModelo')?.setValue(modelo.idModelo);
+    this.lstProductosFiltrados = this.lstProductos.filter((p) => p.idModelo === modelo.idModelo);
+    this.visualizarModelos = false;
+  }
+
+  SelectMarca(marca: IMarcaActivo): void {
+    this.marcaControl.setValue(marca.nombreMarca);
+    this.visualizarMarcas = false;
+    this.lstModelosFiltrados = this.lstModelos.filter((m) => m.idMarca === marca.idMarca);
+    this.productoEmpleadoForm.get('idModelo')!.setValue(null);
+    this.modeloControl.setValue('');
+    this.productoEmpleadoForm.get('idProducto')?.setValue(null);
+    this.productoControl.setValue('');
+    this.lstProductosFiltrados = [];
+    this.visualizarProductos = false;
+  }
+
+  SelectEmpleado(empleado: IEmpleadoActivo, campo: 'entrega' | 'recibe'): void {
+    const nombreCompleto = `${empleado.nombreEmpleado} ${empleado.apellidoEmpleado}`;
+    if (campo === 'entrega') {
+      this.empleadoEntregaControl.setValue(nombreCompleto);
+      this.productoEmpleadoForm.get('idEmpleadoEntrega')?.setValue(empleado.cedulaEmpleado);
+      this.visualizarEmpleadosEntrega = false;
+    } else {
+      this.empleadoRecibeControl.setValue(nombreCompleto);
+      this.productoEmpleadoForm.get('idEmpleadoRecibe')?.setValue(empleado.cedulaEmpleado);
+      this.visualizarEmpleadosRecibe = false;
+    }
+  }
+
+  SelectTipoActa(tipoActa: ITipoActaActivo): void {
+    this.tipoActaControl.setValue(tipoActa.nombreTipoActa);
+    this.productoEmpleadoForm.get('idTipoActa')?.setValue(tipoActa.idTipoActa);
+    this.visualizarTiposActa = false;
+  }
+
   HideCargos(): void {
     setTimeout(() => (this.visualizarCargos = false), 200);
   }
+
   HideDepartamentos(): void {
     setTimeout(() => (this.visualizarDepartamentos = false), 200);
   }
   HideSucursales(): void {
     setTimeout(() => (this.visualizarSucursales = false), 200);
   }
+  HideProductos(): void {
+    setTimeout(() => (this.visualizarProductos = false), 200);
+  }
+  HideModelos(): void {
+    setTimeout(() => (this.visualizarModelos = false), 200);
+  }
+  HideMarcas(): void {
+    setTimeout(() => this.visualizarMarcas = false, 200);
+  }
+
+  HideEmpleados(campo: 'entrega' | 'recibe'): void {
+    setTimeout(() => {
+      if (campo === 'entrega') {
+        this.visualizarEmpleadosEntrega = false;
+      } else {
+        this.visualizarEmpleadosRecibe = false;
+      }
+    }, 200);
+  }
+
+  HideTipoActa(): void {
+    setTimeout(() => this.visualizarTiposActa = false, 200);
+  }
+
   GetSpanishLanguage() {
     return SpanishLanguage;
   }
@@ -470,7 +600,7 @@ export class EmpleadosComponent implements OnInit {
     let suma = 0;
     for (let i = 0; i < coeficientes.length; i++) {
       let valor = parseInt(cedula[i]) * coeficientes[i];
-      if (valor > 9) { valor -= 9;}
+      if (valor > 9) { valor -= 9; }
       suma += valor;
     }
     const digitoVerificador = parseInt(cedula[9]);
@@ -502,7 +632,7 @@ export class EmpleadosComponent implements OnInit {
     const tabla = this.lstEmpleados.map((emp) => {
       const row: Record<string, any> = {};
       columnas.forEach((col) => {
-        row[col.header] = emp[col.key as keyof IEmpleadoActivo]; 
+        row[col.header] = emp[col.key as keyof IEmpleadoActivo];
       });
       return row;
     });
@@ -525,11 +655,11 @@ export class EmpleadosComponent implements OnInit {
 
     this.imagenEmpleado = file;
     let fileName = file.name;
-    // Cambiar los espacios por _
     fileName = fileName.replace(/\s+/g, '_');
     fileName = fileName.trim();
     // Actualizar el formControl con nombre de la foto
     this.empleadoForm.get('fotoEmpleado')?.setValue(fileName);
+    this.empleadoForm.get('fotoUrl')?.setValue(fileName);
     // Vista previa de la imagen local y si no está en el servidor en Editar se mostrará el default Usuario.png 
     const reader = new FileReader();
     reader.onload = () => { this.previewUrl = reader.result; };
@@ -538,5 +668,167 @@ export class EmpleadosComponent implements OnInit {
 
   enFotoError(event: any) {
     event.target.src = 'assets/images/providers/Usuario.png';
+  }
+
+  AsignarProductoForm(empleadoData: IEmpleadoActivo) {
+    this.productoControl = new FormControl('', Validators.required);
+    this.modeloControl = new FormControl('', Validators.required);
+    this.marcaControl = new FormControl('', Validators.required);
+    this.empleadoEntregaControl = new FormControl('', Validators.required);
+    this.empleadoRecibeControl = new FormControl('', Validators.required);
+
+    this.productoEmpleadoForm = this.fb.group({
+      fechaGeneracion: [{ value: this.getFechaActual(), disabled: true }],
+      cedulaEmpleado: [{ value: empleadoData.cedulaEmpleado, disabled: true }],
+      nombreEmpleado: [empleadoData.nombreEmpleado],
+      apellidoEmpleado: [empleadoData.apellidoEmpleado],
+      nombreCompleto: [{
+        value: `${empleadoData.nombreEmpleado} ${empleadoData.apellidoEmpleado}`,
+        disabled: true
+      }],
+      // TODO: PROBLEMA CON ESTOS DATOS AL ASIGNARSE PRIMERO EL PRODUCTO Y DESPUÉS LOS DATOS DEL ACTA, SE VAN VACÍOS
+      idProducto: ['', Validators.required],
+      idModelo: ['', Validators.required],
+      idTipoActa: [1], // DATO DE PRUEBA PARA VERIFICAR QUE SE GUARDEN LOS PRODUCTOS
+      idEmpleadoEntrega: [empleadoData.cedulaEmpleado], // DATO DE PRUEBA PARA VERIFICAR QUE SE GUARDEN LOS PRODUCTOS
+      idEmpleadoRecibe: [empleadoData.cedulaEmpleado], // DATO DE PRUEBA PARA VERIFICAR QUE SE GUARDEN LOS PRODUCTOS
+      observacion: ['', [Validators.maxLength(255)]], // DATO SE ENVIÓ VACÍO PORQUE NO SE LLENA ANTES DE LA ASIGNACIÓN DEL PRODUCTO A LA LISTA
+      estaActivo: [true, Validators.required],
+    });
+  }
+
+  getFechaActual(): string {
+    const hoy = new Date();
+    return hoy.toISOString().split('T')[0];
+  }
+
+  // TODO: REVISAR ESTE MODA Y ARREGLAR EL UNDIFINED PORQUE EL MODAL TARDE EN RESPONER Y CARGAR LA INFORMACIÓN
+  async AsignarProductoModal(cedulaEmpleado: string) {
+    $('#productoModal').modal('show');
+    $('#productoModal').off('show.bs.modal');
+    $('#productoModal').on('show.bs.modal', async () => {
+      const empleadoData: any = this.lstEmpleados.find((x) => x.cedulaEmpleado == cedulaEmpleado);
+      this.lstProductosAsignados = await this.productosService.obtenerProductoPorEmpleado(cedulaEmpleado);
+
+      this.lstProductos = await this.productosService.obtenerProductosSinEmpleado();
+      if (this.lstProductos.length > 0)
+        this.lstProductosFiltrados = [];
+
+      this.lstModelos = await this.modelosService.obtenerModelos();
+      if (this.lstModelos.length > 0)
+        this.lstModelosFiltrados = [];
+      this.lstMarcas = await this.marcasService.obtenerMarcas();
+      if (this.lstMarcas.length > 0)
+        this.lstMarcasFiltradas = [...this.lstMarcas];
+
+      this.lstTipoActas = await this.tiposActaService.obtenerTipoActas()
+      if (this.lstTipoActas.length > 0)
+        this.lstTipoActaFiltradas = [...this.lstTipoActas];
+
+      this.productoControl.reset('');
+      this.modeloControl.reset('');
+      this.marcaControl.reset('');
+      this.lstProductosEmpleado = [];
+      this.AsignarProductoForm(empleadoData!);
+      this.changeDetector.detectChanges();
+    });
+  }
+
+  AgregarProductoLista() {
+    if (this.productoEmpleadoForm.invalid) {
+      this.marcaControl.markAsTouched();
+      this.modeloControl.markAsTouched();
+      this.productoControl.markAsTouched();
+      return;
+    }
+
+    const productoEmpleadoData = this.productoEmpleadoForm.getRawValue();
+    // Validar duplicados en la lista temporal
+    const yaAsignado = this.lstProductosEmpleado.some(p => p.idProducto === productoEmpleadoData.idProducto);
+    if (yaAsignado) {
+      this.toastrService.error('Error al agregar producto', 'El producto ya está en la lista.');
+      return;
+    }
+
+    // Buscar información completa del producto
+    const productoCompleto = this.lstProductosFiltrados.find(p => p.idProducto === productoEmpleadoData.idProducto);
+    if (!productoCompleto) return;
+
+    // Mapeo del objeto
+    const nuevaAsignacion: IProductoEmpleadoActivo = {
+      ...productoEmpleadoData,
+      cedula: productoEmpleadoData.cedulaEmpleado,
+      // PARTE INVALIDA PORQUE NO SE MAPEAN LOS DATOS AL LLEVAR VACÍOS
+      idTipoActa: productoEmpleadoData.idTipoActa,
+      idEmpleadoEntrega: productoEmpleadoData.idEmpleadoEntrega,
+      idEmpleadoRecibe: productoEmpleadoData.idEmpleadoRecibe,
+      observacion: productoEmpleadoData.observacion,
+      producto: {
+        idProducto: productoCompleto.idProducto,
+        codigoProducto: productoCompleto.codigoProducto,
+        nombreProducto: productoCompleto.nombreProducto,
+        codigoCeco: productoCompleto.codigoCeco,
+        ceco: productoCompleto.ceco,
+        idModelo: productoCompleto.idModelo,
+        idMarca: productoCompleto.idMarca,
+        modelo: {
+          idModelo: productoCompleto.idModelo,
+          nombreModelo: productoCompleto.nombreModelo,
+          marca: {
+            idMarca: productoCompleto.idMarca,
+            nombreMarca: productoCompleto.nombreMarca
+          }
+        }
+      },
+      fechaAsignacion: new Date(),
+      estaActivo: true
+    };
+
+    console.log(nuevaAsignacion);
+    this.lstProductosEmpleado.push(nuevaAsignacion);
+    // Limpiar el producto de la lista
+    this.productoEmpleadoForm.get('idProducto')?.reset('');
+    this.productoEmpleadoForm.get('idModelo')?.reset('');
+    // Limpiar los controles visuales de los select
+    this.productoControl?.reset('');
+    this.modeloControl?.reset('');
+    this.marcaControl?.reset('');
+  }
+
+  EliminarProductoLista(index: number) {
+    this.lstProductosEmpleado.splice(index, 1);
+  }
+
+  async GuardarProductosAsignados() {
+    try {
+      this.loadingService.showLoading();
+      if (this.lstProductosEmpleado.length > 0) {
+        try {
+          await this.productosService.insertarProductoEmpleado(this.lstProductosEmpleado as any);
+          Swal.fire({ text: 'Todos los productos han sido asignados correctamente', icon: 'success' }).then(() => { window.location.reload(); });
+        } catch (error) {
+          if (error instanceof Error) {
+            this.toastrService.error('Error al asignar el producto al empleado', error.message);
+          } else {
+            this.toastrService.error('Error al asignar el producto al empleado', 'Solicitar soporte al departamento de TI.');
+          }
+        }
+      } else {
+        this.appComponent.validateAllFormFields(this.productoEmpleadoForm);
+        this.toastrService.error('Error al asignar el producto al empleado', 'No se llenaron todos los campos necesarios.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al asignar el producto al empleado', error.message);
+      } else {
+        this.toastrService.error('Error al asignar el producto al empleado', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
+    }
+  }
+
+  public VerificarRolUsuario(rolesPermitidos: string[]): boolean {
+    return this.lstRolesUsuario.some(role => rolesPermitidos.includes(role));
   }
 }

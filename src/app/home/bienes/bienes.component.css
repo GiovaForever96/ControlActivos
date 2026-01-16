@@ -27,3 +27,32 @@
 .list-group-item:hover {
     background-color: #f1f1f1;
 }
+
+.fotoProducto {
+    width: 120px;          
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    display: block;
+    margin-bottom: 10px;
+    cursor: pointer; 
+    animation: parpadeoBorde 2s infinite;
+}
+
+@keyframes parpadeoBorde {
+    0%, 100% { 
+        border-color: #dee2e6;
+        box-shadow: none;
+    }
+    50% { 
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+}
+
+#fotoModal .modal-content {
+  border: 3px solid #18bbee; /* Un color que resalte, como amarillo o el que prefieras */
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.7); /* Sombra intensa para separarlo del modal XL */
+  border-radius: 15px; /* Bordes redondeados para que se vea diferente al XL */
+}
