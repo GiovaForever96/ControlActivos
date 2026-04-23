@@ -500,4 +500,138 @@ export class ResultadosComponent {
     return presupuesto > 0 ? (gastos / presupuesto) : 0;
   }
 
+  exportarExcel(): void {
+    const data: any[][] = [];
+
+    /** ===== FILA 1: MESES ===== */
+    const headerRow1: any[] = ['Código', 'Plan'];
+    this.cabeceraMeses.forEach(mes => {
+      headerRow1.push(mes.nombreMes, '', '', '', '');
+    });
+    data.push(headerRow1);
+
+    /** ===== FILA 2: SUBCABECERAS ===== */
+    const headerRow2: any[] = ['', ''];
+    this.cabeceraMeses.forEach(() => {
+      headerRow2.push(
+        'Presupuesto',
+        'Gastos',
+        'Diferencia',
+        '%',
+        'Indicador'
+      );
+    });
+    data.push(headerRow2);
+
+    /** ===== FILAS DE DATOS ===== */
+    this.filteredData.forEach(plan => {
+      const row: any[] = [
+        plan.codigoPlan,
+        plan.nombrePlan
+      ];
+
+      this.cabeceraMeses.forEach(mes => {
+        const presupuesto = plan.mesGastoPresupuesto[mes.nombreMes] ?? 0;
+        const gastos = plan.mesGastoPresupuesto[mes.nombreMes + 'G'] ?? 0;
+        const diferencia = presupuesto - gastos;
+        const porcentaje = plan.mesGastoPresupuesto[mes.nombreMes + '%'] ?? 0;
+
+        row.push(
+          presupuesto,
+          gastos,
+          diferencia,
+          porcentaje
+        );
+
+        // Indicador textual (no iconos)
+        if (gastos > presupuesto) row.push('↑');
+        else if (gastos < presupuesto) row.push('↓');
+        else row.push('=');
+      });
+
+      data.push(row);
+    });
+
+    /** ===== FILA TOTALES ===== */
+    const totalRow: any[] = ['', 'Ganancia / Pérdida'];
+
+    this.cabeceraMeses.forEach(mes => {
+      totalRow.push(
+        this.getTotal(mes.nombreMes, 'presupuesto'),
+        this.getTotal(mes.nombreMes, 'gastos'),
+        '',
+        '',
+        ''
+      );
+    });
+
+    data.push(totalRow);
+
+    /** ===== CREAR EXCEL ===== */
+    const worksheet: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { 'Gasto Mensual': worksheet },
+      SheetNames: ['Gasto Mensual']
+    };
+
+    XLSX.writeFile(workbook, `Gasto_Mensual_${this.anioGasto}.xlsx`);
+  }
+
+  /* =====================================================
+   *  TOTALES POR FILA (COLUMNA TOTALES)
+   * ===================================================== */
+
+  totalPresupuesto(plan: any): number {
+    if (!plan || !plan.mesGastoPresupuesto) return 0;
+
+    return this.cabeceraMeses.reduce((acc: number, mes: any) => {
+      const value = Number(plan.mesGastoPresupuesto[mes.nombreMes]);
+      return acc + (isNaN(value) ? 0 : value);
+    }, 0);
+  }
+
+  totalGastos(plan: any): number {
+    if (!plan || !plan.mesGastoPresupuesto) return 0;
+
+    return this.cabeceraMeses.reduce((acc: number, mes: any) => {
+      const value = Number(plan.mesGastoPresupuesto[mes.nombreMes + 'G']);
+      return acc + (isNaN(value) ? 0 : value);
+    }, 0);
+  }
+
+  porcentajeTotal(plan: any): number {
+    const presupuesto = this.totalPresupuesto(plan);
+    const gastos = this.totalGastos(plan);
+
+    if (!presupuesto) return 0;
+    return +((gastos / presupuesto) * 100).toFixed(2);
+  }
+
+  /* =====================================================
+   *  TOTALES GENERALES (FOOTER)
+   * ===================================================== */
+
+  totalAnual(tipo: 'presupuesto' | 'gastos'): number {
+    if (!this.filteredData?.length) return 0;
+
+    return this.filteredData.reduce((acc: number, plan: any) => {
+      // 🔴 Si no quieres sumar padres, descomenta:
+      // if (plan.tieneHijos) return acc;
+
+      const total = tipo === 'presupuesto'
+        ? this.totalPresupuesto(plan)
+        : this.totalGastos(plan);
+
+      return acc + total;
+    }, 0);
+  }
+
+  totalAnualPorcentaje(): number {
+    const presupuesto = this.totalAnual('presupuesto');
+    const gastos = this.totalAnual('gastos');
+
+    if (!presupuesto) return 0;
+    return +((gastos / presupuesto) * 100).toFixed(2);
+  }
+
 }

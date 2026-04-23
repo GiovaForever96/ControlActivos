@@ -29,24 +29,43 @@
 }
 
 .fotoEmpleado {
-    width: 120px;          
+    width: 120px;
     height: 120px;
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid #dee2e6;
     display: block;
     margin-bottom: 10px;
-    cursor: pointer; 
+    cursor: pointer;
     animation: parpadeoBorde 2s infinite;
 }
 
 @keyframes parpadeoBorde {
-    0%, 100% { 
+
+    0%,
+    100% {
         border-color: #dee2e6;
         box-shadow: none;
     }
-    50% { 
+
+    50% {
         border-color: #007bff;
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+}
+
+.foto-empleado {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+}
+
+.border-left-lg {
+    border-left: 0;
+}
+
+@media (min-width: 992px) {
+    .border-left-lg {
+        border-left: 1px solid #e9ecef;
     }
 }

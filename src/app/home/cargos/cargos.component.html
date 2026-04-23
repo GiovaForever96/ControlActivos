@@ -19,12 +19,12 @@
                                 Cargos
                             </h3>
                             <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
-                                (click)="AbrirModal(false)">
-                                <i class="fas fa-plus-circle mr-2"></i> Agregar cargo
+                                (click)="AbrirModal(false)" title="Agregar cargo">
+                                <i class="fas fa-plus-circle"></i>
                             </button>
                             <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
-                                (click)="descargarTable()">
-                                <i class="fas fa-download mr-2"></i> Descargar
+                                (click)="descargarTable()" title="Descargar tabla cargos">
+                                <i class="fas fa-download"></i>
                             </button>
                             <button #btnActualizaCargo type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">

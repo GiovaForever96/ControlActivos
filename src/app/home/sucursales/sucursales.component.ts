@@ -30,7 +30,7 @@ export class SucursalesComponent implements OnInit {
 
   constructor(
     private loadingService: LoadingService,
-    private appComponent: AppComponent,
+    public appComponent: AppComponent,
     private homeComponent: HomeComponent,
     private sucursalesService: SucursalActivoService,
     private fb: FormBuilder,
@@ -307,13 +307,6 @@ export class SucursalesComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
-  }
-
-  soloNumeros(event: KeyboardEvent): void {
-    const key = event.key;
-    if (!/^\d+$/.test(key)) {
-      event.preventDefault();
-    }
   }
 
   descargarTable() {

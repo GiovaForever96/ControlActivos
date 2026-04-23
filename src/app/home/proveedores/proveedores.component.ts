@@ -39,7 +39,7 @@ export class ProveedoresComponent implements OnInit {
 
   constructor(
     private loadingService: LoadingService,
-    private appComponent: AppComponent,
+    public appComponent: AppComponent,
     private homeComponent: HomeComponent,
     private proveedoresService: ProveedorActivoService,
     private fb: FormBuilder,
@@ -330,13 +330,6 @@ export class ProveedoresComponent implements OnInit {
 
   GetSpanishLanguage() {
     return SpanishLanguage;
-  }
-
-  soloNumeros(event: KeyboardEvent): void {
-    const key = event.key;
-    if (!/^\d+$/.test(key)) {
-      event.preventDefault();
-    }
   }
 
   FilterProvincias(): void {

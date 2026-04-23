@@ -1,6 +1,6 @@
 <a routerLink="/home/index" class="brand-link" style="color: white;">
     <img src="./assets/dist/img/nuevoLogo.png" alt="Seguros Suárez Logo" class="brand-image img-circle elevation-3">
-    <span class="brand-text font-weight-light color:white" >{{appName}}</span>
+    <span class="brand-text font-weight-light color:white">{{appName}}</span>
 </a>
 
 <div class="sidebar" style="background-image: url('assets/images/fondos/fondo_menu.png');">
@@ -106,7 +106,6 @@
                     </li>
                 </ul>
             </li>
-
             <!-- Presupuestos -->
             <li class="nav-item has-treeview" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
                 <a href="javascript:void(0)" class="nav-link">
@@ -149,6 +148,34 @@
                             (click)="SetActive($event)">
                             <i class="nav-icon fa fa-chart-pie mr-2" style="color: white;"> </i>
                             <p style="color: white;">DashBoard</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <!-- Reembolso Gastos -->
+            <li class="nav-item has-treeview">
+                <a href="javascript:void(0)" class="nav-link">
+                    <i class="nav-icon fas fa-file-invoice-dollar mr-2 text-white"></i>
+                    <p class="text-white">
+                        Reembolso Gastos
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
+                </a>
+                <ul name="childParent" class="nav nav-treeview">
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                        <a routerLink="/home/reembolsos/ingreso" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+
+                            <i class="nav-icon fas fa-plus-circle mr-2 text-white"></i>
+                            <p class="text-white">Ingreso</p>
+                        </a>
+                    </li>
+                    <li class="nav-item ml-3" *ngIf="VerificarRolUsuario(['FIN', 'PRES'])">
+                        <a routerLink="/home/reembolsos/seguimiento" class="nav-link" routerLinkActive="active"
+                            (click)="SetActive($event)">
+
+                            <i class="nav-icon fas fa-search-dollar mr-2 text-white"></i>
+                            <p class="text-white">Seguimiento</p>
                         </a>
                     </li>
                 </ul>

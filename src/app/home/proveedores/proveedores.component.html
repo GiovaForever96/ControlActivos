@@ -62,8 +62,9 @@
                                                 [ngClass]="{ 'is-invalid': proveedorForm.get('rucProveedor')!.errors && proveedorForm.get('rucProveedor')!.touched}"
                                                 class="form-control" placeholder="RUC del Proveedor"
                                                 formControlName="rucProveedor" (keyup.enter)="onConsultarRuc()"
-                                                (keydown.Tab)="onConsultarRuc()" (keypress)="soloNumeros($event)"
-                                                maxlength="13" (input)="enRucInput()">
+                                                (keydown.Tab)="onConsultarRuc()"
+                                                (keypress)="appComponent.soloNumeros($event)" maxlength="13"
+                                                (input)="enRucInput()">
                                             <div class="invalid-feedback"
                                                 *ngIf="proveedorForm.get('rucProveedor')!.errors && proveedorForm.get('rucProveedor')!.touched">
                                                 El RUC es obligatorio.
@@ -84,12 +85,10 @@
                                                 formControlName="razonSocial">
                                             <div class="invalid-feedback"
                                                 *ngIf="proveedorForm.get('razonSocial')!.errors && proveedorForm.get('razonSocial')!.touched">
-                                                <div
-                                                    *ngIf="proveedorForm.get('razonSocial')!.hasError('maxlength')">
+                                                <div *ngIf="proveedorForm.get('razonSocial')!.hasError('maxlength')">
                                                     La longitud máxima del campo es 255.
                                                 </div>
-                                                <div
-                                                    *ngIf="proveedorForm.get('razonSocial')!.hasError('required')">
+                                                <div *ngIf="proveedorForm.get('razonSocial')!.hasError('required')">
                                                     La razon social es obligatoria.
                                                 </div>
                                             </div>
@@ -178,8 +177,8 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': proveedorForm.get('telefonoProveedor')!.errors && proveedorForm.get('telefonoProveedor')!.touched}"
                                                 class="form-control" placeholder="Teléfono del proveedor"
-                                                formControlName="telefonoProveedor" (keypress)="soloNumeros($event)"
-                                                maxlength="10">
+                                                formControlName="telefonoProveedor"
+                                                (keypress)="appComponent.soloNumeros($event)" maxlength="10">
                                             <div class="invalid-feedback"
                                                 *ngIf="proveedorForm.get('telefonoProveedor')!.errors && proveedorForm.get('telefonoProveedor')!.touched">
                                                 <div

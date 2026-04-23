@@ -1,6 +1,6 @@
-import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2 } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IIndicadoresFinancierosCalculos, IPlanCuentas } from 'src/app/models/plan-cuentas';
+import { IIndicadoresFinancierosCalculos, IIndicadorFinanciero, IPlanCuentas } from 'src/app/models/plan-cuentas';
 import { IGastosRespuesta } from 'src/app/models/presupuesto-gastos';
 import { DataService } from 'src/app/services/data.service';
 import { IndicadorFinancieroService } from 'src/app/services/indicador-financiero.service';
@@ -33,7 +33,13 @@ export class IndicadoresComponent {
   informacionIndicadoresFinancierosReporte: any;
   indicadoresFinancierosCalculos: IIndicadoresFinancierosCalculos = null!;
   base64Image = 'data:image/png;base64,<TU_BASE64_AQUÍ>';
-
+  private readonly ORDEN_MESES = [
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+  ] as const;
+  nombreMesIndicador: string = '';
+  lstValoresIndicadoresFinancieros: IIndicadorFinanciero[] = [];
+  valoresIndicadores: Record<number, number> = {};
   //#endregion
 
   constructor(
@@ -44,6 +50,7 @@ export class IndicadoresComponent {
     private planCuentasService: PlanCuentasService,
     private indicadoresService: IndicadorFinancieroService,
     private dataService: DataService,
+    private cdr: ChangeDetectorRef,
     private appComponent: AppComponent) {
     this.lstMeses = appComponent.obtenerMesesAnio();
   }
@@ -62,6 +69,7 @@ export class IndicadoresComponent {
       this.indicadoresFinancierosCalculos = storedData
         ? (JSON.parse(storedData) as IIndicadoresFinancierosCalculos)
         : null!;
+      this.lstIndicadoresFinancieros = await this.indicadoresService.obtenerIndicadoresFinancieros(1);
     } catch (error) {
       if (error instanceof Error) {
         this.toastr.error('Error Indicadores Financieros', error.message);
@@ -112,7 +120,6 @@ export class IndicadoresComponent {
       this.toastr.warning("Indicadores Financieros", "No se encontró los códigos de los indicadores financieros");
       return;
     }
-    this.mesIndicador = nombreMes;
     //Obtener los valores para las tablas
     var activoCorriente = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.ActivoCorriente, nombreMes);
     var pasivoCorriente = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.PasivoCorriente, nombreMes);
@@ -124,7 +131,7 @@ export class IndicadoresComponent {
     var patrimonio = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Patrimonio, nombreMes);
     var ROE = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.RentabiidadROE, nombreMes) * 100;
     var utilidadBruta = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.UtilidadBruta, nombreMes);
-    var ventas = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Ventas, nombreMes);
+    var ventas = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.Ventas, nombreMes, true);
     var margenBruto = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.MargenBrutoUtilidad, nombreMes) * 100;
     var margenNeto = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.MargenNetoUtilidad, nombreMes) * 100;
     var capitalTrabajo = this.obtenerValorIndicador(this.indicadoresFinancierosCalculos.CapitalTrabajoNeto, nombreMes);
@@ -224,13 +231,23 @@ export class IndicadoresComponent {
     $('#indicadoresModal').modal('show');
   }
 
-  obtenerValorIndicador(idPlan: number, nombreMes: string): number {
-    let registroCuentaPlan = this.listaDatos.find(x => x.idPlan == idPlan);
-    let valorIndicador: number = 0;
-    if (registroCuentaPlan != null && registroCuentaPlan != undefined) {
-      valorIndicador = registroCuentaPlan.mesGastoPresupuesto[nombreMes];
+  obtenerValorIndicador(idPlan: number, nombreMes: string, acumulado: boolean = false): number {
+    const registro = this.listaDatos.find(x => x.idPlan === idPlan);
+    if (!registro?.mesGastoPresupuesto) return 0;
+
+    if (!acumulado) {
+      return Number(registro.mesGastoPresupuesto[nombreMes] ?? 0);
     }
-    return valorIndicador;
+
+    const idx = this.ORDEN_MESES.indexOf(nombreMes as any);
+    if (idx === -1) return 0;
+
+    let suma = 0;
+    for (let i = 0; i <= idx; i++) {
+      const mes = this.ORDEN_MESES[i];
+      suma += Number(registro.mesGastoPresupuesto[mes] ?? 0);
+    }
+    return suma;
   }
 
 
@@ -369,6 +386,95 @@ export class IndicadoresComponent {
       this.toastr.error('Error al cargar la imagen:', error);
       return '';
     }
+  }
+
+  async abrirModal(nombreMes: any) {
+    try {
+      this.loadingService.showLoading();
+      this.nombreMesIndicador = nombreMes;
+
+      const mesIndicador = this.obtenerNumeroMes(this.nombreMesIndicador);
+
+      this.lstValoresIndicadoresFinancieros = (await this.indicadoresService.obtenerValorIndicadoresFinancieros(this.anioIndicador, mesIndicador)) ?? [];
+
+      if (!this.indicadoresFinancierosCalculos) {
+        this.toastr.warning('Indicadores Financieros', 'No se encontró los códigos de los indicadores financieros');
+        return;
+      }
+
+      this.valoresIndicadores = {};
+
+      for (const reg of this.lstValoresIndicadoresFinancieros) {
+        const idPlan = Number(reg.idCuentaPlan);
+        if (!idPlan) continue;
+        this.valoresIndicadores[idPlan] = Number(reg.montoIndicador ?? 0);
+      }
+
+      const idsPlanes = Object.values(this.indicadoresFinancierosCalculos)
+        .map(v => Number(v))
+        .filter(v => !Number.isNaN(v) && v > 0);
+
+      for (const id of new Set(idsPlanes)) {
+        if (this.valoresIndicadores[id] == null) {
+          this.valoresIndicadores[id] = 0;
+        }
+      }
+
+      setTimeout(() => $('#planModal').modal('show'), 0);
+
+    } catch (error: any) {
+      const msg = error?.message ?? 'Solicitar soporte al departamento de TI.';
+      this.toastr.error('Error al abrir el modal', msg);
+
+    } finally {
+      this.loadingService.hideLoading();
+    }
+  }
+
+  async actualizarIndicadores() {
+    let esError = false;
+
+    try {
+      this.loadingService.showLoading();
+
+      const mesIndicador = this.obtenerNumeroMes(this.nombreMesIndicador);
+
+      this.valoresIndicadores = this.valoresIndicadores ?? {};
+
+      // ✅ Enviar TODOS basado en lstValoresIndicadoresFinancieros (aquí están los 15)
+      const indicadoresActualizar: IIndicadorFinanciero[] =
+        (this.lstValoresIndicadoresFinancieros ?? []).map(reg => {
+          const idPlan = Number(reg.idCuentaPlan);
+          const monto = this.valoresIndicadores[idPlan] ?? reg.montoIndicador ?? 0;
+
+          return {
+            idIndicadorFinanciero: reg.idIndicadorFinanciero ?? 0,
+            anioIndicador: this.anioIndicador,
+            mesIndicador: mesIndicador,
+            montoIndicador: Number(monto),
+            idCuentaPlan: idPlan
+          };
+        });
+
+      const respuestaPeticion = await this.indicadoresService.actualizarValorIndicadoresFinancieros(indicadoresActualizar);
+
+      esError = false;
+      setTimeout(() => this.toastr.success('Guardado Exitosamente', respuestaPeticion), 1000);
+
+    } catch (error: any) {
+      esError = true;
+      const msg = error?.message ?? 'Solicitar soporte al departamento de TI.';
+      this.toastr.error('Error al registrar gastos', msg);
+
+    } finally {
+      this.loadingService.hideLoading();
+      if (!esError) window.location.reload();
+    }
+  }
+
+  private obtenerNumeroMes(nombreMes: string): number {
+    const meses: Record<string, number> = { ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6, JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12 };
+    return meses[nombreMes?.toUpperCase()] ?? 0;
   }
 
 }

@@ -60,7 +60,7 @@ export class BienesComponent implements OnInit {
 
   constructor(
     private loadingService: LoadingService,
-    private appComponent: AppComponent,
+    public appComponent: AppComponent,
     private homeComponent: HomeComponent,
     private productosService: ProductoActivoService,
     private proveedoresService: ProveedorActivoService,
@@ -240,7 +240,7 @@ export class BienesComponent implements OnInit {
       idProducto: [productoActualizar!.idProducto],
       codigoProducto: [productoActualizar!.codigoProducto, [Validators.required]],
       nombreProducto: [productoActualizar!.nombreProducto, [Validators.required, Validators.maxLength(100)]],
-      fechaCompraProducto: [this.formatearFecha(productoActualizar!.fechaCompraProducto.toString()), Validators.required],
+      fechaCompraProducto: [this.appComponent.formatearFechaCorta(productoActualizar!.fechaCompraProducto.toString()), Validators.required],
       valorCompraProducto: [productoActualizar!.valorCompraProducto, [Validators.required, Validators.min(0.01)]],
       esBienaControl: [productoActualizar!.esBienaControl, [Validators.required]],
       estaActivo: [productoActualizar!.estaActivo, [Validators.required]],
@@ -506,24 +506,6 @@ export class BienesComponent implements OnInit {
     return SpanishLanguage;
   }
 
-  soloNumeros(event: KeyboardEvent): void {
-    const key = event.key;
-    if (!/^\d+$/.test(key)) {
-      event.preventDefault();
-    }
-  }
-
-  soloDecimal(event: KeyboardEvent): void {
-    const input = event.target as HTMLInputElement;
-    const key = event.key;
-    if (!/^\d+$/.test(key)) {
-      if (key === '.' && !input.value.includes('.')) {
-        return;
-      }
-      event.preventDefault();
-    }
-  }
-
   validarFecha(event: any) {
     const fecha = event.target.value;
     if (this.fechaInvalida = fecha > this.fechaMax) {
@@ -534,11 +516,6 @@ export class BienesComponent implements OnInit {
 
   enCodigoProductoInput() {
     this.productoForm.get('codigoProducto')?.setValue('');
-  }
-
-  formatearFecha(fecha: string): string {
-    const date = new Date(fecha);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD
   }
 
   descargarTable() {
@@ -560,7 +537,7 @@ export class BienesComponent implements OnInit {
       columnas.forEach((col) => {
         let valor = prod[col.key as keyof IProductoActivo];
         if (col.key === 'fechaCompraProducto' && valor) {
-          valor = this.formatearFecha(valor as string);
+          valor = this.appComponent.formatearFechaCorta(valor as string);
         }
         if (col.key === 'esBienaControl') {
           valor = valor ? 'Sí' : 'No';
@@ -687,5 +664,7 @@ export class BienesComponent implements OnInit {
   onCamerasNotFound(): void {
     this.toastrService.error('Inicializar cámara', 'No se encontraron cámaras');
   }
+
+  handleKeyDown(event: KeyboardEvent) { }
 
 }

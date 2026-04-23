@@ -15,7 +15,6 @@
                                         <i class="fa fa-chart-line mr-2"></i> Gasto Mensual
                                     </h3>
                                 </div>
-
                                 <!-- Columna 2: Año y botón -->
                                 <div class="col-sm-12 col-md-4">
                                     <div class="d-flex align-items-center">
@@ -30,7 +29,6 @@
                                         </button>
                                     </div>
                                 </div>
-
                                 <!-- Columna 3: Buscar y botón Historial -->
                                 <div class="col-sm-12 col-md-4 text-md-right text-sm-left mt-sm-2 mt-md-0">
                                     <div class="d-flex justify-content-end align-items-center">
@@ -40,7 +38,11 @@
                                         <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal"
                                             title="Acciones en el presupuesto" *ngIf="lstHistorial.length != 0"
                                             (click)="visualizarHistorial()">
-                                            <i class="fas fa-history mr-2"></i> Historial
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                        <button class="btn btn-success btn-sm ml-2" (click)="exportarExcel()"
+                                            title="Exportar a Excel">
+                                            <i class="fas fa-file-excel"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -49,43 +51,59 @@
                         <div class="card-body" style="z-index: 0;">
                             <p-table *ngIf="filteredData && filteredData.length > 0" [value]="filteredData" dataKey="id"
                                 [sortField]="'codigoPlan'" [sortOrder]="1" [scrollable]="true" scrollHeight="500px">
+                                <!-- HEADER -->
                                 <ng-template pTemplate="header">
+                                    <!-- Fila 1: Meses -->
                                     <tr style="font-size: 10px;">
                                         <th colspan="2" pFrozenColumn id=""></th>
+
                                         <th *ngFor="let item of cabeceraMeses" colspan="5" class="celdas" id="">
-                                            {{item.nombreMes}}</th>
+                                            {{ item.nombreMes }}
+                                        </th>
+                                        <!-- ✅ Bloque final -->
+                                        <th colspan="5" class="celdas" id="">TOTALES</th>
                                     </tr>
+                                    <!-- Fila 2: Subcolumnas -->
                                     <tr style="font-size: 10px;">
                                         <th pSortableColumn="codigoPlan" pFrozenColumn id="">Código</th>
                                         <th pSortableColumn="nombrePlan" pFrozenColumn id="">Plan</th>
                                         <ng-container *ngFor="let item of cabeceraMeses">
-                                            <th class="celdasIzq" pSortableColumn="{{'presupuesto'+item.nombreMes}}">
-                                                Presupuesto</th>
-                                            <th pSortableColumn="{{'gastos'+item.nombreMes}}">Gastos</th>
-                                            <th pSortableColumn="{{'diferencia'+item.nombreMes}}">Diferencia</th>
-                                            <th pSortableColumn="{{'porcentaje'+item.nombreMes}}">%</th>
-                                            <th class="celdasDer"><i class="nav-icon fa fa-chart-line mr-2"
-                                                    style="color: black;"> </i></th>
+                                            <th class="celdasIzq"
+                                                pSortableColumn="{{ 'presupuesto' + item.nombreMes }}">Presupuesto</th>
+                                            <th pSortableColumn="{{ 'gastos' + item.nombreMes }}">Gastos</th>
+                                            <th pSortableColumn="{{ 'diferencia' + item.nombreMes }}">Diferencia</th>
+                                            <th pSortableColumn="{{ 'porcentaje' + item.nombreMes }}">%</th>
+                                            <th class="celdasDer">
+                                                <i class="nav-icon fa fa-chart-line mr-2" style="color: black;"></i>
+                                            </th>
                                         </ng-container>
+                                        <!-- ✅ Subcolumnas de TOTALES -->
+                                        <th class="celdasIzq">Presupuesto</th>
+                                        <th>Gastos</th>
+                                        <th>Diferencia</th>
+                                        <th>%</th>
+                                        <th class="celdasDer">
+                                            <i class="nav-icon fa fa-chart-line mr-2" style="color: black;"></i>
+                                        </th>
                                     </tr>
                                 </ng-template>
+                                <!-- BODY -->
                                 <ng-template pTemplate="body" let-plan>
-                                    <tr style="font-size: 10px;" [ngClass]="{'grey-text': plan.tieneHijos}">
+                                    <tr style="font-size: 10px;" [ngClass]="{ 'grey-text': plan.tieneHijos }">
+                                        <!-- Frozen columns -->
                                         <td pFrozenColumn>
                                             <p-cellEditor>
-                                                <ng-template pTemplate="output">
-                                                    {{plan.codigoPlan}}
-                                                </ng-template>
+                                                <ng-template pTemplate="output">{{ plan.codigoPlan }}</ng-template>
                                             </p-cellEditor>
                                         </td>
                                         <td pFrozenColumn>
                                             <p-cellEditor>
-                                                <ng-template pTemplate="output">
-                                                    {{plan.nombrePlan}}
-                                                </ng-template>
+                                                <ng-template pTemplate="output">{{ plan.nombrePlan }}</ng-template>
                                             </p-cellEditor>
                                         </td>
+                                        <!-- Meses -->
                                         <ng-container *ngFor="let mes of cabeceraMeses">
+                                            <!-- Presupuesto -->
                                             <td class="celdasIzq">
                                                 <p-cellEditor>
                                                     <ng-template pTemplate="input">
@@ -94,97 +112,139 @@
                                                             [pTooltip]="obtenerInformacion(plan.idPlan, mes.nombreMes)"
                                                             tooltipPosition="top">
                                                     </ng-template>
+
                                                     <ng-template pTemplate="output">
-                                                        <span [pTooltip]="obtenerInformacion(plan.idPlan,mes.idMes)"
+                                                        <span [pTooltip]="obtenerInformacion(plan.idPlan, mes.idMes)"
                                                             [ngStyle]="{ 'text-decoration': !tieneDetallePlan(plan.idPlan, mes.idMes) ? 'underline' : 'none' }"
                                                             tooltipPosition="top">
-                                                            {{plan.mesGastoPresupuesto[mes.nombreMes]| currency: 'USD'}}
+                                                            {{ plan.mesGastoPresupuesto[mes.nombreMes] | currency:'USD'
+                                                            }}
                                                         </span>
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
+                                            <!-- Gastos -->
                                             <td pEditableColumn>
-
                                                 <p-cellEditor>
                                                     <ng-template pTemplate="input">
                                                         <input *ngIf="!plan.tieneHijos && permiteModificarRol(['FIN'])"
                                                             pInputText type="number"
                                                             [(ngModel)]="plan.mesGastoPresupuesto[mes.nombreMes + 'G']"
                                                             (focus)="celdaOriginal(plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
-                                                            (focusout)="celdaEditada(plan,mes,plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
+                                                            (focusout)="celdaEditada(plan, mes, plan.mesGastoPresupuesto[mes.nombreMes + 'G'])"
                                                             min="0" />
-                                                        <span
-                                                            *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">{{plan.mesGastoPresupuesto[mes.nombreMes
-                                                            + 'G'] | currency: 'USD'}}</span>
+                                                        <span *ngIf="plan.tieneHijos || !permiteModificarRol(['FIN'])">
+                                                            {{ plan.mesGastoPresupuesto[mes.nombreMes + 'G'] |
+                                                            currency:'USD' }}
+                                                        </span>
                                                     </ng-template>
-
                                                     <ng-template pTemplate="output">
-                                                        {{plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency:
-                                                        'USD'}}
+                                                        {{ plan.mesGastoPresupuesto[mes.nombreMes + 'G'] |
+                                                        currency:'USD' }}
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
+                                            <!-- Diferencia -->
                                             <td
-                                                [ngClass]="plan.tieneHijos?{'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]}:{}">
-                                                <p-cellEditor *ngIf="plan.tieneHijos">
+                                                [ngClass]="plan.tieneHijos ? { 'red-text': plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes] } : {}">
+                                                <p-cellEditor>
                                                     <ng-template pTemplate="input">
                                                         <input pInputText type="number">
                                                     </ng-template>
                                                     <ng-template pTemplate="output">
-                                                        {{ plan.mesGastoPresupuesto[mes.nombreMes] -
-                                                        plan.mesGastoPresupuesto[mes.nombreMes + 'G'] | currency:
-                                                        'USD'}}
+                                                        {{ (plan.mesGastoPresupuesto[mes.nombreMes] -
+                                                        plan.mesGastoPresupuesto[mes.nombreMes + 'G']) | currency:'USD'
+                                                        }}
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
+                                            <!-- % -->
                                             <td>
-                                                <p-cellEditor *ngIf="plan.tieneHijos">
+                                                <p-cellEditor>
                                                     <ng-template pTemplate="input">
                                                         <input pInputText type="number" [(ngModel)]="plan.porcentaje">
                                                     </ng-template>
+
                                                     <ng-template pTemplate="output">
-                                                        {{ plan.mesGastoPresupuesto[mes.nombreMes+'%']}}%
+                                                        {{ plan.mesGastoPresupuesto[mes.nombreMes + '%'] }}%
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
+                                            <!-- Indicador -->
                                             <td class="celdasDer">
-                                                <p-cellEditor *ngIf="plan.tieneHijos">
+                                                <p-cellEditor>
                                                     <ng-template pTemplate="output">
                                                         <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] > plan.mesGastoPresupuesto[mes.nombreMes]"
                                                             class="fas fa-arrow-circle-up fa-lg"
                                                             style="color: rgba(255, 0, 0,0.4);"></i>
+
                                                         <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] < plan.mesGastoPresupuesto[mes.nombreMes]"
                                                             class="fas fa-arrow-circle-down fa-lg"
                                                             style="color: rgb(98, 168, 98);"></i>
+
                                                         <i *ngIf="plan.mesGastoPresupuesto[mes.nombreMes + 'G'] === plan.mesGastoPresupuesto[mes.nombreMes]"
                                                             class="fas fa-equals fa-lg" style="color: skyblue;"></i>
                                                     </ng-template>
                                                 </p-cellEditor>
                                             </td>
                                         </ng-container>
+                                        <!-- ✅ TOTALES (5 columnas extra) -->
+                                        <td class="celdasIzq">
+                                            {{ totalPresupuesto(plan) | currency:'USD' }}
+                                        </td>
+                                        <td>
+                                            {{ totalGastos(plan) | currency:'USD' }}
+                                        </td>
+                                        <td [ngClass]="{ 'red-text': totalGastos(plan) > totalPresupuesto(plan) }">
+                                            {{ (totalPresupuesto(plan) - totalGastos(plan)) | currency:'USD' }}
+                                        </td>
+                                        <td>
+                                            {{ porcentajeTotal(plan) }}%
+                                        </td>
+                                        <td class="celdasDer">
+                                            <i *ngIf="totalGastos(plan) > totalPresupuesto(plan)"
+                                                class="fas fa-arrow-circle-up fa-lg"
+                                                style="color: rgba(255, 0, 0,0.4);"></i>
+                                            <i *ngIf="totalGastos(plan) < totalPresupuesto(plan)"
+                                                class="fas fa-arrow-circle-down fa-lg"
+                                                style="color: rgb(98, 168, 98);"></i>
+
+                                            <i *ngIf="totalGastos(plan) === totalPresupuesto(plan)"
+                                                class="fas fa-equals fa-lg" style="color: skyblue;"></i>
+                                        </td>
                                     </tr>
                                 </ng-template>
+                                <!-- FOOTER -->
                                 <ng-template pTemplate="footer">
                                     <tr style="font-size: 10px; font-weight: bold;">
                                         <td pFrozenColumn colspan="2" class="text-right">Ganancia/Perdida:</td>
                                         <ng-container *ngFor="let mes of cabeceraMeses">
                                             <td class="text-right">
-                                                {{ getTotal(mes.nombreMes, 'presupuesto') | currency: 'USD' }}
+                                                {{ getTotal(mes.nombreMes, 'presupuesto') | currency:'USD' }}
                                             </td>
                                             <td class="text-right">
-                                                {{ getTotal(mes.nombreMes, 'gastos') | currency: 'USD' }}
+                                                {{ getTotal(mes.nombreMes, 'gastos') | currency:'USD' }}
                                             </td>
-                                            <td class="text-right">
-                                                <!-- {{ getTotalDiferencia(mes.nombreMes) | currency: 'USD' }} -->
-                                            </td>
-                                            <td class="text-right">
-                                                <!-- {{ getTotalPorcentaje(mes.nombreMes) | percent:'1.2-2' }} -->
-                                            </td>
+                                            <td class="text-right"></td>
+                                            <td class="text-right"></td>
                                             <td class="celdasDer"></td>
                                         </ng-container>
+                                        <!-- ✅ Totales generales al final -->
+                                        <td class="text-right celdasIzq">
+                                            {{ totalAnual('presupuesto') | currency:'USD' }}
+                                        </td>
+                                        <td class="text-right">
+                                            {{ totalAnual('gastos') | currency:'USD' }}
+                                        </td>
+                                        <td class="text-right">
+                                            {{ (totalAnual('presupuesto') - totalAnual('gastos')) | currency:'USD' }}
+                                        </td>
+                                        <td class="text-right">
+                                            {{ totalAnualPorcentaje() }}%
+                                        </td>
+                                        <td class="celdasDer"></td>
                                     </tr>
                                 </ng-template>
-
                             </p-table>
                             <div *ngIf="filteredData && filteredData.length === 0"
                                 style="text-align: center;font-weight: bold;">

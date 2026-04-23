@@ -219,7 +219,7 @@ export class InventarioComponent {
           'Marca': productoInventario.producto.modelo?.marca?.nombreMarca,
           'Modelo': productoInventario.producto.modelo?.nombreModelo,
           'Descripción': productoInventario.producto.nombreProducto,
-          'Fc. de Adquisición': productoInventario.producto.fechaCompraProducto == null ? '' : this.formatearFecha(productoInventario.producto.fechaCompraProducto),
+          'Fc. de Adquisición': productoInventario.producto.fechaCompraProducto == null ? '' : this.appComponent.formatearFecha(productoInventario.producto.fechaCompraProducto),
           'Valor de Compra': productoInventario.producto.valorCompraProducto,
           'Estado': productoInventario.estaActivo ? 'Registrado' : 'Pendiente',
           'Fc. de Registro': productoInventario.fechaRegistro,
@@ -228,15 +228,6 @@ export class InventarioComponent {
       });
       this.exportarInformacionAExcel(this.lstProductosInventarioExportar, "Listado_bienes", true);
     }
-  }
-
-  formatearFecha(fecha: Date | string): string {
-    const date = new Date(fecha);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
   }
 
   exportarInformacionAExcel(resumen: any[], excelFileName: string, descargar: boolean): void {

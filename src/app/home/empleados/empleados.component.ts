@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { AppComponent } from 'src/app/app.component';
-import { IEmpleadoActivo } from 'src/app/models/empleado-activo';
+import { IDocumentoEmpleado, IEmpleadoActivo, IInformacionEmpleado } from 'src/app/models/empleado-activo';
 import { LoadingService } from 'src/app/services/loading.service';
 import { EmpleadoActivoService } from 'src/app/services/empleado-activo.service';
 import { ToastrService } from 'src/app/services/toastr.service';
@@ -23,6 +23,9 @@ import * as XLSX from 'xlsx';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ITipoActaActivo } from 'src/app/models/tipo-acta-activo';
 import { TipoActaActivoService } from 'src/app/services/tipo-acta-activo.service';
+import { UsuarioService } from 'src/app/services/usuario.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { merge, Subscription } from 'rxjs';
 declare var $: any;
 
 @Component({
@@ -35,6 +38,7 @@ export class EmpleadosComponent implements OnInit {
   tableEmpleados!: ElementRef;
   @ViewChild('btnActualizaEmpleado', { static: true })
   btnActualizaEmpleado!: ElementRef;
+  @ViewChild('cedulaInput') cedulaInput!: ElementRef;
 
   isEditing: boolean = false;
   lstEmpleados: IEmpleadoActivo[] = [];
@@ -81,10 +85,17 @@ export class EmpleadosComponent implements OnInit {
   visualizarTiposActa = false;
   previewUrl: string | ArrayBuffer | null = null;
   imagenEmpleado: File | null = null;
+  private subs = new Subscription();
+  emailCorpAuto = true;
+  fotoRequeridaError = false;
+  lstDocumentosEmpleado: IDocumentoEmpleado[] = [];
+  zipUrl: string | null = null;
+  zipNombre: string | null = null;
+  empleadoSeleccionado: string | null = null;
 
   constructor(
     private loadingService: LoadingService,
-    private appComponent: AppComponent,
+    public appComponent: AppComponent,
     private homeComponent: HomeComponent,
     private empleadosService: EmpleadoActivoService,
     private cargosService: CargoActivoService,
@@ -98,13 +109,15 @@ export class EmpleadosComponent implements OnInit {
     private changeDetector: ChangeDetectorRef,
     private el: ElementRef,
     private renderer: Renderer2,
-    private toastrService: ToastrService
+    private toastrService: ToastrService,
+    private usuarioService: UsuarioService,
   ) { }
 
   ngOnInit(): void {
     (window as any).EliminarEmpleado = this.EliminarEmpleado.bind(this);
     (window as any).EditarEmpleado = this.EditarEmpleado.bind(this);
     (window as any).AsignarProductoModal = this.AsignarProductoModal.bind(this);
+    (window as any).VerDocumentosEmpleado = this.VerDocumentosEmpleado.bind(this);
     this.CargarListadoEmpleados();
     this.CrearEmpleadoForm();
     this.AsignarProductoForm({} as IEmpleadoActivo);
@@ -115,22 +128,96 @@ export class EmpleadosComponent implements OnInit {
   }
 
   CrearEmpleadoForm() {
+
     this.cargoControl = new FormControl('', Validators.required);
     this.departamentoControl = new FormControl('', Validators.required);
     this.sucursalControl = new FormControl('', Validators.required);
+
     this.empleadoForm = this.fb.group({
-      cedulaEmpleado: ['', [Validators.required]],
-      nombreEmpleado: ['', [Validators.required, Validators.maxLength(100)]],
-      apellidoEmpleado: ['', [Validators.required, Validators.maxLength(100)]],
-      telefonoEmpleado: ['', [Validators.required, Validators.minLength(9), Validators.maxLength(10)]],
-      emailEmpleado: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      fotoEmpleado: [{ value: '', disabled: true }],
-      idCargo: ['', [Validators.required]],
-      idDepartamento: ['', [Validators.required]],
-      idSucursal: ['', [Validators.required]],
-      estaActivo: [true, [Validators.required]],
-      fotoUrl: ['', [Validators.required]]
+      // Personal
+      cedulaEmpleado: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
+      nombreEmpleado: ['', Validators.required],
+      apellidoEmpleado: ['', Validators.required],
+      telefonoEmpleado: ['', [Validators.required, Validators.minLength(9)]],
+      emailEmpleado: ['', [Validators.required, Validators.email]],
+      fechaNacimiento: ['', Validators.required],
+      direccionEmpleado: ['', [Validators.required]],
+      // Foto
+      fotoUrl: [''],
+      // Corporativo
+      numeroCuenta: ['', [Validators.required, Validators.minLength(5)]],
+      sueldoEmpleado: [null, [Validators.required, Validators.min(0.01)]],
+      numeroCorporativo: [''],
+      emailCorporativo: ['', [Validators.required, Validators.email]],
+      fechaIngreso: ['', Validators.required],
+      // Organizacional
+      idSucursal: [null, Validators.required],
+      idDepartamento: [null, Validators.required],
+      idCargo: [null, Validators.required],
     });
+    this.empleadoForm.get('fechaIngreso')?.setValue(new Date().toISOString().slice(0, 10));
+  }
+
+
+  generarCorreoCorporativo() {
+    const nombreRaw = (this.empleadoForm.get('nombreEmpleado')?.value ?? '').toString();
+    const apellidoRaw = (this.empleadoForm.get('apellidoEmpleado')?.value ?? '').toString();
+    const emailCtrl = this.empleadoForm.get('emailCorporativo');
+
+    if (!emailCtrl) return;
+
+    const nombre = this.limpiarTexto(nombreRaw);
+    const apellido = this.limpiarTexto(apellidoRaw);
+
+    if (!nombre || !apellido) {
+      emailCtrl.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const primerNombre = nombre.split(' ').filter(Boolean)[0] ?? '';
+    const primerApellido = apellido.split(' ').filter(Boolean)[0] ?? '';
+
+    if (!primerNombre || !primerApellido) return;
+
+    const dominio = '@segurossuarez.com';
+
+    // 1) intento con 1 letra
+    let base = `${primerNombre.slice(0, 1)}${primerApellido}`;
+    let candidato = `${base}${dominio}`.toLowerCase();
+
+    // Si existe, 2) intento con 2 letras
+    if (this.emailExiste(candidato)) {
+      base = `${primerNombre.slice(0, 2)}${primerApellido}`;
+      candidato = `${base}${dominio}`.toLowerCase();
+    }
+
+    // Si aún existe, 3) agrega número incremental
+    if (this.emailExiste(candidato)) {
+      let i = 2;
+      while (this.emailExiste(`${base}${i}${dominio}`)) {
+        i++;
+      }
+      candidato = `${base}${i}${dominio}`.toLowerCase();
+    }
+
+    emailCtrl.setValue(candidato, { emitEvent: false });
+  }
+
+  private emailExiste(email: string): boolean {
+    const e = (email ?? '').toLowerCase().trim();
+    return (this.lstEmpleados ?? []).some(emp =>
+      (emp.emailEmpleado ?? '').toLowerCase().trim() === e
+    );
+  }
+
+  private limpiarTexto(texto: string): string {
+    return (texto ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zñ\s]/g, '')
+      .replace(/\s+/g, ' ');
   }
 
   async CargarListadoEmpleados() {
@@ -189,7 +276,8 @@ export class EmpleadosComponent implements OnInit {
               const botonEditar = esRH ? `<button class="btn btn-sm btn-primary" onclick="EditarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-edit"></i></button>` : '';
               const botonEliminar = esRH ? `<button class="btn btn-sm btn-danger" onclick="EliminarEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-trash-alt"></i></button>` : '';
               const botonAsignar = `<button class="btn btn-sm btn-secondary" onclick="AsignarProductoModal('${full.cedulaEmpleado}')"><i class="fas fa-clipboard-list"></i></button>`;
-              return `${botonEditar} ${botonEliminar} ${botonAsignar}`;
+              const botonDocs = `<button class="btn btn-sm btn-info btn-docs" onclick="VerDocumentosEmpleado('${full.cedulaEmpleado}')"><i class="fas fa-file-alt"></i></button>`;
+              return `${botonEditar} ${botonEliminar} ${botonDocs}`;
             },
             className: 'text-center btn-acciones-column',
             width: '100px',
@@ -254,22 +342,21 @@ export class EmpleadosComponent implements OnInit {
 
   EditarEmpleado(cedulaEmpleado: string) {
     const empleadoActualizar = this.lstEmpleados.find((x) => x.cedulaEmpleado == cedulaEmpleado);
-    this.empleadoForm = this.fb.group({
-      cedulaEmpleado: [empleadoActualizar!.cedulaEmpleado, [Validators.required],],
-      nombreEmpleado: [empleadoActualizar!.nombreEmpleado,
-      [Validators.required, Validators.maxLength(200)],],
-      apellidoEmpleado: [empleadoActualizar!.apellidoEmpleado,
-      [Validators.required, Validators.maxLength(200)],],
-      telefonoEmpleado: [empleadoActualizar!.telefonoEmpleado,
-      [Validators.required, Validators.minLength(9), Validators.maxLength(10)],],
-      emailEmpleado: [empleadoActualizar!.emailEmpleado,
-      [Validators.required, Validators.email, Validators.maxLength(100)],],
-      fotoEmpleado: [empleadoActualizar!.fotoEmpleado, [Validators.required, Validators.maxLength(200)],],
-      idCargo: [empleadoActualizar!.idCargo, [Validators.required, Validators.maxLength(300)],],
-      idDepartamento: [empleadoActualizar!.idDepartamento, [Validators.required, Validators.maxLength(300)],],
-      idSucursal: [empleadoActualizar!.idSucursal, [Validators.required, Validators.maxLength(300)],],
-      estaActivo: [empleadoActualizar!.estaActivo, [Validators.required]],
-      fotoUrl: [empleadoActualizar!.fotoUrl]
+    this.empleadoForm.patchValue({
+      cedulaEmpleado: empleadoActualizar?.cedulaEmpleado ?? '',
+      nombreEmpleado: empleadoActualizar?.nombreEmpleado ?? '',
+      apellidoEmpleado: empleadoActualizar?.apellidoEmpleado ?? '',
+      telefonoEmpleado: empleadoActualizar?.telefonoEmpleado ?? '',
+      emailEmpleado: empleadoActualizar?.emailEmpleado ?? '',
+      fechaNacimiento: empleadoActualizar?.fechaNacimiento ? new Date(empleadoActualizar.fechaNacimiento).toISOString().slice(0, 10) : '',
+      fechaIngreso: empleadoActualizar?.fechaIngreso ? new Date(empleadoActualizar.fechaIngreso).toISOString().slice(0, 10) : '',
+      numeroCuenta: empleadoActualizar?.numeroCuenta ?? '',
+      sueldoEmpleado: empleadoActualizar?.sueldoEmpleado ?? null,
+      numeroCorporativo: empleadoActualizar?.numeroCorporativo ?? '',
+      emailCorporativo: empleadoActualizar?.emailCorporativo ?? '',
+      fotoUrl: empleadoActualizar?.fotoUrl ?? '',
+      fotoEmpleado: empleadoActualizar?.fotoEmpleado ?? '',
+      direccionEmpleado: empleadoActualizar?.direccionEmpleado ?? '',
     });
     let informacionCargo = this.lstCargos.find((x) => x.idCargo == empleadoActualizar?.idCargo);
     let informacionDepartamento = this.lstDepartamentos.find((x) => x.idDepartamento == empleadoActualizar?.idDepartamento);
@@ -278,7 +365,6 @@ export class EmpleadosComponent implements OnInit {
     this.SelectDepartamento(informacionDepartamento!);
     this.SelectSucursal(informacionSucursal!);
     this.empleadoForm.get('cedulaEmpleado')?.disable();
-    this.empleadoForm.get('fotoEmpleado')?.disable();
     this.isEditing = true;
     this.changeDetector.detectChanges();
     this.btnActualizaEmpleado.nativeElement.click();
@@ -298,6 +384,7 @@ export class EmpleadosComponent implements OnInit {
   }
 
   OnSubmit(): void {
+    console.log(this.isEditing);
     if (this.isEditing) {
       this.ActualizarEmpleado();
     } else {
@@ -308,55 +395,47 @@ export class EmpleadosComponent implements OnInit {
   async CrearEmpleado() {
     try {
       this.loadingService.showLoading();
-      if (this.empleadoForm.valid) {
-        try {
-          //Con Get Raw Value se puede enviar los datos bloqueados en el typeScript
-          const empleadoData = this.empleadoForm.getRawValue();
-          empleadoData.nombreEmpleado = empleadoData.nombreEmpleado.trim();
-          empleadoData.apellidoEmpleado = empleadoData.apellidoEmpleado.trim();
-          empleadoData.cedulaEmpleado = empleadoData.cedulaEmpleado.trim();
-          empleadoData.emailEmpleado = empleadoData.emailEmpleado.trim();
-          empleadoData.telefonoEmpleado = empleadoData.telefonoEmpleado.trim();
 
-          const formData = new FormData();
-          for (const key in empleadoData) {
-            if (empleadoData[key] != null)
-              formData.append(key, empleadoData[key]);
-          }
-          if (this.imagenEmpleado) {
-            formData.append('ImagenEmpleado', this.imagenEmpleado);
-          }
-          const mensajeInsercion = await this.empleadosService.insertarEmpleado(formData);
-          Swal.fire({ text: mensajeInsercion, icon: 'success', }).then(() => { window.location.reload(); });
-        } catch (error) {
-          if (error instanceof Error) {
-            this.toastrService.error('Error al agregar el empleado', error.message);
-          } else {
-            this.toastrService.error('Error al agregar el empleado', 'Solicitar soporte al departamento de TI.');
-          }
-        }
-      } else {
-        let foto = this.empleadoForm.get('fotoEmpleado')?.value;
-        if (!foto) {
-          this.toastrService.error('Error al agregar empleado', 'Debe seleccionar una foto');
-          return;
-        }
-        this.appComponent.validateAllFormFields(this.empleadoForm);
-        const telefono = this.empleadoForm.get('telefonoEmpleado');
-        if (telefono?.hasError('minlength')) {
-          this.toastrService.error('Error en el teléfono', 'Debe tener un mínimo de 9 dígitos.');
-          return;
-        }
-        if (this.empleadoForm.invalid) {
-          this.toastrService.error('Error al agregar el empleado', 'No se llenaron todos los campos necesarios.');
-        }
+      this.empleadoForm.markAllAsTouched();
+      this.empleadoForm.updateValueAndValidity();
+      this.fotoRequeridaError = !this.imagenEmpleado;
+
+      if (this.empleadoForm.invalid || this.fotoRequeridaError) {
+        this.toastrService.error('Error', 'Faltan campos obligatorios por completar.');
+        return;
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        this.toastrService.error('Error al agregar el empleado', error.message);
-      } else {
-        this.toastrService.error('Error al agregar el empleado', 'Solicitar soporte al departamento de TI.');
-      }
+
+      const empleadoData = this.empleadoForm.getRawValue();
+      empleadoData.nombreEmpleado = (empleadoData.nombreEmpleado ?? '').trim();
+      empleadoData.apellidoEmpleado = (empleadoData.apellidoEmpleado ?? '').trim();
+      empleadoData.cedulaEmpleado = (empleadoData.cedulaEmpleado ?? '').trim();
+      empleadoData.emailEmpleado = (empleadoData.emailEmpleado ?? '').trim();
+      empleadoData.telefonoEmpleado = (empleadoData.telefonoEmpleado ?? '').trim();
+      empleadoData.emailCorporativo = (empleadoData.emailCorporativo ?? '').trim();
+      empleadoData.fotoEmpleado = (this.imagenEmpleado?.name ?? '').trim();
+
+      const formData = new FormData();
+      Object.keys(empleadoData).forEach((key) => {
+        const value = empleadoData[key];
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      formData.append('ImagenEmpleado', this.imagenEmpleado as File);
+
+      const mensaje = await this.empleadosService.insertarEmpleado(formData);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'OK',
+        text: mensaje,
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => { window.location.reload(); });
+
+    } catch (error: any) {
+      this.toastrService.error('Error al agregar el empleado', error?.message ?? 'Solicitar soporte a TI.');
     } finally {
       this.loadingService.hideLoading();
     }
@@ -365,64 +444,67 @@ export class EmpleadosComponent implements OnInit {
   async ActualizarEmpleado() {
     try {
       this.loadingService.showLoading();
-      if (this.cargoControl.value == '') {
-        this.empleadoForm.patchValue({ idCargo: '' });
+
+      // 1) Marcar para que se vean errores
+      this.empleadoForm.markAllAsTouched();
+      this.empleadoForm.updateValueAndValidity();
+
+      // 2) Validaciones simples para selects/autocomplete (si están vacíos, el id debe quedar null)
+      if (!this.cargoControl.value) this.empleadoForm.get('idCargo')?.setValue(null);
+      if (!this.departamentoControl.value) this.empleadoForm.get('idDepartamento')?.setValue(null);
+      if (!this.sucursalControl.value) this.empleadoForm.get('idSucursal')?.setValue(null);
+
+      // 3) Si el form está inválido, salir
+      if (this.empleadoForm.invalid) {
+        this.toastrService.error('Error', 'Faltan campos obligatorios por completar.');
+        return;
       }
-      if (this.departamentoControl.value == '') {
-        this.empleadoForm.patchValue({ idDepartamento: '' });
-      }
-      if (this.sucursalControl.value == '') {
-        this.empleadoForm.patchValue({ idSucursal: '' });
-      }
-      if (this.empleadoForm.valid) {
-        try {
-          const empleadoActualizadoData: IEmpleadoActivo = this.empleadoForm.getRawValue();
-          const formData = new FormData();
-          for (const key in empleadoActualizadoData) {
-            const value = empleadoActualizadoData[key as keyof IEmpleadoActivo];
-            if (value != null) {
-              formData.append(key, value.toString());
-            }
-          }
-          if (this.imagenEmpleado) {
-            formData.append('ImagenEmpleado', this.imagenEmpleado);
-          }
-          const mensajeActualizacion = await this.empleadosService.actualizarEmpleado(empleadoActualizadoData.cedulaEmpleado, formData);
-          Swal.fire({
-            text: mensajeActualizacion,
-            icon: 'success',
-          }).then(() => {
-            window.location.reload();
-          });
-        } catch (error) {
-          if (error instanceof Error) {
-            this.toastrService.error('Error al actualizar el empleado', error.message);
-          } else {
-            this.toastrService.error('Error al actualizar el empleado', 'Solicitar soporte al departamento de TI.');
-          }
+
+      // 4) Preparar data
+      const empleadoActualizadoData: IEmpleadoActivo = this.empleadoForm.getRawValue();
+
+      // trims (recomendado)
+      empleadoActualizadoData.nombreEmpleado = (empleadoActualizadoData.nombreEmpleado ?? '').trim();
+      empleadoActualizadoData.apellidoEmpleado = (empleadoActualizadoData.apellidoEmpleado ?? '').trim();
+      empleadoActualizadoData.emailEmpleado = (empleadoActualizadoData.emailEmpleado ?? '').trim();
+      empleadoActualizadoData.telefonoEmpleado = (empleadoActualizadoData.telefonoEmpleado ?? '').trim();
+      empleadoActualizadoData.emailCorporativo = (empleadoActualizadoData.emailCorporativo ?? '').trim();
+
+      // si quieres guardar el nombre de la imagen en el form
+      empleadoActualizadoData.fotoEmpleado = (this.imagenEmpleado?.name ?? empleadoActualizadoData.fotoEmpleado ?? '').trim();
+
+      // 5) FormData
+      const formData = new FormData();
+      Object.keys(empleadoActualizadoData).forEach((key) => {
+        const value = (empleadoActualizadoData as any)[key];
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
         }
-      } else {
-        let foto = this.empleadoForm.get('fotoEmpleado')?.value;
-        if (!foto) {
-          this.toastrService.error('Error al agregar empleado', 'Debe seleccionar una foto');
-          return;
-        }
-        this.appComponent.validateAllFormFields(this.empleadoForm);
-        const telefono = this.empleadoForm.get('telefonoEmpleado');
-        if (telefono?.hasError('minlength')) {
-          this.toastrService.error('Error en el teléfono', 'Debe tener un mínimo de 9 dígitos.');
-          return;
-        }
-        if (this.empleadoForm.invalid) {
-          this.toastrService.error('Error al agregar el empleado', 'No se llenaron todos los campos necesarios.');
-        }
+      });
+
+      // 6) Solo adjunta imagen si se cambió
+      if (this.imagenEmpleado) {
+        formData.append('ImagenEmpleado', this.imagenEmpleado);
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        this.toastrService.error('Error al actualizar el empleado', error.message);
-      } else {
-        this.toastrService.error('Error al actualizar el empleado', 'Solicitar soporte al departamento de TI.');
-      }
+
+      // 7) Actualizar
+      const mensajeActualizacion = await this.empleadosService.actualizarEmpleado(
+        empleadoActualizadoData.cedulaEmpleado,
+        formData
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: 'OK',
+        text: mensajeActualizacion,
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => {
+        window.location.reload();
+      });
+
+    } catch (error: any) {
+      this.toastrService.error('Error al actualizar el empleado', error?.message ?? 'Solicitar soporte a TI.');
     } finally {
       this.loadingService.hideLoading();
     }
@@ -477,20 +559,38 @@ export class EmpleadosComponent implements OnInit {
   }
 
   SelectCargo(cargo: ICargoActivo): void {
-    this.cargoControl.setValue(cargo.nombreCargo);
-    this.empleadoForm.get('idCargo')?.setValue(cargo.idCargo);
+    this.cargoControl.setValue(cargo.nombreCargo, { emitEvent: false });
+
+    const ctrl = this.empleadoForm.get('idCargo');
+    ctrl?.setValue(cargo.idCargo);
+    ctrl?.markAsTouched();
+    ctrl?.markAsDirty();
+    ctrl?.setErrors(null); // quita "required" si ya seleccionó
+
     this.visualizarCargos = false;
   }
 
   SelectDepartamento(departamento: IDepartamentoActivo): void {
-    this.departamentoControl.setValue(departamento.nombreDepartamento);
-    this.empleadoForm.get('idDepartamento')?.setValue(departamento.idDepartamento);
+    this.departamentoControl.setValue(departamento.nombreDepartamento, { emitEvent: false });
+
+    const ctrl = this.empleadoForm.get('idDepartamento');
+    ctrl?.setValue(departamento.idDepartamento);
+    ctrl?.markAsTouched();
+    ctrl?.markAsDirty();
+    ctrl?.setErrors(null);
+
     this.visualizarDepartamentos = false;
   }
 
   SelectSucursal(sucursal: ISucursalActivo): void {
-    this.sucursalControl.setValue(sucursal.descripcionSucursal);
-    this.empleadoForm.get('idSucursal')?.setValue(sucursal.idSucursal);
+    this.sucursalControl.setValue(sucursal.descripcionSucursal, { emitEvent: false });
+
+    const ctrl = this.empleadoForm.get('idSucursal');
+    ctrl?.setValue(sucursal.idSucursal);
+    ctrl?.markAsTouched();
+    ctrl?.markAsDirty();
+    ctrl?.setErrors(null);
+
     this.visualizarSucursales = false;
   }
 
@@ -576,44 +676,98 @@ export class EmpleadosComponent implements OnInit {
     return SpanishLanguage;
   }
 
-  soloNumeros(event: KeyboardEvent): void {
-    const key = event.key;
-    if (!/^\d+$/.test(key)) {
-      event.preventDefault();
-    }
-  }
+  async validarCedula() {
+    const control = this.empleadoForm.get('cedulaEmpleado');
 
-  soloLetras(event: KeyboardEvent) {
-    const key = event.key;
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(key);
-  }
+    // Normaliza el valor
+    const identificacion: string = (control?.value ?? '').toString().trim();
 
-  private esCedulaValida(cedula: string): boolean {
-    if (!cedula || cedula.length !== 10) {
-      return false;
-    }
-    const provincia = parseInt(cedula.substring(0, 2), 10);
-    if (provincia < 1 || provincia > 24) {
-      return false;
-    }
-    const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
-    let suma = 0;
-    for (let i = 0; i < coeficientes.length; i++) {
-      let valor = parseInt(cedula[i]) * coeficientes[i];
-      if (valor > 9) { valor -= 9; }
-      suma += valor;
-    }
-    const digitoVerificador = parseInt(cedula[9]);
-    const residuo = suma % 10;
-    const resultado = residuo === 0 ? 0 : 10 - residuo;
-    return resultado === digitoVerificador;
-  }
+    // Helper para marcar error + foco
+    const invalidarYFoco = (msgTitulo: string, msg: string, errorKey = 'cedulaInvalida') => {
+      this.toastrService.error(msgTitulo, msg);
+      control?.setErrors({ ...(control?.errors ?? {}), [errorKey]: true });
+      control?.markAsTouched();
+      setTimeout(() => {
+        this.cedulaInput?.nativeElement?.focus();
+        this.cedulaInput?.nativeElement?.select?.(); // opcional
+      }, 0);
+    };
 
-  validarCedula() {
-    let identificacion = this.empleadoForm.get('cedulaEmpleado')?.value;
-    let esValidadorCedula = this.esCedulaValida(identificacion);
-    if (!esValidadorCedula) {
-      this.toastrService.error('Error en la cédula', 'La cédula no es valida');
+    try {
+      // Validaciones rápidas antes de cargar/consultar
+      if (!identificacion) {
+        invalidarYFoco('Error en la cédula', 'Debe ingresar la cédula.');
+        return;
+      }
+
+      const esValida = this.appComponent.esCedulaValida(identificacion);
+      if (!esValida) {
+        invalidarYFoco('Error en la cédula', 'La cédula no es válida');
+        return; // ✅ IMPORTANTÍSIMO
+      }
+
+      // Si estás editando, evita que choque contra sí mismo (si aplica)
+      // const idActual = this.empleadoForm.get('idEmpleado')?.value;
+      // const existe = this.lstEmpleados.some(e => e.cedulaEmpleado === identificacion && e.idEmpleado !== idActual);
+
+      const existe = this.lstEmpleados?.some(emp => emp.cedulaEmpleado === identificacion);
+      if (existe) {
+        // Mejor warning, no error
+        this.toastrService.warning('Cédula existente', 'La cédula ingresada ya pertenece a un empleado registrado.');
+        control?.setErrors({ ...(control?.errors ?? {}), cedulaExistente: true });
+        control?.markAsTouched();
+        setTimeout(() => this.cedulaInput?.nativeElement?.focus(), 0);
+        return;
+      }
+
+      this.loadingService.showLoading();
+
+      // Consultamos la información del número de cédula
+      const persona = await this.usuarioService.obtenerInformacionPersona(
+        identificacion,
+        'Recursos Humanos'
+      );
+
+      if (!persona) {
+        this.toastrService.warning('Cédula', 'No se pudo obtener información de la cédula.');
+        return; // ✅ no sigas si no hay data
+      }
+
+      // Patch seguro
+      this.empleadoForm.patchValue({
+        fechaNacimiento: persona.fcNac ? this.appComponent.formatearFechaCorta(persona.fcNac) : '',
+        telefonoEmpleado: persona.medio1 ?? '',
+        emailEmpleado: persona.email1 ?? ''
+      });
+
+      // Separar nombres y apellidos
+      const nombreCompleto = (persona.nm ?? '').trim();
+      if (!nombreCompleto) return;
+
+      const separado = await this.usuarioService.obtenerApellidosNombresSeparados(nombreCompleto);
+
+      if (separado?.esError) {
+        this.toastrService.warning('Nombre', 'No se pudo separar nombres y apellidos.');
+        this.empleadoForm.patchValue({
+          nombreEmpleado: nombreCompleto,
+          apellidoEmpleado: ''
+        });
+        return;
+      }
+
+      this.empleadoForm.patchValue({
+        nombreEmpleado: separado?.nombres ?? '',
+        apellidoEmpleado: separado?.apellidos ?? ''
+      });
+
+    } catch (error: any) {
+      // Mensaje más coherente con lo que hace el método
+      this.toastrService.error(
+        'Error al validar cédula',
+        error?.message ?? 'Solicitar soporte al departamento de TI.'
+      );
+    } finally {
+      this.loadingService.hideLoading();
     }
   }
 
@@ -649,20 +803,51 @@ export class EmpleadosComponent implements OnInit {
     XLSX.writeFile(wb, 'Empleados.xlsx');
   }
 
-  enfotoSeleccionada(event: any) {
-    const file: File = event.target.files[0];
-    if (!file) return;
+  enfotoSeleccionada(event: Event) {
+    const input = event.target as HTMLInputElement;
 
+    // Si no selecciona nada, marca error
+    if (!input.files || input.files.length === 0) {
+      this.imagenEmpleado = null;
+      this.previewUrl = null;
+      this.fotoRequeridaError = true;
+      return;
+    }
+
+    const file = input.files[0];
+
+    // ✅ apaga error apenas empieza (si termina inválido lo prendemos de nuevo)
+    this.fotoRequeridaError = false;
+
+    // valida tipo
+    const validTypes = ['image/png', 'image/jpeg'];
+    if (!validTypes.includes(file.type)) {
+      this.toastrService.error('Foto inválida', 'Solo se permite PNG o JPG.');
+      input.value = '';
+      this.imagenEmpleado = null;
+      this.previewUrl = null;
+      this.fotoRequeridaError = true;
+      return;
+    }
+
+    // valida tamaño
+    const maxMB = 2;
+    if (file.size > maxMB * 1024 * 1024) {
+      this.toastrService.error('Foto muy grande', `Máximo ${maxMB}MB.`);
+      input.value = '';
+      this.imagenEmpleado = null;
+      this.previewUrl = null;
+      this.fotoRequeridaError = true;
+      return;
+    }
+
+    // ✅ archivo válido
     this.imagenEmpleado = file;
-    let fileName = file.name;
-    fileName = fileName.replace(/\s+/g, '_');
-    fileName = fileName.trim();
-    // Actualizar el formControl con nombre de la foto
-    this.empleadoForm.get('fotoEmpleado')?.setValue(fileName);
-    this.empleadoForm.get('fotoUrl')?.setValue(fileName);
-    // Vista previa de la imagen local y si no está en el servidor en Editar se mostrará el default Usuario.png 
+    this.fotoRequeridaError = false;
+
+    // preview
     const reader = new FileReader();
-    reader.onload = () => { this.previewUrl = reader.result; };
+    reader.onload = () => (this.previewUrl = reader.result as string);
     reader.readAsDataURL(file);
   }
 
@@ -700,6 +885,42 @@ export class EmpleadosComponent implements OnInit {
   getFechaActual(): string {
     const hoy = new Date();
     return hoy.toISOString().split('T')[0];
+  }
+
+  async VerDocumentosEmpleado(cedulaEmpleado: string) {
+    try {
+      this.loadingService.showLoading();
+      let informacionEmpleado = this.lstEmpleados.find((x) => x.cedulaEmpleado == cedulaEmpleado);
+      console.log('Ver documentos del empleado con cédula:', cedulaEmpleado, informacionEmpleado);
+      if (!informacionEmpleado) {
+        this.toastrService.error('Error', 'No se encontró información del empleado para generar los documentos.');
+        return;
+      }
+      this.empleadoSeleccionado = `${informacionEmpleado.nombreEmpleado} ${informacionEmpleado.apellidoEmpleado}`;
+      let informacionEmpleadoRequest: IInformacionEmpleado = {
+        identificacionEmpleado: cedulaEmpleado,
+        sueldo: informacionEmpleado?.sueldoEmpleado ?? 0,
+        numeroCuenta: informacionEmpleado?.numeroCuenta ?? '',
+      }
+      //Generamos los documentos del empleado
+      let responseGenerarDocumentos = await this.empleadosService.generarDocumentosEmpleado(informacionEmpleadoRequest);
+      this.toastrService.success('Documentos generados', responseGenerarDocumentos);
+      //Obtenemos el listado de documentos generados para el empleado
+      const resp = await this.empleadosService.listarDocumentosEmpleado(cedulaEmpleado);
+      this.lstDocumentosEmpleado = resp.documentos;
+      this.zipUrl = resp.zip?.url ?? null;
+      this.zipNombre = resp.zip?.nombre ?? null;
+      $('#modalDocumentos').modal('show');
+      this.changeDetector.detectChanges();
+    } catch (error) {
+      if (error instanceof Error) {
+        this.toastrService.error('Error al asignar el producto al empleado', error.message);
+      } else {
+        this.toastrService.error('Error al asignar el producto al empleado', 'Solicitar soporte al departamento de TI.');
+      }
+    } finally {
+      this.loadingService.hideLoading();
+    }
   }
 
   // TODO: REVISAR ESTE MODA Y ARREGLAR EL UNDIFINED PORQUE EL MODAL TARDE EN RESPONER Y CARGAR LA INFORMACIÓN
@@ -784,7 +1005,6 @@ export class EmpleadosComponent implements OnInit {
       estaActivo: true
     };
 
-    console.log(nuevaAsignacion);
     this.lstProductosEmpleado.push(nuevaAsignacion);
     // Limpiar el producto de la lista
     this.productoEmpleadoForm.get('idProducto')?.reset('');
@@ -828,7 +1048,34 @@ export class EmpleadosComponent implements OnInit {
     }
   }
 
+  esInvalido(campo: string): boolean {
+    const c = this.empleadoForm.get(campo);
+    return !!(c && c.invalid && (c.touched || c.dirty));
+  }
+
+  getErrorMsg(campo: string): string {
+    const control = this.empleadoForm.get(campo);
+
+    if (!control || !control.errors) return '';
+    const errors = control.errors;
+
+    if (errors['required']) return 'Este campo es obligatorio.';
+    if (errors['minlength']) return `Mínimo ${errors['minlength'].requiredLength} caracteres.`;
+    if (errors['maxlength']) return `Máximo ${errors['maxlength'].requiredLength} caracteres.`;
+    if (errors['min']) return `Debe ser mayor o igual a ${errors['min'].min}.`;
+    if (errors['max']) return `Debe ser menor o igual a ${errors['max'].max}.`;
+    if (errors['email']) return 'Correo electrónico inválido.';
+    if (errors['pattern']) return 'Formato inválido.';
+    if (errors['cedulaInvalida']) return 'La cédula no es válida.';
+    if (errors['cedulaExistente']) return 'La cédula ya existe en el sistema.';
+    return 'Campo inválido.';
+  }
+
+
   public VerificarRolUsuario(rolesPermitidos: string[]): boolean {
     return this.lstRolesUsuario.some(role => rolesPermitidos.includes(role));
   }
+
+  handleKeyDown(event: KeyboardEvent) { }
+
 }

@@ -103,7 +103,8 @@
                                         <div class="col-lg-6 col-md-8 col-sm-12">
                                             <img [src]="previewUrl || productoForm.get('fotoUrl')?.value || 'assets/images/providers/Producto.png'"
                                                 class="fotoProducto cursor-pointer" (click)="ModalFoto()"
-                                                (error)="enFotoError($event)" [title]="'Seleccione una Imagen'">
+                                                (error)="enFotoError($event)" [title]="'Seleccione una Imagen'"
+                                                (keydown)="handleKeyDown($event)" alt="Foto del producto">
                                             <input type="file" hidden #fileInput (change)="enfotoSeleccionada($event)"
                                                 accept=".png,.jpg,.jpeg" />
                                         </div>
@@ -233,7 +234,8 @@
                                             <input type="text"
                                                 [ngClass]="{ 'is-invalid': productoForm.get('valorCompraProducto')!.errors && productoForm.get('valorCompraProducto')!.touched}"
                                                 class="form-control" placeholder="Valor de compra"
-                                                formControlName="valorCompraProducto" (keypress)="soloDecimal($event)">
+                                                formControlName="valorCompraProducto"
+                                                (keypress)="appComponent.soloDecimal($event)">
                                             <div class="invalid-feedback"
                                                 *ngIf="productoForm.get('valorCompraProducto')!.errors && productoForm.get('valorCompraProducto')!.touched">
                                                 <div *ngIf="productoForm.get('valorCompraProducto')!.hasError('min')">

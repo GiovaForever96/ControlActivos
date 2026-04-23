@@ -20,8 +20,7 @@ import { EmpleadosComponent } from './empleados/empleados.component';
 import { ProveedoresComponent } from './proveedores/proveedores.component';
 import { BienesComponent } from './bienes/bienes.component';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
-
-
+import { TreeTableModule } from "primeng/treetable";
 
 @NgModule({
    declarations: [
@@ -38,7 +37,7 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       SucursalesComponent,
       EmpleadosComponent,
       ProveedoresComponent,
-      BienesComponent
+      BienesComponent,
    ],
    imports: [
       CommonModule,
@@ -47,7 +46,8 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       ReactiveFormsModule,
       HomeRoutingModule,
       FormsModule,
-      ZXingScannerModule 
+      ZXingScannerModule,
+      TreeTableModule
    ],
    providers: [
       AuthService

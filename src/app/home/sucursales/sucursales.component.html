@@ -19,12 +19,12 @@
                                 Sucursales
                             </h3>
                             <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal"
-                                (click)="AbrirModal(false)">
-                                <i class="fas fa-plus-circle mr-2"></i> Agregar sucursal
+                                (click)="AbrirModal(false)" title="Agregar sucursal">
+                                <i class="fas fa-plus-circle"></i>
                             </button>
                             <button type="button" class="btn btn-success btn-sm float-right mr-2" data-toggle="modal"
-                                (click)="descargarTable()">
-                                <i class="fas fa-download mr-2"></i> Descargar
+                                (click)="descargarTable()" title="Descargar tabla sucursales">
+                                <i class="fas fa-download"></i>
                             </button>
                             <button #btnActualizaSucursal type="button" hidden data-toggle="modal"
                                 (click)="AbrirModal(true)">
@@ -94,7 +94,7 @@
                                         <input type="text"
                                             [ngClass]="{ 'is-invalid': sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched}"
                                             class="form-control" placeholder="Teléfono de la sucursal"
-                                            formControlName="telefono" (keypress)="soloNumeros($event)"
+                                            formControlName="telefono" (keypress)="appComponent.soloNumeros($event)"
                                             maxlength="10">
                                         <div class="invalid-feedback"
                                             *ngIf="sucursalForm.get('telefono')!.errors && sucursalForm.get('telefono')!.touched">
@@ -106,7 +106,8 @@
 
                             <div class="col-lg-12 form-group">
                                 <div class="row align-items-center">
-                                    <label for="urlUbicacion" class="col-lg-3 col-md-4 col-sm-12 col-form-label">Coordenadas </label>
+                                    <label for="urlUbicacion"
+                                        class="col-lg-3 col-md-4 col-sm-12 col-form-label">Coordenadas </label>
                                     <div class="col-lg-9 col-md-8 col-sm-12">
                                         <input type="text"
                                             [ngClass]="{ 'is-invalid': sucursalForm.get('urlUbicacion')!.errors && sucursalForm.get('urlUbicacion')!.touched}"

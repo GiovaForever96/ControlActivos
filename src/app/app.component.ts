@@ -58,4 +58,62 @@ export class AppComponent {
     ];
   }
 
+  soloNumeros(event: KeyboardEvent): void {
+    const key = event.key;
+    if (!/^\d+$/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  soloDecimal(event: KeyboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const key = event.key;
+    if (!/^\d+$/.test(key)) {
+      if (key === '.' && !input.value.includes('.')) {
+        return;
+      }
+      event.preventDefault();
+    }
+  }
+
+  soloLetras(event: KeyboardEvent) {
+    const key = event.key;
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(key);
+  }
+
+  esCedulaValida(cedula: string): boolean {
+    if (!cedula || cedula.length !== 10) {
+      return false;
+    }
+    const provincia = parseInt(cedula.substring(0, 2), 10);
+    if (provincia < 1 || provincia > 24) {
+      return false;
+    }
+    const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+    let suma = 0;
+    for (let i = 0; i < coeficientes.length; i++) {
+      let valor = parseInt(cedula[i]) * coeficientes[i];
+      if (valor > 9) { valor -= 9; }
+      suma += valor;
+    }
+    const digitoVerificador = parseInt(cedula[9]);
+    const residuo = suma % 10;
+    const resultado = residuo === 0 ? 0 : 10 - residuo;
+    return resultado === digitoVerificador;
+  }
+
+  formatearFechaCorta(fecha: string): string {
+    const date = new Date(fecha);
+    return date.toISOString().split('T')[0];
+  }
+
+  formatearFecha(fecha: Date | string): string {
+    const date = new Date(fecha);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
 }

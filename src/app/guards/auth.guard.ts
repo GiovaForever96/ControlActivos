@@ -1,18 +1,35 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
-export const AuthGuard: CanActivateFn = (route, state) => {
+export const AuthGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const token = localStorage.getItem('token');
 
-  const isLoggedIn = checkLoginState();
-  if (isLoggedIn) {
-    return true;
-  } else {
-    return inject(Router).createUrlTree(['/']);
-  }
+  if (token) return true;
 
+  return router.createUrlTree(['/']);
 };
 
-function checkLoginState(): boolean {
+export const RoleGuard: CanActivateFn = (route) => {
+  const router = inject(Router);
+
   const token = localStorage.getItem('token');
-  return !!token;
-}
+  if (!token) {
+    return router.createUrlTree(['/']);
+  }
+
+  const rolesStorage = localStorage.getItem('roles');
+  const userRoles: string[] = rolesStorage
+    ? rolesStorage.split(',').map(r => r.trim())
+    : [];
+
+  const allowedRoles: string[] = route.data?.['roles'] || [];
+
+  const tienePermiso = allowedRoles.some(rol => userRoles.includes(rol));
+  console.log(tienePermiso);
+  if (tienePermiso) {
+    return true;
+  }
+
+  return router.createUrlTree(['/home/index']);
+};
